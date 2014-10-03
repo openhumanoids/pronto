@@ -13,11 +13,11 @@
 #include <mav_state_est/mav-est-legodo/rbis_legodo_common.hpp>
 
 #include <leg_estimate/leg_estimate.hpp>
-#include <pointcloud_tools/pointcloud_lcm.hpp>
-#include <drc_utils/joint_utils.hpp>
+// #include <pointcloud_tools/pointcloud_lcm.hpp>
+#include <joint_utils/joint_utils.hpp>
 #include <estimate_tools/torque_adjustment.hpp>
 
-#include <lcmtypes/drc/atlas_state_t.hpp>
+#include <lcmtypes/pronto/atlas_state_t.hpp>
 
 namespace MavStateEst {
   
@@ -36,7 +36,7 @@ public:
 
   LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
-  RBISUpdateInterface * processMessage(const drc::atlas_state_t *msg);
+  RBISUpdateInterface * processMessage(const pronto::atlas_state_t *msg);
 
 
   // Classes:

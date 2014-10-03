@@ -2,6 +2,7 @@
 # and lines starting with '#' are ignored
 
 # filters used in motion est and state sync
+pronto-lcmtypes
 estimate_tools
 
 #state_sync

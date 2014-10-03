@@ -4,16 +4,15 @@
 #include <mav_state_est/mav_state_est.hpp>
 #include <mav_state_est/gpf/rbis_gpf_update.hpp>
 
-// #include <mav_state_est/gpf-rgbd-lib/rbis_gpf_update.hpp>
-#include <mav_state_est/mav-est-fovis/rbis_fovis_update.hpp>
+//#include <mav_state_est/mav-est-fovis/rbis_fovis_update.hpp>
 #include <mav_state_est/mav-est-legodo/rbis_legodo_update.hpp>
-#include <mav_state_est/mav-est-legodo/rbis_legodo_external_update.hpp>
+//#include <mav_state_est/mav-est-legodo/rbis_legodo_external_update.hpp>
 #include <mav_state_est/pose_meas.hpp>
 
 #include <path_util/path_util.h>
 
 
-#include <lcmtypes/drc/utime_t.hpp>
+#include <lcmtypes/pronto/utime_t.hpp>
 
 
 #include <ConciseArgs>
@@ -45,7 +44,7 @@ private:
     boost::shared_ptr<lcm::LCM> lcm_;
     bool ready_;
     void navReadyHandler(const lcm::ReceiveBuffer* rbuf, 
-                           const std::string& channel, const  drc::utime_t* msg){
+                           const std::string& channel, const  pronto::utime_t* msg){
       std::cout << "Received Ready\n";
       ready_ = true;
     }
@@ -200,10 +199,10 @@ public:
     //}
 
 
-    if (front_end->isActive("fovis")) {
-      fovis_handler = new FovisHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
-      front_end->addSensor("fovis", &MavStateEst::FovisHandler::processMessage, fovis_handler);
-    }
+    //if (front_end->isActive("fovis")) {
+    //  fovis_handler = new FovisHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
+    //  front_end->addSensor("fovis", &MavStateEst::FovisHandler::processMessage, fovis_handler);
+    //}
 
 
 
@@ -223,10 +222,10 @@ public:
       front_end->addSensor("legodo", &MavStateEst::LegOdoHandler::processMessage, legodo_handler);
     }
 
-    if (front_end->isActive("legodo_external")) {
-      legodo_external_handler = new LegOdoExternalHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
-      front_end->addSensor("legodo_external", &MavStateEst::LegOdoExternalHandler::processMessage, legodo_external_handler);
-    }
+    //if (front_end->isActive("legodo_external")) {
+    //  legodo_external_handler = new LegOdoExternalHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
+    //  front_end->addSensor("legodo_external", &MavStateEst::LegOdoExternalHandler::processMessage, legodo_external_handler);
+    //}
     
     
     
@@ -234,7 +233,7 @@ public:
 
   }
 
-  void restartHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drc::utime_t* msg){
+  void restartHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::utime_t* msg){
     // exit 
     front_end->exit_estimator = true; 
     
@@ -275,9 +274,9 @@ public:
   GpsHandler * gps_handler;
   LaserGPFHandler * laser_gpf_handler;
   //RgbdGPFHandler * rgbd_gpf_handler;
-  FovisHandler * fovis_handler;
+  //FovisHandler * fovis_handler;
   LegOdoHandler * legodo_handler;
-  LegOdoExternalHandler * legodo_external_handler;
+  //LegOdoExternalHandler * legodo_external_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
   ScanMatcherHandler * scan_matcher_handler;
   OpticalFlowHandler * optical_flow_handler;

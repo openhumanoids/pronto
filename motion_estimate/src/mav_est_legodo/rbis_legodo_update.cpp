@@ -168,7 +168,7 @@ void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::s
 }
 
 
-RBISUpdateInterface * LegOdoHandler::processMessage(const drc::atlas_state_t *msg){
+RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t *msg){
   
   if (!bdi_init_){
     std::cout << "POSE_BDI not received yet, not integrating leg odometry =========================\n";
