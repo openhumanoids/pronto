@@ -8,7 +8,7 @@
 
 #include <mav_state_est/mav-est-legodo/rbis_legodo_common.hpp>
 
-#include <lcmtypes/drc/pose_transform_t.hpp>
+#include <lcmtypes/pronto/pose_transform_t.hpp>
 
 namespace MavStateEst {
 
@@ -17,7 +17,7 @@ public:
   
   LegOdoExternalHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, BotParam * param);
 
-  RBISUpdateInterface * processMessage(const drc::pose_transform_t  * msg);
+  RBISUpdateInterface * processMessage(const pronto::pose_transform_t  * msg);
 
   lcm::LCM* lcm_pub;
   lcm::LCM* lcm_recv;

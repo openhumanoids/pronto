@@ -33,15 +33,15 @@ pods_install_pkg_config_file(mav-est-legodo
 
 # This was originally used but I no longer use it:
 # make library which receives external delta message
-#add_library(mav-est-legodo-external SHARED 
-#                rbis_legodo_external_update.cpp
-#                rbis_legodo_common.cpp)
-#
-#pods_use_pkg_config_packages(mav-est-legodo-external ${REQUIRED_LIBS} 
-#    leg_estimate)
-#pods_install_libraries(mav-est-legodo-external)
-#pods_install_pkg_config_file(mav-est-legodo-external
-#    CFLAGS
-#    LIBS -lmav-est-legodo-external
-#    REQUIRES 	${REQUIRED_LIBS}
-#    VERSION 0.0.1)
+add_library(mav-est-legodo-external SHARED 
+                rbis_legodo_external_update.cpp
+                rbis_legodo_common.cpp)
+
+pods_use_pkg_config_packages(mav-est-legodo-external ${REQUIRED_LIBS} 
+    leg_estimate)
+pods_install_libraries(mav-est-legodo-external)
+pods_install_pkg_config_file(mav-est-legodo-external
+    CFLAGS
+    LIBS -lmav-est-legodo-external
+    REQUIRES 	${REQUIRED_LIBS}
+    VERSION 0.0.1)

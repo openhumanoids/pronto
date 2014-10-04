@@ -14,7 +14,7 @@ LegOdoExternalHandler::LegOdoExternalHandler(lcm::LCM* lcm_recv, lcm::LCM* lcm_p
 }
 
 
-RBISUpdateInterface * LegOdoExternalHandler::processMessage(const drc::pose_transform_t * msg)
+RBISUpdateInterface * LegOdoExternalHandler::processMessage(const pronto::pose_transform_t * msg)
 {
   /// ... insert handling and special cases here.
   bool verbose = false;
