@@ -3,7 +3,7 @@
 
 #include <lcmtypes/bot_core.hpp>
 
-#include <pointcloud_tools/pointcloud_vis.hpp>
+#include <pronto_utils/pronto_vis.hpp>
 #include <bot_frames_cpp/bot_frames_cpp.hpp>
 #include <path_util/path_util.h>
 #include <ConciseArgs>
@@ -37,7 +37,7 @@ class PoseTransformer{
     // The vicon body position at zerotime, the bdi motion since zerotime is applied to it
     // to produce a estimate position that can be compared to VICON
     Eigen::Isometry3d worldvicon_to_viconbody_zerotime_;    
-    pointcloud_vis* pc_vis_;
+    pronto_vis* pc_vis_;
     int pose_counter_;
     
   private:
@@ -52,7 +52,7 @@ PoseTransformer::PoseTransformer(boost::shared_ptr<lcm::LCM> &lcm_, int pose_cou
     lcm_(lcm_), pose_counter_(pose_counter_){
   
   // Vis Config:
-  pc_vis_ = new pointcloud_vis( lcm_->getUnderlyingLCM());
+  pc_vis_ = new pronto_vis( lcm_->getUnderlyingLCM());
   // obj: id name type reset
   if (pose_counter_==0){
     base_string_ = "EST";
@@ -173,7 +173,7 @@ class App{
     
     std::vector <PoseTransformer> pts_;   
     const CommandLineConfig cl_cfg_;   
-    pointcloud_vis* pc_vis_; 
+    pronto_vis* pc_vis_; 
 
     Eigen::Isometry3d prev_worldvicon_to_body_vicon_;
     int64_t prev_vicon_utime_;    
@@ -219,7 +219,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   
   
   // Vis Config:
-  pc_vis_ = new pointcloud_vis( lcm_->getUnderlyingLCM());
+  pc_vis_ = new pronto_vis( lcm_->getUnderlyingLCM());
   pc_vis_->obj_cfg_list.push_back( obj_cfg(10032,"Vicon (v)",5,1) );
   pc_vis_->obj_cfg_list.push_back( obj_cfg(10033,"Vicon at init",5,1) );
   pc_vis_->obj_cfg_list.push_back( obj_cfg(10034,"Vicon (v all)",5,0) );

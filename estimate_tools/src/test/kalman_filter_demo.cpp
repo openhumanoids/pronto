@@ -23,7 +23,7 @@
 
 #include <Eigen/Core>
 
-#include <joint_utils/joint_utils.hpp>
+#include <pronto_utils/pronto_joint_tools.hpp>
 
 using namespace std;
 using namespace boost::assign; // bring 'operator+()' into scope

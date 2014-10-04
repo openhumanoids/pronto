@@ -15,7 +15,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   std::cout << "LegOdo will compute directly, in thread\n";
   verbose_ =2; // 3 lots, 2 some, 1 v.important
   
-  frames_cpp = new bot::frames(frames);
+  //frames_cpp = new bot::frames(frames);
   lcm_recv_boost = boost::shared_ptr<lcm::LCM>(lcm_recv);
   lcm_pub_boost = boost::shared_ptr<lcm::LCM>(lcm_pub);
   model_boost = boost::shared_ptr<ModelClient>(model);
@@ -71,6 +71,20 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
 }
 
 /// Extra-class Functions  /////////////////////////////
+int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }  
+  return status;
+}
+
 BotTrans getPoseAsBotTrans(Eigen::Isometry3d odo_delta){
   BotTrans msgT;
   memset(&msgT, 0, sizeof(msgT));
@@ -285,7 +299,8 @@ void LegOdoHandler::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::stri
   
   // Apply the body to frontplate transform
   Eigen::Isometry3d frontplate_vicon_to_body_vicon;
-  frames_cpp->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);    
+  //frames_cpp->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);
+  get_trans_with_utime(frames, "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);        
   Eigen::Isometry3d worldvicon_to_body_vicon = worldvicon_to_frontplate_vicon* frontplate_vicon_to_body_vicon;
   bot_core::pose_t pose_msg = getPoseAsBotPose(worldvicon_to_body_vicon, msg->utime);
   

@@ -18,8 +18,8 @@ add_library(mav-est-legodo SHARED
                 rbis_legodo_common.cpp)
 
 pods_use_pkg_config_packages(mav-est-legodo ${REQUIRED_LIBS} 
-    leg_estimate torque_adjustment_tools
-    bot2-frames_cpp)
+    leg_estimate torque_adjustment_tools)
+#    bot2-frames_cpp
 # joint-utils)
 pods_install_libraries(mav-est-legodo)
 pods_install_pkg_config_file(mav-est-legodo

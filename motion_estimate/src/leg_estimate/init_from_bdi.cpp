@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include <pointcloud_tools/pointcloud_vis.hpp>
+#include <pronto_tools/pronto_vis.hpp>
 #include <bot_frames_cpp/bot_frames_cpp.hpp>
 #include <path_util/path_util.h>
 

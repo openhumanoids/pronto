@@ -10,8 +10,8 @@
 
 #include <bot_frames_cpp/bot_frames_cpp.hpp>
 
-#include <pointcloud_tools/pointcloud_vis.hpp>
-#include <pointcloud_tools/pointcloud_lcm.hpp> // decode perception lcm messages
+#include <pronto_utils/pronto_vis.hpp>
+#include <pronto_utils/pronto_lcm.hpp> // decode perception lcm messages
 #include <drc_utils/frame_check_utils.hpp>
 #include <drc_utils/LidarUtils.hpp>
 ////////////////////////////////////////
@@ -51,7 +51,7 @@ class CloudAccumulate{
     
     
     
-    pointcloud_vis* pc_vis_ ;
+    pronto_vis* pc_vis_ ;
     BotParam* botparam_;
     BotFrames* botframes_;
     bot::frames* botframes_cpp_;  

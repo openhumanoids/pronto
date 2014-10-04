@@ -12,8 +12,8 @@ pods_use_pkg_config_packages(leg_estimate estimate_tools  filter_tools foot_cont
   foot_contact_alt
   ${REQUIRED_PACKAGES} 
   lcmtypes_bot2-core 
-  pointcloud_math
-#  pointcloud_vis 
+  pronto_math
+#  pronto_vis 
   eigen3)
 # lcmtypes_fovis-bot2 
 set_target_properties(leg_estimate PROPERTIES SOVERSION 1)
@@ -30,9 +30,10 @@ pods_install_pkg_config_file(leg_estimate
 add_executable(se-leg-odometry main.cpp LegOdoWrapper.cpp)
 target_link_libraries(se-leg-odometry boost_system)
 pods_use_pkg_config_packages(se-leg-odometry leg_estimate path-util
-   bot2-param-client model-client  bot2-frames_cpp
-   pointcloud_math
+   bot2-param-client model-client  
+   pronto_math bot2-frames
    )
+#bot2-frames_cpp
 target_link_libraries (se-leg-odometry lcm )
 pods_install_executables(se-leg-odometry )
 
@@ -45,9 +46,9 @@ pods_install_executables(se-leg-odometry )
 #pods_use_pkg_config_packages(se-convert-bdi-into-vicon-frame  bot2-frames_cpp
 #    path-util ${REQUIRED_PACKAGES}
 #      )
-## pointcloud_vis
+## pronto_vis
 #target_link_libraries (se-convert-bdi-into-vicon-frame lcm  )
-##pointcloud_math 
+##pronto_math 
 #pods_install_executables(se-convert-bdi-into-vicon-frame )
 
 
@@ -61,7 +62,7 @@ pods_install_executables(se-leg-odometry )
 #pods_use_pkg_config_packages(se-init-from-bdi  bot2-frames_cpp
 #    path-util ${REQUIRED_PACKAGES}
 #      )
-## pointcloud_vis
+## pronto_vis
 #target_link_libraries (se-init-from-bdi lcm   )
-## pointcloud_math
+## pronto_math
 #pods_install_executables(se-init-from-bdi )

@@ -20,6 +20,20 @@ App::~App() {
   delete(leg_est_);
 }
 
+int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }  
+  return status;
+}
+
 void LegOdoWrapper::setupLegOdo() {
   if (cl_cfg_.param_file == ""){
     botparam_ = bot_param_new_from_server(lcm_subscribe_->getUnderlyingLCM(), 0);
@@ -32,7 +46,7 @@ void LegOdoWrapper::setupLegOdo() {
   // TODO: not sure what do do here ... what if i want the frames from the file?
   //frames_ = bot_frames_new(NULL, botparam_);
   frames_ = bot_frames_get_global(lcm_subscribe_->getUnderlyingLCM(), botparam_);
-  frames_cpp_ = new bot::frames(frames_);
+  // frames_cpp_ = new bot::frames(frames_);
 
   if (cl_cfg_.urdf_file == ""){
     model_ = boost::shared_ptr<ModelClient>(new ModelClient(lcm_subscribe_->getUnderlyingLCM(), 0));
@@ -113,7 +127,10 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
 
   // Apply the body to frontplate transform
   Eigen::Isometry3d frontplate_vicon_to_body_vicon;
-  frames_cpp_->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);
+  // frames_cpp_->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);
+  get_trans_with_utime(frames_, "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);
+
+
   Eigen::Isometry3d worldvicon_to_body_vicon = worldvicon_to_frontplate_vicon* frontplate_vicon_to_body_vicon;
 
   bot_core::pose_t pose_msg = getPoseAsBotPose(worldvicon_to_body_vicon, msg->utime);

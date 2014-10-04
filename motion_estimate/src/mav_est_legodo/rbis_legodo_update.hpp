@@ -2,10 +2,11 @@
 #define RBIS_LEGODO_LIB_UPDATE_HPP_
 
 #include <lcm/lcm.h>
+#include <lcm/lcm-cpp.hpp>
 #include <bot_core/bot_core.h>
 #include <bot_param/param_client.h>
 #include <bot_frames/bot_frames.h>
-#include <bot_frames_cpp/bot_frames_cpp.hpp>
+// #include <bot_frames_cpp/bot_frames_cpp.hpp>
 #include <model-client/model-client.hpp>
 
 #include <string>
@@ -13,8 +14,8 @@
 #include <mav_state_est/mav-est-legodo/rbis_legodo_common.hpp>
 
 #include <leg_estimate/leg_estimate.hpp>
-// #include <pointcloud_tools/pointcloud_lcm.hpp>
-#include <joint_utils/joint_utils.hpp>
+// #include <pronto_tools/pronto_lcm.hpp>
+#include <pronto_utils/pronto_joint_tools.hpp>
 #include <estimate_tools/torque_adjustment.hpp>
 
 #include <lcmtypes/pronto/atlas_state_t.hpp>
@@ -59,7 +60,7 @@ public:
   boost::shared_ptr<lcm::LCM> lcm_pub_boost;
   boost::shared_ptr<ModelClient> model_boost;
   BotFrames* frames;
-  bot::frames* frames_cpp;
+  // bot::frames* frames_cpp;
   std::vector<std::string> joint_names_;
   
   // Settings 

@@ -3,11 +3,12 @@
 
 #include <path_util/path_util.h>
 #include <leg_estimate/leg_estimate.hpp>
-#include <pointcloud_tools/pointcloud_math.hpp>
+#include <pronto_utils/pronto_math.hpp>
+#include <bot_frames/bot_frames.h>
 
-#include <bot_frames_cpp/bot_frames_cpp.hpp>
+// #include <bot_frames_cpp/bot_frames_cpp.hpp>
 #include <lcmtypes/pronto/atlas_state_t.hpp>
-#include <joint_utils/joint_utils.hpp>
+#include <pronto_utils/pronto_joint_tools.hpp>
 
 struct CommandLineConfig
 {
@@ -39,7 +40,7 @@ protected:
   leg_estimate* leg_est_;
 
   BotFrames* frames_;
-  bot::frames* frames_cpp_;
+  // bot::frames* frames_cpp_;
   std::vector<std::string> joint_names_;
 
   

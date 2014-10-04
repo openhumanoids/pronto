@@ -11,8 +11,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
-#include <pointcloud_tools/pointcloud_math.hpp>
-// #include <pointcloud_tools/pointcloud_vis.hpp>
+#include <pronto_utils/pronto_math.hpp>
+// #include <pronto_utils/pronto_vis.hpp>
 #include <estimate_tools/Filter.hpp>
 #include <estimate_tools/SignalTap.hpp> // SchmittTrigger
 // #include "lcmtypes/drc/foot_contact_estimate_t.hpp"
@@ -97,7 +97,7 @@ class foot_contact_classify {
 
   private:
     boost::shared_ptr<lcm::LCM> lcm_publish_;
-//    pointcloud_vis* pc_vis_;
+//    pronto_vis* pc_vis_;
     
     // the schmitt trigger detector for force-based contact classication:
     
