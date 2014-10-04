@@ -1,1 +1,39 @@
 *~
+
+pod-build/
+
+
+#######################
+# Ignores for lcmtypes
+#
+# In newer versions of git you can use "**" to match any number of
+# subdirectories, but these ignores assume that feature is not available.
+
+pronto-lcmtypes/lcmtypes/cpp/
+pronto-lcmtypes/lcmtypes/c/
+pronto-lcmtypes/lcmtypes/java/
+pronto-lcmtypes/lcmtypes/python/
+
+/*/*/lcmtypes/c/
+/*/*/*/lcmtypes/c/
+/*/*/*/*/lcmtypes/c/
+/*/*/*/*/*/lcmtypes/c/
+/*/*/*/*/*/*/lcmtypes/c/
+
+/*/*/lcmtypes/cpp/
+/*/*/*/lcmtypes/cpp/
+/*/*/*/*/lcmtypes/cpp/
+/*/*/*/*/*/lcmtypes/cpp/
+/*/*/*/*/*/*/lcmtypes/cpp/
+
+/*/*/lcmtypes/java/
+/*/*/*/lcmtypes/java/
+/*/*/*/*/lcmtypes/java/
+/*/*/*/*/*/lcmtypes/java/
+/*/*/*/*/*/*/lcmtypes/java/
+
+/*/*/lcmtypes/python/
+/*/*/*/lcmtypes/python/
+/*/*/*/*/lcmtypes/python/
+/*/*/*/*/*/lcmtypes/python/
+/*/*/*/*/*/*/lcmtypes/python/
