@@ -27,7 +27,7 @@
 #include "pcl/octree/octree.h"
 
 
-#include <pronto_tools/pronto_vis.hpp> // visualize pt clds
+#include <pronto_utils/pronto_vis.hpp> // visualize pt clds
 
 using namespace std;
 typedef pcl::PointXYZRGB PointT;
@@ -93,7 +93,7 @@ class GrowCloud {
     // ditto for the bounding points 
     void printPlaneStackHull (vector<BasicPlane> &planeStack,  std::stringstream &ss);
     
-    void visualizePlanes(vector<BasicPlane> &plane_stack,pointcloud_vis* pc_vis_ , int null_id );
+    void visualizePlanes(vector<BasicPlane> &plane_stack,pronto_vis* pc_vis_ , int null_id );
     
   protected:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr incloud;    

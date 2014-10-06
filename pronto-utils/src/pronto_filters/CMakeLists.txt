@@ -1,5 +1,5 @@
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(VISUALIZATION visualization.pc)
+pkg_check_modules(VISUALIZATION visualization)
 if(NOT VISUALIZATION_FOUND)
   message("---- Visualization not found. Not building pronto_filters\n")
   return()

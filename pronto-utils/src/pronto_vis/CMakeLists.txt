@@ -10,7 +10,7 @@ if(NOT PCL_IO_FOUND)
   return()
 endif()
 
-pkg_check_modules(VISUALIZATION visualization.pc)
+pkg_check_modules(VISUALIZATION visualization)
 if(NOT VISUALIZATION_FOUND)
   message("---- Visualization not found. Not building pronto_vis\n")
   return()

@@ -113,7 +113,7 @@ void GrowCloud::printPlaneStackHull (vector<BasicPlane> &planeStack,  std::strin
 
 
 
-void GrowCloud::visualizePlanes(vector<BasicPlane> &plane_stack,pointcloud_vis* pc_vis, int null_id  ){
+void GrowCloud::visualizePlanes(vector<BasicPlane> &plane_stack,pronto_vis* pc_vis, int null_id  ){
   obj_cfg ocfg = obj_cfg(null_id,"Plane Detect | Null Pose",5,0);
   Isometry3dTime null_poseT_ = Isometry3dTime(0, Eigen::Isometry3d::Identity() );
   pc_vis->pose_to_lcm(ocfg, null_poseT_);
