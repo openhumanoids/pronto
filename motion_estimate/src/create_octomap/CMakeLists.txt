@@ -6,7 +6,7 @@ project(create_octomap)
 
 ################
 add_executable(se-create-octomap create_octomap.cpp convert_octomap.cpp cloud_accumulate.cpp)
-pods_use_pkg_config_packages(se-create-octomap  bot2-frames_cpp
+pods_use_pkg_config_packages(se-create-octomap  
     path-util ${REQUIRED_PACKAGES}
     pronto_vis  octomap
     drc-utils

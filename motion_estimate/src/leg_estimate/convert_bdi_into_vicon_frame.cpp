@@ -4,9 +4,9 @@
 #include <lcmtypes/bot_core.hpp>
 
 #include <pronto_utils/pronto_vis.hpp>
-#include <bot_frames_cpp/bot_frames_cpp.hpp>
 #include <path_util/path_util.h>
 #include <ConciseArgs>
+#include <bot_frames/bot_frames.h>
 
 #include "visualization/collections.hpp"
 
@@ -94,6 +94,22 @@ PoseTransformer::PoseTransformer(boost::shared_ptr<lcm::LCM> &lcm_, int pose_cou
   prev_utime_ = 0;
 }
 
+
+int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }  
+  return status;
+}
+
+
 void PoseTransformer::doWork(Eigen::Isometry3d worldest_to_estbody, int64_t utime, int pose_counter){
   
   if (!world_tf_init_){
@@ -153,7 +169,6 @@ class App{
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
     BotParam* botparam_;
-    bot::frames* frames_cpp_;
     BotFrames* frames_;
     
     void poseESTHandler(const lcm::ReceiveBuffer* rbuf, 
@@ -195,7 +210,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   // TODO: not sure what do do here ... what if i want the frames from the file?
   //frames_ = bot_frames_new(NULL, botparam_);
   frames_ = bot_frames_get_global(lcm_->getUnderlyingLCM(), botparam_);
-  frames_cpp_ = new bot::frames(frames_);  
+  // frames_cpp_ = new bot::frames(frames_);  
   
   //  frames_cpp_ = new bot::frames( lcm_);
 
@@ -325,7 +340,8 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
                                             msg->quat[2], msg->quat[3]);
   worldvicon_to_frontplate_vicon.rotate(quat); 
   Eigen::Isometry3d frontplate_vicon_to_body_vicon;
-  frames_cpp_->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);    
+  //frames_cpp_->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);    
+  get_trans_with_utime(frames_, "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);    
   Eigen::Isometry3d worldvicon_to_body_vicon = worldvicon_to_frontplate_vicon * frontplate_vicon_to_body_vicon;
 
   useVicon(worldvicon_to_body_vicon, msg->utime);  

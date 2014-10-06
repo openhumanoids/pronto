@@ -4,9 +4,9 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include <pronto_tools/pronto_vis.hpp>
-#include <bot_frames_cpp/bot_frames_cpp.hpp>
+#include <pronto_utils/pronto_vis.hpp>
 #include <path_util/path_util.h>
+#include <bot_frames/bot_frames.h>
 
 using namespace std;
 
@@ -24,7 +24,6 @@ class App{
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
     BotParam* botparam_;
-    bot::frames* frames_cpp_;
     BotFrames* frames_;
     
     void poseBDIHandler(const lcm::ReceiveBuffer* rbuf, 
@@ -42,9 +41,23 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   std::string param_file_full = std::string(getConfigPath()) +'/' + std::string(param_file);
   botparam_ = bot_param_new_from_file(param_file_full.c_str());
   frames_ = bot_frames_get_global(lcm_->getUnderlyingLCM(), botparam_);
-  frames_cpp_ = new bot::frames(frames_);  
   
   lcm_->subscribe("POSE_BDI",&App::poseBDIHandler,this);  
+}
+
+
+int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }  
+  return status;
 }
 
 void App::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
@@ -56,7 +69,8 @@ void App::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& chan
   worldbdi_to_body.rotate(quat); 
 
   Eigen::Isometry3d body_to_frontplate;
-  frames_cpp_->get_trans_with_utime( "frontplate_vicon" ,"body_vicon" , msg->utime, body_to_frontplate);    
+  get_trans_with_utime(frames_,  "frontplate_vicon" ,"body_vicon" , msg->utime, body_to_frontplate);    
+  //frames_cpp_->get_trans_with_utime( "frontplate_vicon" ,"body_vicon" , msg->utime, body_to_frontplate);    
   Eigen::Isometry3d worldbdi_to_frontplate = worldbdi_to_body * body_to_frontplate;
   
   bot_core::rigid_transform_t pose_msg;

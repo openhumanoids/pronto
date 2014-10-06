@@ -8,7 +8,7 @@
 #include <laser_utils/laser_util.h>
 #include <path_util/path_util.h>
 
-#include <bot_frames_cpp/bot_frames_cpp.hpp>
+//#include <bot_frames_cpp/bot_frames_cpp.hpp>
 
 #include <pronto_utils/pronto_vis.hpp>
 #include <pronto_utils/pronto_lcm.hpp> // decode perception lcm messages
@@ -54,7 +54,6 @@ class CloudAccumulate{
     pronto_vis* pc_vis_ ;
     BotParam* botparam_;
     BotFrames* botframes_;
-    bot::frames* botframes_cpp_;  
     FrameCheckUtils frame_check_utils_;
     
     drc::LidarUtils lidar_utils_;

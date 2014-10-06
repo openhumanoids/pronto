@@ -46,6 +46,22 @@ bot_core_planar_lidar_t * convertPlanarLidarCppToC(std::shared_ptr<bot_core::pla
   return laser_msg_c;
 }
 
+
+int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }  
+  return status;
+}
+
+
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
  
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_laser (new pcl::PointCloud<pcl::PointXYZRGB> ());
@@ -59,7 +75,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode1(std::share
     
     // 4. Visualize the scan:
     Eigen::Isometry3d scan_to_local;
-    botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN", "local"  , this_msg->utime, scan_to_local);
+    //botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN", "local"  , this_msg->utime, scan_to_local);
+    get_trans_with_utime( botframes_ , "SCAN", "local"  , this_msg->utime, scan_to_local);
     
     Isometry3dTime scan_to_local_T = Isometry3dTime(counter_, scan_to_local);
     if (verbose_>=3) pc_vis_->pose_to_lcm_from_list(60000, scan_to_local_T);
@@ -85,7 +102,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::share
   ////////////////////
   ////////////////////
   Eigen::Isometry3d body_to_scan;
-  botframes_cpp_->get_trans_with_utime( botframes_ , "body", "SCAN"  , this_msg->utime, body_to_scan);  
+  //botframes_cpp_->get_trans_with_utime( botframes_ , "body", "SCAN"  , this_msg->utime, body_to_scan);
+  get_trans_with_utime( botframes_ , "body", "SCAN"  , this_msg->utime, body_to_scan);    
   Eigen::Vector3d t(body_to_scan.translation());
   Eigen::Quaterniond r(body_to_scan.rotation());
   double rpy[3];
@@ -212,7 +230,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::share
   
     // 4. Visualize the scan:
     Eigen::Isometry3d body_to_local;
-    botframes_cpp_->get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);  
+    //botframes_cpp_->get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);  
+    get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);  
   
     /////////////////
     // 2. Project the scan into local frame:
@@ -243,8 +262,10 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode3(std::share
 
   // std::cout << scan_start_utime << " and " << scan_end_utime << "\n";
   
-  botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN","local"  , scan_start_utime, local_to_scan_start);  
-  botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN", "local"  , scan_end_utime, local_to_scan_end);  
+  //botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN","local"  , scan_start_utime, local_to_scan_start);  
+  //botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN", "local"  , scan_end_utime, local_to_scan_end);  
+  get_trans_with_utime( botframes_ , "SCAN","local"  , scan_start_utime, local_to_scan_start);  
+  get_trans_with_utime( botframes_ , "SCAN", "local"  , scan_end_utime, local_to_scan_end);  
   lidar_utils_.interpolateScan(this_msg->ranges, this_msg->rad0, this_msg->radstep,
           local_to_scan_start, local_to_scan_end, points);    
 
