@@ -29,7 +29,7 @@ set_target_properties(pronto_filters PROPERTIES SOVERSION 1)
 pods_install_libraries(pronto_filters)
 pods_install_headers(filter_planes.hpp grow_cloud.hpp  
     filter_findfloor.hpp filter_colorize.hpp
-    DESTINATION pronto_tools)
+    DESTINATION pronto_utils)
 # filter_light.hpp 
 #    filter_person.hpp   filter_cloudtolaser.hpp
 
