@@ -336,6 +336,21 @@ void pronto_vis::ptcld_collection_reset(int id, std::string name){
 }
 
 
+void pronto_vis::transformPointCloud(pronto::PointCloud &cloud_in, pronto::PointCloud &cloud_out, Eigen::Affine3f transform){
+  int npts = cloud_in.points.size();
+  cloud_out.points.resize(npts);
+  for(int j=0; j<npts; j++) {
+    Eigen::Vector3f pt_out = transform* Eigen::Vector3f(cloud_in.points[j].x, cloud_in.points[j].y, cloud_in.points[j].z);
+    cloud_out.points[j].x = pt_out(0);
+    cloud_out.points[j].y = pt_out(1);
+    cloud_out.points[j].z = pt_out(2);
+    cloud_out.points[j].r = cloud_in.points[j].r;
+    cloud_out.points[j].g = cloud_in.points[j].g;
+    cloud_out.points[j].b = cloud_in.points[j].b;
+  }
+}
+
+
 #ifdef USE_PCL
 //// PCL::PointCloud publishes and conversions (from here to end)
 void pronto_vis::convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &cloud, pronto::PointCloud &cloud_out){

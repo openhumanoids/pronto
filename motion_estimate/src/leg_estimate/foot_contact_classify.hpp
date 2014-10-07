@@ -15,7 +15,7 @@
 #include <pronto_utils/pronto_vis.hpp>
 #include <estimate_tools/Filter.hpp>
 #include <estimate_tools/SignalTap.hpp> // SchmittTrigger
-// #include "lcmtypes/drc/foot_contact_estimate_t.hpp"
+#include "lcmtypes/pronto/foot_contact_estimate_t.hpp"
 
 //#include <foot_contact/TwoLegsEstimate_types.h>
 #define LEFTFOOT  0

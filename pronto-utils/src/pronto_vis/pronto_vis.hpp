@@ -121,6 +121,10 @@ class pronto_vis {
     // Also can be used by mesh
     void ptcld_collection_reset(int id, std::string name);
 
+    // Equivalent to PCL function of same name:
+    // Conversion from Isometry3d to Affine3f:
+    // Eigen::Affine3f t ( pose_transform.cast<float>() );
+    void transformPointCloud(pronto::PointCloud &cloud_in, pronto::PointCloud &cloud_out, Eigen::Affine3f transform);
 
     ///////////// Point Cloud Methods ////////////////////////////
 #ifdef USE_PCL

@@ -1,10 +1,8 @@
 #include <iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
-
 #include <lcm/lcm-cpp.hpp>
 #include <pronto_utils/pronto_vis.hpp> // visualize pt clds
-
 
 int
 main (int argc, char** argv)
@@ -32,7 +30,7 @@ main (int argc, char** argv)
   obj_cfg oconfig = obj_cfg(cfg_root,   "Pose"  ,5,1);
   pc_vis_->pose_to_lcm(oconfig,poseT);
 
-  ptcld_cfg pconfig = ptcld_cfg(cfg_root+1,  "Cloud"     ,1,1, cfg_root,0, {0.2,0,0.2} );
+  ptcld_cfg pconfig = ptcld_cfg(cfg_root+1,  "Cloud - pcl"     ,1,1, cfg_root,0, {0.2,0,0.2} );
   pc_vis_->ptcld_to_lcm(pconfig, *cloud, 0, 0);  
 
   
@@ -43,14 +41,34 @@ main (int argc, char** argv)
 
   std::cout << "Pronto Points: " << cloud2->points.size() << "\n";
 
-  ptcld_cfg pconfig2 = ptcld_cfg(cfg_root+2,  "Cloud2"     ,1,1, cfg_root,0, {0.2,0,0.2} );
+  ptcld_cfg pconfig2 = ptcld_cfg(cfg_root+2,  "Cloud2 - pronto"     ,1,1, cfg_root,0, {0.2,0,0.2} );
   pc_vis_->ptcld_to_lcm(pconfig2, *cloud2, 0, 0);  
 
   pronto::PointCloud* cloud3 (new pronto::PointCloud);
   pc_vis_->convertCloudPclToPronto(*cloud,*cloud3);
   std::cout << "Pronto Points: " << cloud3->points.size() << "\n";  
-  ptcld_cfg pconfig3 = ptcld_cfg(cfg_root+3,  "Cloud3"     ,1,1, cfg_root,0, {0.2,0,0.2} );
+  ptcld_cfg pconfig3 = ptcld_cfg(cfg_root+3,  "Cloud3 - pronto"     ,1,1, cfg_root,0, {0.2,0,0.2} );
   pc_vis_->ptcld_to_lcm(pconfig3, *cloud3, 0, 0);  
+
+
+  // Test 2: Transformation of pointclouds:
+  Eigen::Isometry3d pose_transform = Eigen::Isometry3d::Identity();
+  pose_transform.translation().x() = 0.5;
+  pose_transform.translation().y() = 1;
+
+  // a: pcl method:
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud4 (new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::transformPointCloud (*cloud, *cloud4,
+                           pose_transform.translation().cast<float>(), Eigen::Quaternionf(pose_transform.rotation().cast<float>()));
+  ptcld_cfg pconfig4 = ptcld_cfg(cfg_root+4,  "Cloud4 - pcl"     ,1,1, cfg_root,0, {0.2,0,0.2} );
+  pc_vis_->ptcld_to_lcm(pconfig4, *cloud4, 0, 0);
+
+  // b: pronto method:
+  pronto::PointCloud* cloud5 (new pronto::PointCloud);
+  pc_vis_->transformPointCloud(*cloud3, *cloud5, Eigen::Affine3f ( pose_transform.cast<float>() ) );
+  ptcld_cfg pconfig5 = ptcld_cfg(cfg_root+5,  "Cloud5 - pronto"     ,1,1, cfg_root,0, {0.2,0,0.2} );
+  pc_vis_->ptcld_to_lcm(pconfig5, *cloud5, 0, 0);
+
 
 
   return (0);

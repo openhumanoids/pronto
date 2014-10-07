@@ -106,12 +106,11 @@ float foot_contact_classify::update (int64_t utime, Eigen::Isometry3d primary_fo
 
 
   if (publish_diagnostics_){
-    /*
     // 4. Output Foot Contact Estimates for visualization:
     float vis_scale = 2000; // to scale for use with signal scope
-    drc::foot_contact_estimate_t msg_contact_est;
+    pronto::foot_contact_estimate_t msg_contact_est;
     msg_contact_est.utime = utime;
-    msg_contact_est.detection_method = drc::foot_contact_estimate_t::DIFF_SCHMITT_WITH_DELAY;
+    msg_contact_est.detection_method = pronto::foot_contact_estimate_t::DIFF_SCHMITT_WITH_DELAY;
     msg_contact_est.left_contact  = vis_scale*lf_state  - 100;
     msg_contact_est.right_contact = vis_scale*rf_state - 200;
     lcm_publish_->publish("FOOT_CONTACT_ESTIMATE",&msg_contact_est); // this message was used by the controller
@@ -122,17 +121,16 @@ float foot_contact_classify::update (int64_t utime, Eigen::Isometry3d primary_fo
       recent_left_contact = true;
     if ( recent_right_break || recent_right_strike)
       recent_right_contact = true;
-    drc::foot_contact_estimate_t msg_contact_classify;
+    pronto::foot_contact_estimate_t msg_contact_classify;
     msg_contact_classify.utime = utime;
-    msg_contact_classify.detection_method = drc::foot_contact_estimate_t::DIFF_SCHMITT_WITH_DELAY;
+    msg_contact_classify.detection_method = pronto::foot_contact_estimate_t::DIFF_SCHMITT_WITH_DELAY;
     msg_contact_classify.left_contact =  (float) vis_scale* ((float)recent_left_contact)  - 300;
     msg_contact_classify.right_contact = (float) vis_scale* ((float)recent_right_contact) - 400;
     lcm_publish_->publish("FOOT_CONTACT_CLASSIFY",&msg_contact_classify);
-    */
   }
 
   // Determine which points are in contact with the ground (stub)
-  //determineContactPoints(utime, primary_foot, secondary_foot);
+  determineContactPoints(utime, primary_foot, secondary_foot);
 
   // Determine center of pressure, works but i am not using it currently
   if (verbose_>=3) determineCenterOfPressure(utime, primary_foot, secondary_foot,standing_foot);
@@ -341,11 +339,8 @@ void foot_contact_classify::determineContactPoints(int64_t utime, Eigen::Isometr
   // I define the sole frame as a frame directly below the foot frame on the sole
   pronto::PointCloud* cp_moving(new pronto::PointCloud ());
   Eigen::Isometry3d foot_to_foot =  primary_foot.inverse() * secondary_foot * foot_to_sole_;
-  // PRONTO_VIS component not reintegrated - needs testing
-  //pcl::transformPointCloud (*contact_points_, *cp_moving,
-  //                         foot_to_foot.translation().cast<float>(), Eigen::Quaternionf(foot_to_foot.rotation().cast<float>()));
-  //pc_vis_->ptcld_to_lcm_from_list(2004, *cp_moving, utime, utime);
-
+  pc_vis_->transformPointCloud(*contact_points_, *cp_moving, Eigen::Affine3f ( foot_to_foot.cast<float>() ) );
+  pc_vis_->ptcld_to_lcm_from_list(2004, *cp_moving, utime, utime); // this is visualised relative to 0,0,0
   
   if (cp_moving_prev_->points.size() != 4){
     std::cout << "Previous contact points not four - we have a problem\n";
@@ -407,44 +402,31 @@ void foot_contact_classify::determineCenterOfPressure(int64_t utime, Eigen::Isom
   Eigen::Vector4f r_cpressure = Eigen::Vector4f(-rfoot_sensing_.torque_y/rfoot_sensing_.force_z ,
                                                  rfoot_sensing_.torque_x/rfoot_sensing_.force_z , -foot_to_sole_z_ , 0); // additional zero for pcl
 
+  pronto::PointCloud* l_cpressure_pcld(new pronto::PointCloud ());
+  pronto::Point l_cpressure_pt;  l_cpressure_pt.x = l_cpressure(0); l_cpressure_pt.y = l_cpressure(1); l_cpressure_pt.z = l_cpressure(2);
+  l_cpressure_pcld->points.push_back(l_cpressure_pt );
+  pc_vis_->transformPointCloud (*l_cpressure_pcld, *l_cpressure_pcld, Eigen::Affine3f(left_foot.cast<float>()) );
 
+  pronto::PointCloud* r_cpressure_pcld(new pronto::PointCloud ());
+  pronto::Point r_cpressure_pt;  r_cpressure_pt.x = r_cpressure(0); r_cpressure_pt.y = r_cpressure(1); r_cpressure_pt.z = r_cpressure(2);
+  r_cpressure_pcld->points.push_back(r_cpressure_pt );
+  pc_vis_->transformPointCloud (*r_cpressure_pcld, *r_cpressure_pcld, Eigen::Affine3f(right_foot.cast<float>()) );
 
-
-/*
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr l_cpressure_pcld(new pcl::PointCloud<pcl::PointXYZRGB> ());
-  l_cpressure_pcld->width = 1;
-  l_cpressure_pcld->height = 1;
-  l_cpressure_pcld->points.resize (l_cpressure_pcld->width);
-  l_cpressure_pcld->points[0].getVector4fMap() = l_cpressure;
-  pcl::transformPointCloud (*l_cpressure_pcld, *l_cpressure_pcld,
-                          left_foot.translation().cast<float>(), Eigen::Quaternionf(left_foot.rotation().cast<float>()));
-
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr r_cpressure_pcld(new pcl::PointCloud<pcl::PointXYZRGB> ());
-  r_cpressure_pcld->width = 1;
-  r_cpressure_pcld->height = 1;
-  r_cpressure_pcld->points.resize (r_cpressure_pcld->width);
-  r_cpressure_pcld->points[0].getVector4fMap() = r_cpressure;
-  pcl::transformPointCloud (*r_cpressure_pcld, *r_cpressure_pcld,
-                          right_foot.translation().cast<float>(), Eigen::Quaternionf(right_foot.rotation().cast<float>()));
-
-  l_cpressure = l_cpressure_pcld->points[0].getVector4fMap();
-  r_cpressure = r_cpressure_pcld->points[0].getVector4fMap();
+  l_cpressure = Eigen::Vector4f( l_cpressure_pcld->points[0].x, l_cpressure_pcld->points[0].y, l_cpressure_pcld->points[0].z, 0);
+  r_cpressure = Eigen::Vector4f( r_cpressure_pcld->points[0].x, r_cpressure_pcld->points[0].y, r_cpressure_pcld->points[0].z, 0);
   Eigen::Vector4f cop = Eigen::Vector4f( lfoot_sensing_.force_z  *l_cpressure + rfoot_sensing_.force_z*r_cpressure)/( lfoot_sensing_.force_z+ rfoot_sensing_.force_z);
   //cop(3) = cop(3) + foot_to_sole_z_;
 
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cop_pcld(new pcl::PointCloud<pcl::PointXYZRGB> ());
-  cop_pcld->width = 1;
-  cop_pcld->height = 1;
-  cop_pcld->points.resize (l_cpressure_pcld->width);
-  cop_pcld->points[0].getVector4fMap() = cop;
+  pronto::PointCloud* cop_pcld(new pronto::PointCloud ());
+  pronto::Point cop_pt;  cop_pt.x = cop(0); cop_pt.y = cop(1); cop_pt.z = cop(2);
+  cop_pcld->points.push_back(cop_pt );
 
   // use primary and secondary foot to determine plane that CPs are one
   Isometry3dTime null_pose = Isometry3dTime(utime, Eigen::Isometry3d::Identity() );
-  //pc_vis_->pose_to_lcm_from_list(2001, null_pose);
-  //pc_vis_->ptcld_to_lcm_from_list(2005, *l_cpressure_pcld, utime, utime);
-  //pc_vis_->ptcld_to_lcm_from_list(2006, *r_cpressure_pcld, utime, utime);
-  //pc_vis_->ptcld_to_lcm_from_list(2007, *cop_pcld, utime, utime);
+  pc_vis_->pose_to_lcm_from_list(2001, null_pose);
+  pc_vis_->ptcld_to_lcm_from_list(2005, *l_cpressure_pcld, utime, utime);
+  pc_vis_->ptcld_to_lcm_from_list(2006, *r_cpressure_pcld, utime, utime);
+  pc_vis_->ptcld_to_lcm_from_list(2007, *cop_pcld, utime, utime);
 
-*/
 }
 
