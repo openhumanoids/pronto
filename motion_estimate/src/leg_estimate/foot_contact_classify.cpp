@@ -11,7 +11,7 @@ foot_contact_classify::foot_contact_classify ( boost::shared_ptr<lcm::LCM> &lcm_
   previous_mode_ = UNKNOWN;
   verbose_ = -1; // 3 lots, 2 some, 1 v.important, 0 typical for debug, -1 typical for operation
 
-  /*
+  
   // Vis Config:
   pc_vis_ = new pronto_vis( lcm_publish_->getUnderlyingLCM());
   // obj: id name type reset
@@ -21,7 +21,7 @@ foot_contact_classify::foot_contact_classify ( boost::shared_ptr<lcm::LCM> &lcm_
   pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(2005,"Center of Pressure (l)",1,0, 2001,1, { 0.5, 0.0, 0.5} ));
   pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(2006,"Center of Pressure (r)",1,0, 2001,1, { 0.0, 0.5, 0.5} ));
   pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(2007,"Center of Pressure (c)",1,0, 2001,1, { 0.0, 0.0, 0.8} ));
-  */
+  
 
   // defaults dehann used: 0, 5, 5000 but foot doesnt 'hang' like in VRC
   left_contact_state_weak_  = new SchmittTrigger(20.0, 30.0, 5000, 5000);
@@ -35,21 +35,15 @@ foot_contact_classify::foot_contact_classify ( boost::shared_ptr<lcm::LCM> &lcm_
   break_blackout_duration_ = 800000; // 750ms
 
   foot_to_sole_z_ = 0.081119; // hardcoded from the urdf
-
-/*
-  ///////////////// Contact Points:
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr contact_points(new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pronto::PointCloud* contact_points(new pronto::PointCloud ());
   contact_points_ = contact_points;
-  contact_points_->width = 4;
-  contact_points_->height = 1;
-  contact_points_->points.resize (contact_points_->width);
-  contact_points_->points[0].getVector4fMap() = Eigen::Vector4f(-0.082,  0.0624435, -foot_to_sole_z_, 0.); // heel
-  contact_points_->points[1].getVector4fMap() = Eigen::Vector4f(-0.082, -0.0624435, -foot_to_sole_z_, 0.); // heel
-  contact_points_->points[2].getVector4fMap() = Eigen::Vector4f( 0.178,  0.0624435, -foot_to_sole_z_, 0.); // toe
-  contact_points_->points[3].getVector4fMap() = Eigen::Vector4f( 0.178, -0.0624435, -foot_to_sole_z_, 0.); // toe
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cp_moving_prev(new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pronto::Point pt0; pt0.x =-0.082; pt0.y= 0.0624435; pt0.z = -foot_to_sole_z_; contact_points_->points.push_back(pt0);
+  pronto::Point pt1; pt1.x =-0.082; pt1.y=-0.0624435; pt1.z = -foot_to_sole_z_; contact_points_->points.push_back(pt1);
+  pronto::Point pt2; pt2.x = 0.178; pt2.y= 0.0624435; pt2.z = -foot_to_sole_z_; contact_points_->points.push_back(pt2);
+  pronto::Point pt3; pt3.x = 0.178; pt3.y=-0.0624435; pt3.z = -foot_to_sole_z_; contact_points_->points.push_back(pt3);
+  pronto::PointCloud* cp_moving_prev(new pronto::PointCloud ());
   cp_moving_prev_ = cp_moving_prev;
-*/
+
   foot_to_sole_ = Eigen::Isometry3d( Eigen::Isometry3d::Identity() );
   foot_to_sole_.translation().z() = foot_to_sole_z_;
 }
@@ -341,17 +335,18 @@ void foot_contact_classify::determineContactPoints(int64_t utime, Eigen::Isometr
 
   // use primary and secondary foot to determine plane that CPs are one
   Isometry3dTime null_pose = Isometry3dTime(utime, Eigen::Isometry3d::Identity() );
-  //pc_vis_->pose_to_lcm_from_list(2001, null_pose);
+  pc_vis_->pose_to_lcm_from_list(2001, null_pose);
 
   // Determine moving contact points in stationary foot's sole frame:
   // I define the sole frame as a frame directly below the foot frame on the sole
-  //pcl::PointCloud<PointXYZRGB>::Ptr cp_moving(new pcl::PointCloud<pcl::PointXYZRGB> ());
-  //Eigen::Isometry3d foot_to_foot =  primary_foot.inverse() * secondary_foot * foot_to_sole_;
+  pronto::PointCloud* cp_moving(new pronto::PointCloud ());
+  Eigen::Isometry3d foot_to_foot =  primary_foot.inverse() * secondary_foot * foot_to_sole_;
+  // PRONTO_VIS component not reintegrated - needs testing
   //pcl::transformPointCloud (*contact_points_, *cp_moving,
   //                         foot_to_foot.translation().cast<float>(), Eigen::Quaternionf(foot_to_foot.rotation().cast<float>()));
   //pc_vis_->ptcld_to_lcm_from_list(2004, *cp_moving, utime, utime);
 
-  /*
+  
   if (cp_moving_prev_->points.size() != 4){
     std::cout << "Previous contact points not four - we have a problem\n";
     success = false;
@@ -359,8 +354,8 @@ void foot_contact_classify::determineContactPoints(int64_t utime, Eigen::Isometr
 
     int n_points_in_contact = 0;
     for (size_t i=0; i < 4 ; i++){
-      pcl::PointXYZRGB cp = cp_moving->points[i];
-      pcl::PointXYZRGB cp_prev = cp_moving_prev_->points[i];
+      pronto::Point cp = cp_moving->points[i];
+      pronto::Point cp_prev = cp_moving_prev_->points[i];
 
       double raise = fabs(cp.z);
 
@@ -382,7 +377,7 @@ void foot_contact_classify::determineContactPoints(int64_t utime, Eigen::Isometr
   }
 
   cp_moving_prev_ = cp_moving;
-  */
+  
 
   // determine the velocity of the SF CPs onto the PFCP plane
   // infer the time to contact by differencing

@@ -19,3 +19,6 @@ add_subdirectory(src/pronto_filters)
 add_subdirectory(src/pronto_joint_tools)
 
 
+add_subdirectory(src/test)
+
+

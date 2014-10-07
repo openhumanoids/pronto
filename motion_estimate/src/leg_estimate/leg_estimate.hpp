@@ -25,11 +25,11 @@
 #include <bot_param/param_util.h>
 
 #include <pronto_utils/pronto_math.hpp>
-// #include <pronto_utils/pronto_lcm.hpp>
-// #include <pronto_utils/pronto_vis.hpp>
+#include <pronto_utils/pronto_lcm.hpp>
+#include <pronto_utils/pronto_vis.hpp>
 
 #include <lcmtypes/bot_core.hpp>
-// #include "lcmtypes/drc/pose_transform_t.hpp"
+#include "lcmtypes/pronto/pose_transform_t.hpp"
 
 #include <estimate_tools/Filter.hpp>
 #include <estimate_tools/simple_kalman_filter.hpp> // Eigen::Vector2f KF
@@ -113,7 +113,7 @@ class leg_estimate{
     BotParam* botparam_;
     boost::shared_ptr<ModelClient> model_;
     boost::shared_ptr<KDL::TreeFkSolverPosFull_recursive> fksolver_;
-    //pronto_vis* pc_vis_;
+    pronto_vis* pc_vis_;
     
     // joint position filters, optionally used
     std::vector<LowPassFilter*> lpfilter_; // previously were not pointers

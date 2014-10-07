@@ -1,25 +1,13 @@
 #include <iostream>
-
 #include <lcm/lcm.h>
-
-#include <bot_core/bot_core.h>
-#include <bot_frames/bot_frames.h>
-
 #include "pronto_vis.hpp"
-
 #include "visualization/collections.hpp"
-
-//#include "jpeg-utils.h"
-//#include "jpeg-utils-ijg.c"
-//#include "jpeg-utils-ijg.h"
-
 #include <zlib.h>
 
 #define PCL_VERBOSITY_LEVEL L_ERROR
 
 using namespace std;
 using namespace boost::assign; // bring 'operator+=()' into scope
-
 
 pronto_vis::pronto_vis (lcm_t* publish_lcm):
     publish_lcm_(publish_lcm){
@@ -56,6 +44,7 @@ pronto_vis::pronto_vis (lcm_t* publish_lcm):
         0.5, 0.5, 1.0;
       
 }
+
 
 void pronto_vis::text_collection_to_lcm(int text_collection_id,
                             int object_collection_id, string text_collection_name,
@@ -121,7 +110,6 @@ void pronto_vis::link_collection_to_lcm(link_cfg lcfg, std::vector<link_data> ld
 }
 
 
-
 void pronto_vis::pose_collection_to_lcm_from_list(int id, std::vector<Isometry3dTime> & posesT){
  for (size_t i=0; i < obj_cfg_list.size() ; i++){
    if (id == obj_cfg_list[i].id ){
@@ -130,6 +118,7 @@ void pronto_vis::pose_collection_to_lcm_from_list(int id, std::vector<Isometry3d
    }
  }
 }
+
 
 void pronto_vis::pose_collection_to_lcm(obj_cfg ocfg, std::vector<Isometry3dTime> & posesT){
   // Send a pose
@@ -154,7 +143,6 @@ void pronto_vis::pose_collection_to_lcm(obj_cfg ocfg, std::vector<Isometry3dTime
 }
 
 
-
 void pronto_vis::pose_to_lcm_from_list(int id,Isometry3dTime& poseT){
  for (size_t i=0; i < obj_cfg_list.size() ; i++){
    if (id == obj_cfg_list[i].id ){
@@ -163,6 +151,7 @@ void pronto_vis::pose_to_lcm_from_list(int id,Isometry3dTime& poseT){
    }
  }
 }
+
 
 void pronto_vis::pose_to_lcm(obj_cfg ocfg, Isometry3dTime& poseT){
   // Send a pose
@@ -184,6 +173,7 @@ void pronto_vis::pose_to_lcm(obj_cfg ocfg, Isometry3dTime& poseT){
   vs_obj_collection_t_publish(publish_lcm_, "OBJ_COLLECTION", &objs);
 }
 
+
 void pronto_vis::pose_collection_reset(int id, std::string name){
   vs_obj_collection_t objs;
   objs.id = id;
@@ -195,18 +185,8 @@ void pronto_vis::pose_collection_reset(int id, std::string name){
 }
 
 
-void pronto_vis::ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
-  int64_t obj_id, int64_t ptcld_id){
- for (size_t i=0; i < ptcld_cfg_list.size() ; i++){
-   if (id == ptcld_cfg_list[i].id ){
-     ptcld_collection_to_lcm(ptcld_cfg_list[i],clouds, obj_id, ptcld_id);
-       return;
-   }
- }
-}
-
-
-void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
+//
+void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::PointCloud > &clouds,
             int64_t obj_id, int64_t ptcld_id){
 
   vs_point3d_list_collection_t plist_coll;
@@ -241,7 +221,6 @@ void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::Point
     float rgba[4];
     for(size_t j=0; j<npts; j++) {  //Nransac
       if (  pcfg.use_rgb){// use the rgb value
-        //rgba[3] = ptcoll_cfg.rgba[3];
         rgba[0] = pcfg.rgb[0];
         rgba[1] = pcfg.rgb[1];
         rgba[2] = pcfg.rgb[2];
@@ -273,8 +252,7 @@ void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::Point
 }
 
 
-
-void pronto_vis::ptcld_to_lcm_from_list(int id, pcl::PointCloud<pcl::PointXYZRGB> &cloud, int64_t obj_id, int64_t ptcld_id){
+void pronto_vis::ptcld_to_lcm_from_list(int id, pronto::PointCloud &cloud, int64_t obj_id, int64_t ptcld_id){
  for (size_t i=0; i < ptcld_cfg_list.size() ; i++){
    if (id == ptcld_cfg_list[i].id ){
      ptcld_to_lcm(ptcld_cfg_list[i],cloud,obj_id,ptcld_id);
@@ -283,7 +261,7 @@ void pronto_vis::ptcld_to_lcm_from_list(int id, pcl::PointCloud<pcl::PointXYZRGB
  }
 }
 
-void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> &cloud, int64_t obj_id, int64_t ptcld_id){
+void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t obj_id, int64_t ptcld_id){
   int npts = cloud.points.size();
 
   vs_point3d_list_collection_t plist_coll;
@@ -321,13 +299,6 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> 
       rgba[1] = pcfg.rgb[1];
       rgba[2] = pcfg.rgb[2];
     }else{
-      // PARTICAL FIX: now using .r.g.b values
-      //int rgba_one = *reinterpret_cast<int*>(&cloud.points[j].rgba);
-      //rgba[3] =((float) ((rgba_one >> 24) & 0xff))/255.0;
-      //rgba[2] =((float) ((rgba_one >> 16) & 0xff))/255.0;
-      //rgba[1] =((float) ((rgba_one >> 8) & 0xff))/255.0;
-      //rgba[0] =((float) (rgba_one & 0xff) )/255.0;
-
       rgba[0] = cloud.points[j].r/255.0;
       rgba[1] = cloud.points[j].g/255.0;
       rgba[2] = cloud.points[j].b/255.0;
@@ -354,6 +325,70 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> 
 }
 
 
+void pronto_vis::ptcld_collection_reset(int id, std::string name){
+  vs_point3d_list_collection_t point_lists;
+  point_lists.id = id;
+  point_lists.name =(char*) name.c_str();
+  point_lists.type =5;
+  point_lists.reset = true;
+  point_lists.nlists= 0;
+  vs_point3d_list_collection_t_publish(publish_lcm_, "POINTS_COLLECTION", &point_lists);
+}
+
+
+#ifdef USE_PCL
+//// PCL::PointCloud publishes and conversions (from here to end)
+void pronto_vis::convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &cloud, pronto::PointCloud &cloud_out){
+  int npts = cloud.points.size();
+  cloud_out.points.resize(npts);
+  for(int j=0; j<npts; j++) {
+    cloud_out.points[j].x = cloud.points[j].x;
+    cloud_out.points[j].y = cloud.points[j].y;
+    cloud_out.points[j].z = cloud.points[j].z;
+    cloud_out.points[j].r = cloud.points[j].r;
+    cloud_out.points[j].g = cloud.points[j].g;
+    cloud_out.points[j].b = cloud.points[j].b;
+  }
+}
+
+void pronto_vis::ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
+  int64_t obj_id, int64_t ptcld_id){
+ for (size_t i=0; i < ptcld_cfg_list.size() ; i++){
+   if (id == ptcld_cfg_list[i].id ){
+     ptcld_collection_to_lcm(ptcld_cfg_list[i],clouds, obj_id, ptcld_id);
+       return;
+   }
+ }
+}
+
+
+void pronto_vis::ptcld_to_lcm_from_list(int id, pcl::PointCloud<pcl::PointXYZRGB> &cloud, int64_t obj_id, int64_t ptcld_id){
+ for (size_t i=0; i < ptcld_cfg_list.size() ; i++){
+   if (id == ptcld_cfg_list[i].id ){
+     ptcld_to_lcm(ptcld_cfg_list[i],cloud,obj_id,ptcld_id);
+       return;
+   }
+ }
+}
+
+void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> &cloud, int64_t obj_id, int64_t ptcld_id){
+  pronto::PointCloud* cloud_out (new pronto::PointCloud);
+  convertCloudPclToPronto(cloud,*cloud_out);
+  ptcld_to_lcm(pcfg, *cloud_out, obj_id, ptcld_id);  
+}
+
+
+void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
+            int64_t obj_id, int64_t ptcld_id){
+  std::vector < pronto::PointCloud > clouds_out;
+  for (size_t i=0; i < clouds.size() ; i++){
+    pronto::PointCloud* cloud_out (new pronto::PointCloud);
+    convertCloudPclToPronto(clouds[i],*cloud_out);
+    clouds_out.push_back(*cloud_out);
+  }
+  ptcld_collection_to_lcm(pcfg, clouds, obj_id, ptcld_id);
+}
+
 void pronto_vis::mesh_to_lcm_from_list(int id, pcl::PolygonMesh::Ptr mesh,
     int64_t obj_id, int64_t ptcld_id,
     bool sendSubset, const vector<int> &SubsetIndicies){
@@ -364,6 +399,7 @@ void pronto_vis::mesh_to_lcm_from_list(int id, pcl::PolygonMesh::Ptr mesh,
     }
   }
 }
+
 
 void pronto_vis::mesh_to_lcm(ptcld_cfg pcfg, pcl::PolygonMesh::Ptr mesh,
       int64_t obj_id, int64_t ptcld_id,
@@ -450,19 +486,6 @@ void pronto_vis::mesh_to_lcm(ptcld_cfg pcfg, pcl::PolygonMesh::Ptr mesh,
   }
 }
 
-void pronto_vis::ptcld_collection_reset(int id, std::string name){
-  vs_point3d_list_collection_t point_lists;
-  point_lists.id = id;
-  point_lists.name =(char*) name.c_str();
-  point_lists.type =5;
-  point_lists.reset = true;
-  point_lists.nlists= 0;
-  vs_point3d_list_collection_t_publish(publish_lcm_, "POINTS_COLLECTION", &point_lists);
-}
-
-
-
-
 
 bool pronto_vis::mergePolygonMesh(pcl::PolygonMesh::Ptr &meshA, pcl::PolygonMesh::Ptr meshB){
   pcl::PointCloud<pcl::PointXYZRGB> cloudA;  
@@ -518,68 +541,7 @@ void pronto_vis::ptcldToOctomapLogFile(pcl::PointCloud<pcl::PointXYZRGB> &cloud,
 }
 
 
-
-
-
-
-
-
-
-
-//////////////////////////////////////// Older Code - not put into the class yet
-//from hordur:
-//time x y z qx qy qz qw - all floating points
-void read_poses_csv(std::string poses_files, std::vector<Isometry3dTime>& poses){
-  int counter=0;
-  string line;
-  ifstream myfile (poses_files.c_str());
-  if (myfile.is_open()){
-    while ( myfile.good() ){
-      getline (myfile,line);
-      if (line.size() > 4){
-	double quat[4];
-	double pos[3];
-	
-	//cout << line << "\n";
-	//double dtime;
-	int64_t dtime;
- 	sscanf(line.c_str(),"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
-           &dtime,
-           &pos[0],&pos[1],&pos[2],
-   	   &quat[1],&quat[2],&quat[3],&quat[0]); // NBNBN: note the order
-// 	cout << dtime << " "
-// 	<< pos[0] << " "
-// 	<< pos[1] << " "
-// 	<< pos[2]<< " "
-// 	<< quat[0]<< " "
-// 	<< quat[1]<< " "
-// 	<< quat[2]<< " "
-// 	<< quat[3]<< "\n";
-	
-//  apose.utime = (int64_t) (dtime*1E6);
-// 	cout << apose.utime << "\n\n\n";
-	
-	Eigen::Quaterniond quat2(quat[0],quat[1],quat[2],quat[3]);
-	Eigen::Isometry3d pose;
-	pose.setIdentity();
-	pose.translation()  << pos[0] ,pos[1],pos[2];
-	pose.rotate(quat2);
-	
-	 Isometry3dTime poseT(dtime, pose);
-
-	counter++;
- 	poses.push_back(poseT);
-      }
-    }
-    myfile.close();
-  } else{
-    printf( "Unable to open poses file\n%s",poses_files.c_str());
-    return;
-  }    
-}
-
-
-void savePLYFile(pcl::PolygonMesh::Ptr model,string fname){
+void pronto_vis::savePLYFile(pcl::PolygonMesh::Ptr model,string fname){
   pcl::PointCloud<pcl::PointXYZRGB> bigcloud;  
   pcl::fromPCLPointCloud2(model->cloud, bigcloud);
   Eigen::Vector4f tmp;
@@ -606,7 +568,7 @@ void savePLYFile(pcl::PolygonMesh::Ptr model,string fname){
   for(size_t i=0; i<bigcloud.size() ; i++){ // each triangle/polygon
     tmp = bigcloud.points[i].getVector4fMap();
     
-    stringstream ss;// (stringstream::in | stringstream::out);
+    stringstream ss;
     ss << tmp(0) << " "
        << tmp(1) << " "
        << tmp(2) << " "
@@ -614,13 +576,12 @@ void savePLYFile(pcl::PolygonMesh::Ptr model,string fname){
        << (int)  bigcloud.points[i].g << " "
        << (int)  bigcloud.points[i].b << " 255";
       
-    //cout << ss.str() << "\n";
     fprintf(fid,"%s\n", ss.str().c_str());
   }     
   
   for(size_t i=0; i< model->polygons.size (); i++){ // each triangle/polygon
     pcl::Vertices apoly_in = model->polygons[i];
-    stringstream ss;// (stringstream::in | stringstream::out);
+    stringstream ss;
     int nvert= apoly_in.vertices.size ();
     ss << nvert ;
     for(size_t j=0; j< apoly_in.vertices.size (); j++){ // each point 
@@ -633,7 +594,7 @@ void savePLYFile(pcl::PolygonMesh::Ptr model,string fname){
 }
 
 
-void remove_colored_polygons(pcl::PolygonMesh::Ptr meshin_ptr,vector<int> &color ){
+void pronto_vis::removeColoredPolygons(pcl::PolygonMesh::Ptr meshin_ptr,vector<int> &color ){
   int N_polygons = meshin_ptr->polygons.size ();
   pcl::PointCloud<pcl::PointXYZRGB> bigcloud;  
   pcl::fromPCLPointCloud2(meshin_ptr->cloud, bigcloud);
@@ -674,8 +635,7 @@ void remove_colored_polygons(pcl::PolygonMesh::Ptr meshin_ptr,vector<int> &color
 }
 
 
-
-void get_MeshInBoxIndices(pcl::PolygonMesh::Ptr meshin_ptr,
+void pronto_vis::getMeshInBoxIndices(pcl::PolygonMesh::Ptr meshin_ptr,
 		   vector<double> &center, vector<double> &dgrid,
 		   vector<int> &polygon_in_box_indices){
   int N_polygons = meshin_ptr->polygons.size ();
@@ -702,7 +662,7 @@ void get_MeshInBoxIndices(pcl::PolygonMesh::Ptr meshin_ptr,
 }
 
 
-void get_MeshInCircleIndices(pcl::PolygonMesh::Ptr meshin_ptr,
+void pronto_vis::getMeshInCircleIndices(pcl::PolygonMesh::Ptr meshin_ptr,
 		   vector<double> &center, double radius,
 		   vector<int> &polygon_in_circle_indices){
   int N_polygons = meshin_ptr->polygons.size ();
@@ -730,8 +690,7 @@ void get_MeshInCircleIndices(pcl::PolygonMesh::Ptr meshin_ptr,
 }
 
 
-
-void get_MeshInBox(pcl::PolygonMesh::Ptr meshin_ptr,
+void pronto_vis::getMeshInBox(pcl::PolygonMesh::Ptr meshin_ptr,
 		   vector<double> &center, vector<double> &dgrid,
 		   pcl::PolygonMesh::Ptr &minimesh_ptr){
   int N_polygons = meshin_ptr->polygons.size ();
@@ -781,189 +740,46 @@ void get_MeshInBox(pcl::PolygonMesh::Ptr meshin_ptr,
   cout << minimesh_ptr->polygons.size() << " is the polygon size\n";
   pcl::toPCLPointCloud2 (*minicloud, minimesh_ptr->cloud);
 }
+#endif
 
 
+///////////////////////////////////
+//time x y z qx qy qz qw - all floating points
+void read_poses_csv(std::string poses_files, std::vector<Isometry3dTime>& poses){
+  int counter=0;
+  string line;
+  ifstream myfile (poses_files.c_str());
+  if (myfile.is_open()){
+    while ( myfile.good() ){
+      getline (myfile,line);
+      if (line.size() > 4){
+	double quat[4];
+	double pos[3];
+	
+	int64_t dtime;
+ 	sscanf(line.c_str(),"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+           &dtime,
+           &pos[0],&pos[1],&pos[2],
+   	   &quat[1],&quat[2],&quat[3],&quat[0]); // NBNBN: note the order
+	
+	Eigen::Quaterniond quat2(quat[0],quat[1],quat[2],quat[3]);
+	Eigen::Isometry3d pose;
+	pose.setIdentity();
+	pose.translation()  << pos[0] ,pos[1],pos[2];
+	pose.rotate(quat2);
+	
+	 Isometry3dTime poseT(dtime, pose);
 
-bool merge_PolygonMesh(pcl::PolygonMesh::Ptr &meshA, pcl::PolygonMesh::Ptr meshB){
-  cout << "DEPRECATED: CONSIDER USING VERSION ABOVE\n";
-
-  pcl::PointCloud<pcl::PointXYZRGB> cloudA;  
-  pcl::fromPCLPointCloud2(meshA->cloud, cloudA);
-  int original_size = cloudA.points.size() ;
-
-  //cout << original_size << " is the cloud before (insize) size\n";
-  //cout <<  meshA->polygons.size () << "polygons before\n";
-  
-  int N_polygonsB = meshB->polygons.size ();
-  pcl::PointCloud<pcl::PointXYZRGB> cloudB;  
-  pcl::fromPCLPointCloud2(meshB->cloud, cloudB);
-  Eigen::Vector4f tmp;
-  for(size_t i=0; i< N_polygonsB; i++){ // each triangle/polygon
-    pcl::Vertices apoly_in = meshB->polygons[i];//[i];
-    int N_points = apoly_in.vertices.size ();
-    for(size_t j=0; j< N_points; j++){ // each point
-      // increment the vertex numbers by the size of the original clouds
-      apoly_in.vertices[j] += original_size; 
-    }
-    meshA->polygons.push_back(apoly_in);
-  } 
-  
-  cloudA += cloudB;
-  pcl::toPCLPointCloud2 (cloudA, meshA->cloud);
-  
-  //cout <<  meshA->polygons.size () << "polygons after\n";
-  //cout << cloudA.points.size() << " is the cloud inside size\n";
-  
-  return true;
-}
-
-bool PolygonMesh_to_lcm(lcm_t *lcm, Ptcoll_cfg ptcoll_cfg,pcl::PolygonMesh::Ptr mesh,
-			bool clip_z , double clip_height,
-			bool sendSubset, const vector<int> &SubsetIndicies){
-  
-  // skip_above_z doesnt display the z dimension
-  //TODO: have general method for skipping outside x,y,z +/-
-  int N_polygons;
-  if (!sendSubset){
-    N_polygons = mesh->polygons.size ();
-  }else{
-    N_polygons = SubsetIndicies.size ();
-  }
-  
-  vs_point3d_list_collection_t point_lists;
-  point_lists.id = ptcoll_cfg.id;
-  point_lists.name = (char *)ptcoll_cfg.name.c_str(); // Use channel name?
-  point_lists.type = ptcoll_cfg.type; // collection of POINTS
-
-  point_lists.reset = ptcoll_cfg.reset;
-  point_lists.nlists = N_polygons; // number of seperate sets of points  
-  vs_point3d_list_t point_list[N_polygons];  
-  
-  pcl::PointCloud<pcl::PointXYZRGB> newcloud;  
-  pcl::fromPCLPointCloud2(mesh->cloud, newcloud);
-  Eigen::Vector4f tmp;
-  for(size_t i=0; i< N_polygons; i++){ // each triangle/polygon
-    size_t k;
-    if (!sendSubset){ // send all of the mesh
-      k = i;
-    }else{ // only send some of it:
-      k =  SubsetIndicies[i];
-    }
-
-    pcl::Vertices apoly_in = mesh->polygons[k];//[i];
-    int N_points = apoly_in.vertices.size ();
-
-    vs_point3d_list_t* points = &(point_list[i]); //[i]);
-    points->nnormals = 0;
-    points->normals = NULL;
-    points->npointids = 0;
-    points->pointids = NULL;
-    
-    points->ncolors = N_points;
-    vs_color_t* colors = new vs_color_t[N_points];
-    points->npoints = N_points;
-    vs_point3d_t* entries = new vs_point3d_t[N_points];
-    
-    bool send_this = false;
-    
-    points->id = i; // ... still i - not k
-    points->collection = ptcoll_cfg.collection;//PoseCollID;//collection.objectCollectionId();
-    points->element_id = ptcoll_cfg.element_id;//PoseID;
-    for(size_t j=0; j< N_points; j++){ // each point
-      uint32_t pt = apoly_in.vertices[j];
-      tmp = newcloud.points[pt].getVector4fMap();
-      entries[j].x =(float) tmp(0);
-      entries[j].y =(float) tmp(1);
-      entries[j].z =(float) tmp(2);
-      // r,g,b: input is ints 0->255, opengl wants floats 0->1
-      colors[j].r = (float) newcloud.points[pt].r/255.0; // Red  
-      colors[j].g = (float) newcloud.points[pt].g/255.0; // Green
-      colors[j].b = (float) newcloud.points[pt].b/255.0; // Blue
-      
-      if (!send_this){ // this is bad coding, improve me...
-	if (tmp(2) < clip_height){ // transmit if at least one z point is below thresh
-	  send_this=true;
-	}
+	counter++;
+ 	poses.push_back(poseT);
       }
     }
-    if (clip_z){
-      if (!send_this){ // sends an empty list
-	points->ncolors =0;
-	points->npoints =0;
-      }
-    }
-    points->points = entries;
-    points->colors = colors;
-  } 
-  point_lists.point_lists = point_list;
-  vs_point3d_list_collection_t_publish(lcm,"POINTS_COLLECTION",&point_lists);
-  
-  //TODO I don't think i am doing memory management properly!!!
-  //  delete colors;
-  for (int i=0;i<point_lists.nlists;i++) {
-      delete [] point_lists.point_lists[i].points;
-      delete [] point_lists.point_lists[i].colors;
-  }   
-  
-  return 1;
+    myfile.close();
+  } else{
+    printf( "Unable to open poses file\n%s",poses_files.c_str());
+    return;
+  }    
 }
-
-
-
-
-
-void pcdXYZ_to_lcm(lcm_t *lcm, Ptcoll_cfg ptcoll_cfg,pcl::PointCloud<pcl::PointXYZ> &cloud){
-   
-  vs_point3d_list_collection_t plist_coll;
-  plist_coll.id = ptcoll_cfg.id;
-  plist_coll.name =(char*)   ptcoll_cfg.name.c_str();
-  plist_coll.type =ptcoll_cfg.type; // collection of points
-  plist_coll.reset = ptcoll_cfg.reset;
-  plist_coll.nlists = 1; // number of seperate sets of points
-  vs_point3d_list_t plist[plist_coll.nlists];
-  
-  // loop here for many lists
-  vs_point3d_list_t* this_plist = &(plist[0]);
-  // 3.0: header
-  this_plist->id = ptcoll_cfg.point_lists_id;//bot_timestamp_now();
-  this_plist->collection = ptcoll_cfg.collection;
-  this_plist->element_id = ptcoll_cfg.element_id;
-  // 3.1: points/entries (rename) 
-  vs_point3d_t* points = new vs_point3d_t[ptcoll_cfg.npoints];
-  this_plist->npoints = ptcoll_cfg.npoints;
-  // 3.2: colors:
-  vs_color_t* colors = new vs_color_t[ptcoll_cfg.npoints];
-  //points->colors = NULL;
-  this_plist->ncolors = ptcoll_cfg.npoints;
-  // 3.3: normals:
-  this_plist->nnormals = 0;
-  this_plist->normals = NULL;   
-  // 3.4: point ids:
-  this_plist->npointids = ptcoll_cfg.npoints;
-  int64_t* pointsids= new int64_t[ptcoll_cfg.npoints];
-  
-  for(int j=0; j<ptcoll_cfg.npoints; j++) {  //Nransac
-      colors[j].r = ptcoll_cfg.rgba[0]; // 0-1
-      colors[j].g = ptcoll_cfg.rgba[1];
-      colors[j].b = ptcoll_cfg.rgba[2];
-      points[j].x = cloud.points[j].x;
-      points[j].y = cloud.points[j].y;
-      points[j].z = cloud.points[j].z;
-      pointsids[j] = ptcoll_cfg.element_id + j;
-  }   
-  this_plist->colors = colors;
-  this_plist->points = points;
-  this_plist->pointids = pointsids;
-  plist_coll.point_lists = plist;
-  vs_point3d_list_collection_t_publish(lcm,"POINTS_COLLECTION",&plist_coll);  
-  
-  
-  delete pointsids;
-  delete colors;
-  delete points;
-}
-
-
 
 // display_tic_toc: a helper function which accepts a set of 
 // timestamps and displays the elapsed time between them as 
@@ -987,11 +803,7 @@ void display_tic_toc(std::vector<int64_t> &tic_toc,const string &fun_name){
     time_tic_toc_last = percent_tic_toc*dtime;
   }
   cout << "\ntotal_time_" << fun_name << " " << dtime << "\n";  
-  
 }
-
-
-
 
 
 // Copied from kinect-lcm

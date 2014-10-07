@@ -4,9 +4,11 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include <pronto_utils/pronto_vis.hpp>
 #include <path_util/path_util.h>
 #include <bot_frames/bot_frames.h>
+#include <Eigen/Dense>
+#include <iostream>
+
 
 using namespace std;
 

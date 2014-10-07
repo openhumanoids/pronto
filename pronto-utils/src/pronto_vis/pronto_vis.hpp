@@ -1,17 +1,16 @@
-#ifndef POINTCLOUD_VIS_HPP_
-#define POINTCLOUD_VIS_HPP_
-
+#ifndef PRONTO_VIS_HPP_
+#define PRONTO_VIS_HPP_
 
 #include <lcm/lcm.h>
 #include <iostream>
 #include <fstream>
-
 
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 
 #include <boost/assign/std/vector.hpp>
 
+#ifdef USE_PCL
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
@@ -36,18 +35,49 @@
 #include "pcl/features/normal_3d.h"
 #include "pcl/features/fpfh.h"
 #include "pcl/registration/ia_ransac.h"
-
-#include <bot_core/bot_core.h>
+#endif
 
 #include <vector>
 #include <algorithm>
 
-using namespace pcl;
-using namespace pcl::io;
-
 #include <pronto_utils/pronto_math.hpp>
-// #include <lcmtypes/pronto_tools.h>
 
+
+namespace pronto
+{
+  struct Vertices
+  {
+    Vertices () : vertices ()
+    {}
+
+    std::vector<uint32_t> vertices;
+  };
+
+  struct Point
+  {
+    Point () {}
+
+    float x,y,z;
+    uint8_t r,g,b; // 0-255
+  };
+
+  struct PointCloud
+  {
+    PointCloud () : points ()
+    {}
+
+    std::vector< pronto::Point > points;
+  };
+
+  struct PolygonMesh
+  {
+    PolygonMesh () : cloud () , polygons()
+    {}
+    pronto::PointCloud cloud;
+    std::vector< pronto::Vertices > polygons;
+  };
+
+}
 
 
 
@@ -55,9 +85,16 @@ class pronto_vis {
   public:
     pronto_vis (lcm_t* publish_lcm);
 
+    std::vector <obj_cfg> obj_cfg_list;
+    std::vector <ptcld_cfg> ptcld_cfg_list;
+
+    // Duplicates the list in collections renderer:
+    // assumed to be 3xN colors
+    std::vector < float > colors;    
+
+    ///////////// Text and Pose Methods //////////////////////////
     // Push a colour PointCloud to LCM as a points collection
     // assumes that you want to connect it to the collection specified in Ptcoll_cfg
-    //void pcdXYZRGB_to_lcm(Ptcoll_cfg ptcoll_cfg,pcl::PointCloud<pcl::PointXYZRGB> &cloud);
     void text_collection_to_lcm(int text_collection_id,
                             int object_collection_id, std::string text_collection_name,
                             std::vector<std::string >& labels, 
@@ -74,14 +111,25 @@ class pronto_vis {
     void pose_to_lcm_from_list(int id,Isometry3dTime& poseT);
     void pose_to_lcm(obj_cfg ocfg, Isometry3dTime& poseT);
 
+    void ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::PointCloud > &clouds,
+            int64_t obj_id, int64_t ptcld_id);
+
+    void ptcld_to_lcm_from_list(int id, pronto::PointCloud &cloud,
+            int64_t obj_id, int64_t ptcld_id);
+    void ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud,
+            int64_t obj_id, int64_t ptcld_id);
+    // Also can be used by mesh
+    void ptcld_collection_reset(int id, std::string name);
+
+
+    ///////////// Point Cloud Methods ////////////////////////////
+#ifdef USE_PCL
+    void convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &cloud, pronto::PointCloud &cloud_out);
     // Plot a set of point clouds relative to a specific pose
     void ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
             int64_t obj_id, int64_t ptcld_id);
     void ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
             int64_t obj_id, int64_t ptcld_id);
-    // Also can be used by mesh
-    void ptcld_collection_reset(int id, std::string name);
-
     
     void ptcld_to_lcm_from_list(int id, pcl::PointCloud<pcl::PointXYZRGB> &cloud,
             int64_t obj_id, int64_t ptcld_id);
@@ -95,130 +143,60 @@ class pronto_vis {
             int64_t obj_id, int64_t ptcld_id,
             bool sendSubset =false,const std::vector<int> &SubsetIndicies = std::vector<int>());
 
-    std::vector <obj_cfg> obj_cfg_list;
-    std::vector <ptcld_cfg> ptcld_cfg_list;
-    
-    // Duplicates the list in collections renderer:
-    // assumed to be 3xN colors
-    std::vector < float > colors;    
-    
     // Merge two PolygonMesh structures into the meshA
     bool mergePolygonMesh(pcl::PolygonMesh::Ptr &meshA, pcl::PolygonMesh::Ptr meshB);
     
     void ptcldToOctomapLogFile(pcl::PointCloud<pcl::PointXYZRGB> &cloud,
             std::string filename);
+
+    // Find the polygon INDICES inside a box centered around @center of 2x size @dgrid
+    // of the PolygonMEsh meshin_ptr
+    // @input: meshin_ptr - input mesh model
+    // @input: center - 3 element vector to center of box
+    // @input: dgrid - 3 elements of size of boxlcm
+    // @output: the polygon INDICES inside the box
+    void getMeshInBoxIndices(pcl::PolygonMesh::Ptr meshin_ptr,
+		   std::vector<double> &center, std::vector<double> &dgrid,
+		   std::vector<int> &polygon_in_box_indices);
+
+    // Find the polygon INDICES inside a circle of size @radius
+    // of the PolygonMEsh meshin_ptr
+    // @input: meshin_ptr - input mesh model
+    // @input: center - 3 element vector to center of box
+    // @input: radius - 3 elements of size of box
+    // @output: the polygon INDICES inside the box
+    void getMeshInCircleIndices(pcl::PolygonMesh::Ptr meshin_ptr,
+		   std::vector<double> &center, double radius,
+		   std::vector<int> &polygon_in_box_indices);
     
+    // Remove all the polygons with a specific color
+    // this is used to remove all black polygons which represent glass in kcml
+    void removeColoredPolygons(pcl::PolygonMesh::Ptr meshin_ptr, std::vector<int> &color );
+
+    // Save a PolygonMesh to PLY
+    // PCL's uses VTK which produces an awkward type of PLY
+    void savePLYFile(pcl::PolygonMesh::Ptr model,std::string fname);
+
+    // Find the polygons inside a box centered around @center of 2x size @dgrid
+    // of the PolygonMEsh meshin_ptr
+    // @input: meshin_ptr - input mesh model
+    // @input: center - 3 element vector to center of box
+    // @input: dgrid - 3 elements of size of box
+    // @output: what lies insdie the box
+    void getMeshInBox(pcl::PolygonMesh::Ptr meshin_ptr,
+		   std::vector<double> &center, std::vector<double> &dgrid,
+		   pcl::PolygonMesh::Ptr &minimesh_ptr);
+#endif
+
   private:
     lcm_t *publish_lcm_;
 
 };
 
 
-
-
-
-
-
-// Read a csv file containign poses and timestamps:
+// Read a csv file containing poses and timestamps:
 void read_poses_csv(std::string poses_files, std::vector<Isometry3dTime>& poses);
-
-// Save a PolygonMesh to PLY
-// PCL's uses VTK which produces an awkward type of PLY
-void savePLYFile(pcl::PolygonMesh::Ptr model,std::string fname);
-
-// Remove all the polygons with a specific color
-// this is used to remove all black polygons which represent glass in kcml
-void remove_colored_polygons(pcl::PolygonMesh::Ptr meshin_ptr, std::vector<int> &color );
-
-// Find the polygon INDICES inside a box centered around @center of 2x size @dgrid
-// of the PolygonMEsh meshin_ptr
-// @input: meshin_ptr - input mesh model
-// @input: center - 3 element vector to center of box
-// @input: dgrid - 3 elements of size of boxlcm
-// @output: the polygon INDICES inside the box
-void get_MeshInBoxIndices(pcl::PolygonMesh::Ptr meshin_ptr,
-		   std::vector<double> &center, std::vector<double> &dgrid,
-		   std::vector<int> &polygon_in_box_indices);
-
-
-// Find the polygon INDICES inside a circle of size @radius
-// of the PolygonMEsh meshin_ptr
-// @input: meshin_ptr - input mesh model
-// @input: center - 3 element vector to center of box
-// @input: radius - 3 elements of size of box
-// @output: the polygon INDICES inside the box
-void get_MeshInCircleIndices(pcl::PolygonMesh::Ptr meshin_ptr,
-		   std::vector<double> &center, double radius,
-		   std::vector<int> &polygon_in_box_indices);
-
-
-// Find the polygons inside a box centered around @center of 2x size @dgrid
-// of the PolygonMEsh meshin_ptr
-// @input: meshin_ptr - input mesh model
-// @input: center - 3 element vector to center of box
-// @input: dgrid - 3 elements of size of box
-// @output: what lies insdie the box
-void get_MeshInBox(pcl::PolygonMesh::Ptr meshin_ptr,
-		   std::vector<double> &center, std::vector<double> &dgrid,
-		   pcl::PolygonMesh::Ptr &minimesh_ptr);
-
-
-// Merge two PolygonMesh structures into the meshA
-// deprecated:
-//bool merge_PolygonMesh(pcl::PolygonMesh::Ptr &meshA, pcl::PolygonMesh::Ptr meshB);
-
-// Push a PolygonMesh to PCL. The polygonMesh is a PtCloud with a set of vertices for each mesh
-// the polygon is anchored using a single obj collection specified in Ptcoll_cfg
-// TODO use boost inf  for the default value clip z value
-// If a subset is specified only those polygons are sent to LCM
-bool PolygonMesh_to_lcm(lcm_t *lcm, Ptcoll_cfg ptcoll_cfg,pcl::PolygonMesh::Ptr mesh,
-	bool clip_z = false, double clip_height = 99999999999.0,
-	bool sendSubset =false,const std::vector<int> &SubsetIndicies = std::vector<int>());
-
-// Push an OjbQ (quaterion) Collection to LCM as an Obj Collection (non-quaterion)
-// assumes that you want to connect it to the collection specified in Ptcoll_cfg
-//bool ObjU_to_lcm(lcm_t *lcm, Objq_coll_cfg objq_coll_cfg,std::vector<ObjQ> objq_coll);
-
-
-
-
-
-// Push an un-coloured PointCloud to LCM as a points collection
-// assumes that you want to connect it to the collection specified in Ptcoll_cfg
-void pcdXYZ_to_lcm(lcm_t *lcm, Ptcoll_cfg ptcoll_cfg,pcl::PointCloud<pcl::PointXYZ> &cloud);
-
-
 void display_tic_toc(std::vector<int64_t> &tic_toc,const std::string &fun_name);
-
-/*
-typedef struct _BasicPlane
-{
-  int64_t utime;
-  std::string name; // a unique name eg the file name
-  int major; // which major plane 
-  int minor; // which minor plane
-  //PointT cloud; 
-  pcl::PointCloud<pcl::PointXYZRGB> cloud ;
-//  double coeffs[4];
-   pcl::ModelCoefficients coeffs;  
-  Eigen::Vector4f centroid;
-  // this number of points in the original soure cloud.
-  // Used for voting when combining to a final cloud
-  int n_source_points; 
-  
-  // New members added in jun17_2011: mfallon
-  EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix;
-  Eigen::Affine3f transform000; // transform to move the plane to 0,0,0 [ie centroid=0,0,0] aligned to the x,y axis (i think)
-  
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-  
-} BasicPlane;
-*/
-
-
-//bool read_and_project_submaps(std::string file_path,std::string file_name_in, BasicPlane &one_plane, BasicPlane &one_plane000  );
-
-
 
 // http://www.alecjacobson.com/weblog/?p=1527
 // Acts like matlab's [Y,I] = SORT(X)
@@ -300,6 +278,4 @@ void reorder(
 }
 
 
-
-
-#endif /* POINTCLOUD_VIS_HPP_ */
+#endif /* PRONTO_VIS_HPP_ */

@@ -12,7 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <pronto_utils/pronto_math.hpp>
-// #include <pronto_utils/pronto_vis.hpp>
+#include <pronto_utils/pronto_vis.hpp>
 #include <estimate_tools/Filter.hpp>
 #include <estimate_tools/SignalTap.hpp> // SchmittTrigger
 // #include "lcmtypes/drc/foot_contact_estimate_t.hpp"
@@ -92,12 +92,13 @@ class foot_contact_classify {
     void determineCenterOfPressure(int64_t utime, Eigen::Isometry3d primary_foot, Eigen::Isometry3d secondary_foot,
                                    int standing_foot);
     
-    //pcl::PointCloud<pcl::PointXYZRGB>::Ptr getContactPoints(){ return contact_points_; }
+    pronto::PointCloud* getContactPoints(){ return contact_points_; }
+    
 
 
   private:
     boost::shared_ptr<lcm::LCM> lcm_publish_;
-//    pronto_vis* pc_vis_;
+    pronto_vis* pc_vis_;
     
     // the schmitt trigger detector for force-based contact classication:
     
@@ -110,11 +111,13 @@ class foot_contact_classify {
     SchmittTrigger* right_contact_state_strong_;
     
     //pcl::PointCloud<pcl::PointXYZRGB>::Ptr contact_points_;
+    pronto::PointCloud* contact_points_;
     // Transform from foot frame origin to a point on the sole below the feet
     double foot_to_sole_z_;
     Eigen::Isometry3d foot_to_sole_;
     
     //pcl::PointCloud<pcl::PointXYZRGB>::Ptr cp_moving_prev_;
+    pronto::PointCloud* cp_moving_prev_;
     
     
     // initialization condition is both feet in contact with the ground

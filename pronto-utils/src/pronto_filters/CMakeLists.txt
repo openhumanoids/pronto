@@ -6,6 +6,13 @@ if(NOT VISUALIZATION_FOUND)
 endif()
 
 
+pkg_check_modules(PCL_IO pcl_io-1.7)
+if(NOT PCL_IO_FOUND)
+  message("---- PCL IO not found. Not building pronto_filters\n")
+  return()
+endif()
+
+
 ################################################################
 add_library(pronto_filters SHARED filter_planes.cpp grow_cloud.cpp 
 	filter_findfloor.cpp)

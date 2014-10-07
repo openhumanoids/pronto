@@ -13,7 +13,7 @@ pods_use_pkg_config_packages(leg_estimate estimate_tools  filter_tools foot_cont
   ${REQUIRED_PACKAGES} 
   lcmtypes_bot2-core 
   pronto_math
-#  pronto_vis 
+  pronto_vis 
   eigen3)
 # lcmtypes_fovis-bot2 
 set_target_properties(leg_estimate PROPERTIES SOVERSION 1)
@@ -41,15 +41,13 @@ pods_install_executables(se-leg-odometry )
 
 
 ################
-#add_executable(se-convert-bdi-into-vicon-frame convert_bdi_into_vicon_frame.cpp )
-#target_link_libraries(se-convert-bdi-into-vicon-frame boost_system)
-#pods_use_pkg_config_packages(se-convert-bdi-into-vicon-frame  
-#    bot2-frames pronto_vis
-#    path-util ${REQUIRED_PACKAGES})
-## pronto_vis
-#target_link_libraries (se-convert-bdi-into-vicon-frame lcm  )
-##pronto_math 
-#pods_install_executables(se-convert-bdi-into-vicon-frame )
+add_executable(se-convert-bdi-into-vicon-frame convert_bdi_into_vicon_frame.cpp )
+target_link_libraries(se-convert-bdi-into-vicon-frame boost_system)
+pods_use_pkg_config_packages(se-convert-bdi-into-vicon-frame  
+    bot2-frames pronto_vis
+    path-util ${REQUIRED_PACKAGES})
+target_link_libraries (se-convert-bdi-into-vicon-frame lcm  )
+pods_install_executables(se-convert-bdi-into-vicon-frame )
 
 
 
@@ -57,12 +55,10 @@ pods_install_executables(se-leg-odometry )
 
 
 ################
-#add_executable(se-init-from-bdi init_from_bdi.cpp )
-#target_link_libraries(se-init-from-bdi boost_system)
-#pods_use_pkg_config_packages(se-init-from-bdi 
-#    path-util ${REQUIRED_PACKAGES} 
-#    bot2-frames)
-## pronto_vis
-#target_link_libraries (se-init-from-bdi lcm   )
-## pronto_math
-#pods_install_executables(se-init-from-bdi )
+add_executable(se-init-from-bdi init_from_bdi.cpp )
+target_link_libraries(se-init-from-bdi boost_system)
+pods_use_pkg_config_packages(se-init-from-bdi 
+    path-util ${REQUIRED_PACKAGES}  eigen3
+    bot2-frames)
+target_link_libraries (se-init-from-bdi lcm   )
+pods_install_executables(se-init-from-bdi )

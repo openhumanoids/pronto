@@ -9,8 +9,8 @@ add_executable(se-create-octomap create_octomap.cpp convert_octomap.cpp cloud_ac
 pods_use_pkg_config_packages(se-create-octomap  
     path-util ${REQUIRED_PACKAGES}
     pronto_vis  octomap
-    drc-utils
     octomap-util)
+#    drc-utils
 target_link_libraries (se-create-octomap lcm pronto_math 
                         boost_system boost_thread)
 pods_install_executables(se-create-octomap )
