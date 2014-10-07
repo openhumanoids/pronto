@@ -59,7 +59,7 @@ void GrowCloud::doGrowCloud (vector<BasicPlane> &outstack) {
 	//one_plane.utime
 	//one_plane.major
 	//one_plane.minor
-	compute3DCentroid (*outcloud,one_plane.centroid);
+	pcl::compute3DCentroid (*outcloud,one_plane.centroid);
 	one_plane.cloud = (*outcloud);
 	outstack.push_back(one_plane);
 	
