@@ -1,16 +1,12 @@
 # list of subdirectories to build, one one each line.  Empty lines
 # and lines starting with '#' are ignored
 
-# filters used in motion est and state sync
+isam_include
+visualization
+
 pronto-utils
 pronto-lcmtypes
 estimate_tools
 
-#state_sync
-
-
-# Maurice's estimator
-# dependent on imu filter in estimate_tools
-#vo_estimate
 mav
 motion_estimate
