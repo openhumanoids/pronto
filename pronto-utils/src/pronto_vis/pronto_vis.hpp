@@ -10,6 +10,8 @@
 
 #include <boost/assign/std/vector.hpp>
 
+#include "pronto_vis_config.h"
+
 #ifdef USE_PCL
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
