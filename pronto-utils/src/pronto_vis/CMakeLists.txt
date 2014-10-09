@@ -39,7 +39,7 @@ pods_install_libraries(pronto_vis)
 pods_install_headers(pronto_vis.hpp ${CMAKE_CURRENT_BINARY_DIR}/pronto_vis_config.h DESTINATION pronto_utils)
 pods_install_pkg_config_file(pronto_vis
     LIBS -lpronto_vis 
-    REQUIRES ${PCL_IO_PKG_CONFIG} lcmtypes_visualization pronto_math
+    REQUIRES ${PCL_IO_PKG_CONFIG} lcmtypes_visualization pronto_math eigen3
     VERSION 0.0.1)
 
 #    REQUIRES pcl_io-1.7 lcmtypes_visualization pronto_math

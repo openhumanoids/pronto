@@ -8,7 +8,7 @@ project(create_octomap)
 add_executable(se-create-octomap create_octomap.cpp convert_octomap.cpp cloud_accumulate.cpp)
 pods_use_pkg_config_packages(se-create-octomap  
     path-util ${REQUIRED_PACKAGES}
-    pronto_vis  octomap
+    pronto_vis  octomap eigen3
     octomap-util)
 #    drc-utils
 target_link_libraries (se-create-octomap lcm pronto_math 

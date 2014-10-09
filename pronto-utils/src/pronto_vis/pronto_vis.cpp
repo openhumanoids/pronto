@@ -351,7 +351,86 @@ void pronto_vis::transformPointCloud(pronto::PointCloud &cloud_in, pronto::Point
 }
 
 
-#ifdef USE_PCL
+bool pronto_vis::interpolateScan(const std::vector<float>& iRanges,
+                const double iTheta0, const double iThetaStep,
+                const Eigen::Isometry3d& iPose0,
+                const Eigen::Isometry3d& iPose1,
+                std::vector<Eigen::Vector3f>& oPoints) {
+  const int n = iRanges.size();
+  if (n < 2) return false;
+  const double tStep = 1.0/(n-1);
+  Eigen::Quaterniond q0(iPose0.linear());
+  Eigen::Quaterniond q1(iPose1.linear());
+  Eigen::Vector3d pos0(iPose0.translation());
+  Eigen::Vector3d pos1(iPose1.translation());
+  oPoints.resize(n);
+  double t = 0;
+  double theta = iTheta0;
+  for (int i = 0; i < n; ++i, t += tStep, theta += iThetaStep) {
+    Eigen::Quaterniond q = q0.slerp(t,q1);
+    Eigen::Vector3d pos = (1-t)*pos0 + t*pos1;
+    Eigen::Vector3d pt = iRanges[i]*Eigen::Vector3d(cos(theta), sin(theta), 0);
+    oPoints[i] = (q*pt + pos).cast<float>();
+  }
+  return true;
+}
+
+
+void pronto_vis::convertLidar(std::vector< float > ranges, int numPoints, double thetaStart,
+        double thetaStep,
+        pronto::PointCloud* &cloud,
+	double minRange, double maxRange,
+	double validRangeStart, double validRangeEnd){
+  int count = 0;
+  double theta = thetaStart;
+
+  cloud->points.resize (numPoints);
+
+  // minRange was 0.1 until march 2013
+  for (int i = 0; i < numPoints; i++) {
+      if (ranges[i] > minRange && ranges[i] < maxRange && theta > validRangeStart
+              && theta < validRangeEnd) { 
+          //hokuyo driver seems to report maxRanges as .001 :-/
+          //project to body centered coordinates
+          cloud->points[count].x = ranges[i] * cos(theta);
+          cloud->points[count].y = ranges[i] * sin(theta);
+          cloud->points[count].r = 0; cloud->points[count].g = 0; cloud->points[count].b = 0;
+          count++;
+      }
+      theta += thetaStep;
+  }
+  // Resize outgoing cloud
+  cloud->points.resize (count);
+}
+
+
+void pronto_vis::writePCD(std::string filename, pronto::PointCloud &cloud){
+
+  std::ofstream of (filename.c_str() );
+  if (of.is_open())
+  {
+    of << "# .PCD v.7 - Point Cloud Data file format\n";
+    of << "VERSION .7\n";
+    of << "FIELDS x y z rgb\n";
+    of << "SIZE 4 4 4 4\n";
+    of << "TYPE F F F F\n";
+    of << "COUNT 1 1 1 1\n";
+    of << "WIDTH "<< cloud.points.size() << "\n";
+    of << "HEIGHT 1\n";
+    of << "VIEWPOINT 0 0 0 1 0 0 0\n";
+    of << "POINTS "<< cloud.points.size() << "\n";
+    of << "DATA ascii\n";
+    for(size_t i=0; i < cloud.points.size() ; i++){
+      of << cloud.points[i].x << " "
+         << cloud.points[i].y << " "
+         << cloud.points[i].z << " "
+         << 0 << "\n";
+    }
+    of.close();
+  }
+}
+
+#ifdef USE_PRONTO_VIS_PCL
 //// PCL::PointCloud publishes and conversions (from here to end)
 void pronto_vis::convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &cloud, pronto::PointCloud &cloud_out){
   int npts = cloud.points.size();

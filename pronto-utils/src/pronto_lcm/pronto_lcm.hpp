@@ -1,6 +1,6 @@
-// This class has be continously emptied and now contains
+// This class has been continously emptied and now contains
 // practically no contents. It can probably be removed
-// if the convertLidar methods are not used
+// if the (classless) convertLidar methods are not used
 
 #ifndef PRONTO_LCM_HPP_
 #define PRONTO_LCM_HPP_
@@ -12,16 +12,16 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 
+#include "pronto_lcm_config.h"
+
+#ifdef USE_PRONTO_LCM_PCL
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
-// this seems to be required. don't know why?
 #include "pcl/kdtree/kdtree_flann.h"
+#endif
 
 #include <lcm/lcm.h>
 #include <bot_core/bot_core.h>
-
-using namespace pcl;
-using namespace pcl::io;
 
 class pronto_lcm {
   public:
@@ -32,6 +32,7 @@ class pronto_lcm {
 };
 
 
+#ifdef USE_PRONTO_LCM_PCL
 inline void
 convertLidar(const float * ranges, int numPoints, double thetaStart,
         double thetaStep,
@@ -94,5 +95,8 @@ convertLidar(std::vector< float > ranges, int numPoints, double thetaStart,
   cloud->width   = count;
   cloud->points.resize (count);
 }
+#endif
+
+
 
 #endif

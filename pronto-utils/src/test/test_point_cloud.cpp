@@ -1,9 +1,8 @@
 #include <iostream>
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
 
 #include <lcm/lcm-cpp.hpp>
 #include <pronto_utils/pronto_vis.hpp> // visualize pt clds
+#include <boost/shared_ptr.hpp>
 
 
 int

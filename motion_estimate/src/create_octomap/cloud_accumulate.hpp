@@ -1,6 +1,7 @@
 #ifndef CLOUD_ACCUMULATE_HPP_
 #define CLOUD_ACCUMULATE_HPP_
 
+#include <deque>
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
@@ -12,8 +13,7 @@
 
 #include <pronto_utils/pronto_vis.hpp>
 #include <pronto_utils/pronto_lcm.hpp> // decode perception lcm messages
-#include <drc_utils/frame_check_utils.hpp>
-#include <drc_utils/LidarUtils.hpp>
+#include <pronto_utils/pronto_frame_check_tools.hpp>
 ////////////////////////////////////////
 struct CloudAccumulateConfig
 {
@@ -32,7 +32,7 @@ class CloudAccumulate{
     
     int getCounter(){ return counter_; }
     bool getFinished(){ return finished_; }
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr getCloud(){ return combined_cloud_; }
+    pronto::PointCloud* getCloud(){ return combined_cloud_; }
     
     void clearCloud(){ 
       combined_cloud_->points.clear(); 
@@ -41,7 +41,7 @@ class CloudAccumulate{
       std::cout << "Empty previous map\n";
     }
     
-    void publishCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud);
+    void publishCloud(pronto::PointCloud* &cloud);
     
     void processLidar(const  bot_core::planar_lidar_t* msg);
 
@@ -54,14 +54,12 @@ class CloudAccumulate{
     pronto_vis* pc_vis_ ;
     BotParam* botparam_;
     BotFrames* botframes_;
-    FrameCheckUtils frame_check_utils_;
-    
-    drc::LidarUtils lidar_utils_;
+    FrameCheckTools frame_check_tools_;
     
     int counter_; 
     int verbose_;
     
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr combined_cloud_;  
+    pronto::PointCloud* combined_cloud_;
     
     bool finished_;
     
@@ -74,9 +72,9 @@ class CloudAccumulate{
     int64_t body_to_scan_last_utime_;
     
     
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
+    pronto::PointCloud* convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
+    pronto::PointCloud* convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
+    pronto::PointCloud* convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
     
 };
 

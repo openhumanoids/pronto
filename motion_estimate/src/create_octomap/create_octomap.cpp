@@ -11,8 +11,8 @@
 #include "convert_octomap.hpp"
 #include "cloud_accumulate.hpp"
 
-#include <lcmtypes/drc/utime_t.hpp>
-#include <lcmtypes/drc/system_status_t.hpp>
+#include <lcmtypes/pronto/utime_t.hpp>
+#include <lcmtypes/pronto/system_status_t.hpp>
 
 #include <ConciseArgs>
 
@@ -45,7 +45,7 @@ class App{
     int64_t last_publish_utime_;
     
     void startMapHandler(const lcm::ReceiveBuffer* rbuf, 
-                      const std::string& channel, const  drc::utime_t* msg);   
+                      const std::string& channel, const  pronto::utime_t* msg);
     
     void lidarHandler(const lcm::ReceiveBuffer* rbuf, 
                       const std::string& channel, const  bot_core::planar_lidar_t* msg);   
@@ -76,7 +76,7 @@ App::App(boost::shared_ptr< lcm::LCM >& lcm_, ConvertOctomapConfig co_cfg_,
 }
 
 
-void App::startMapHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drc::utime_t* msg){
+void App::startMapHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::utime_t* msg){
   std::cout << "Start map message received\n";
   do_accum_ = true;
   accu_->clearCloud();
@@ -85,10 +85,10 @@ void App::startMapHandler(const lcm::ReceiveBuffer* rbuf, const std::string& cha
 
 
 void App::sendSystemStatus(std::string message){
-  drc::system_status_t status;
-  status.system = drc::system_status_t::MOTION_ESTIMATION;
-  status.importance = drc::system_status_t::VERY_IMPORTANT;
-  status.frequency = drc::system_status_t::LOW_FREQUENCY;
+  pronto::system_status_t status;
+  status.system = pronto::system_status_t::MOTION_ESTIMATION;
+  status.importance = pronto::system_status_t::VERY_IMPORTANT;
+  status.frequency = pronto::system_status_t::LOW_FREQUENCY;
   status.value = message;
   lcm_->publish("SYSTEM_STATUS", &status);
 }
@@ -120,9 +120,9 @@ void App::lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
 
 ////////// Threads //////////////////////
 void processThread(App& app) { 
-  cout << "Started processThread\n";  
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr sub_cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  std::cout << "Started processThread\n";
+  pronto::PointCloud* cloud (new pronto::PointCloud ());
+  pronto::PointCloud* sub_cloud (new pronto::PointCloud ());
   
   while (1==1) {
     usleep(1e6); // sleep for 1sec, check for new msgs and process
@@ -137,11 +137,9 @@ void processThread(App& app) {
           break;
         }
       }
-      sub_cloud->width = sub_cloud->points.size();
-      sub_cloud->height = 1;  
       
       std::stringstream message;
-      message << "Processing cloud with " << cloud->width * cloud->height
+      message << "Processing cloud with " << cloud->points.size()
               << " points" ;
       app.sendSystemStatus( message.str() ); 
       std::cout << message.str() << "\n";      
@@ -168,13 +166,13 @@ void processThread(App& app) {
     }
   
   }
-  cout << "Finished processThread\n";    
+  std::cout << "Finished processThread\n";
 }
 
 void commsThread(App& app) { 
-  cout << "Started commsThread\n";
+  std::cout << "Started commsThread\n";
   while( 0==app.lcm_->handle() );// &&  (! app.accu_->getFinished()) );
-  cout << "Finished commsThread\n";  
+  std::cout << "Finished commsThread\n";
 }
 
 

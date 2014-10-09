@@ -1,0 +1,6 @@
+#ifndef PRONTO_LCM_CONFIG_H_
+#define PRONTO_LCM_CONFIG_H_
+
+#cmakedefine USE_PRONTO_LCM_PCL
+
+#endif // PRONT_LCM_CONFIG

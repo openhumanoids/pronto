@@ -12,7 +12,7 @@
 
 #include "pronto_vis_config.h"
 
-#ifdef USE_PCL
+#ifdef USE_PRONTO_VIS_PCL
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
@@ -128,8 +128,26 @@ class pronto_vis {
     // Eigen::Affine3f t ( pose_transform.cast<float>() );
     void transformPointCloud(pronto::PointCloud &cloud_in, pronto::PointCloud &cloud_out, Eigen::Affine3f transform);
 
+    // Duplicates a function in drc_lidarUtils
+    // should this be recoded to use pronto::PointCloud?
+    static bool interpolateScan(const std::vector<float>& iRanges,
+                  const double iTheta0, const double iThetaStep,
+                  const Eigen::Isometry3d& iPose0,
+                  const Eigen::Isometry3d& iPose1,
+                  std::vector<Eigen::Vector3f>& oPoints);
+
+
+    void convertLidar(std::vector< float > ranges, int numPoints, double thetaStart,
+        double thetaStep,
+        pronto::PointCloud* &cloud,
+	double minRange = 0., double maxRange = 1e10,
+	double validRangeStart = -1000, double validRangeEnd = 1000);
+
+    // Very basic implementation of PCL's ascii pcd writer
+    void writePCD(std::string filename, pronto::PointCloud &cloud);
+
     ///////////// Point Cloud Methods ////////////////////////////
-#ifdef USE_PCL
+#ifdef USE_PRONTO_VIS_PCL
     void convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &cloud, pronto::PointCloud &cloud_out);
     // Plot a set of point clouds relative to a specific pose
     void ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,

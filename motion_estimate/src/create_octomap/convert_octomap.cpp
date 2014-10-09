@@ -5,10 +5,12 @@ ConvertOctomap::ConvertOctomap(boost::shared_ptr<lcm::LCM> &lcm_, const ConvertO
       
   verbose_ = 1; // 3 lots, 2 some, 1 v.important
   tree_  = new OcTree(1); // set else where
+
+  pc_vis_ = new pronto_vis( lcm_->getUnderlyingLCM() );
 }
 
 
-OcTree* ConvertOctomap::convertPointCloudToOctree(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud){
+OcTree* ConvertOctomap::convertPointCloudToOctree(pronto::PointCloud* &cloud){
   //  Takes about 2.5 sec to convert 400scans or 400k points into an octree
   
   bool write_output_detailed = false;
@@ -21,14 +23,14 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pcl::PointCloud<pcl::PointXYZR
   
   std::string path = "/tmp/";
   
-            
   // 2. Convert to octomap graph:
   ScanGraph* graph = new ScanGraph();
-  Pointcloud* scan = new Pointcloud();
+  octomap::Pointcloud* scan = new octomap::Pointcloud();
   //float x, y, z, roll, pitch, yaw;
   //pose6d pose(x, y, z, roll, pitch, yaw);
   pose6d pose(0, 0, 0, 0, 0, 0);
   //std::cout << "Pose "<< pose << " found.\n";
+
   for (size_t i = 0; i < cloud->points.size(); i++){
     scan->push_back(cloud->points[i].x,
                                  cloud->points[i].y,
@@ -41,7 +43,7 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pcl::PointCloud<pcl::PointXYZR
     std::string filename_out = path + "example_sweep_cloud_400scans.graph";
     graph->writeBinary(filename_out);
   }
-            
+
   std::string treeFilename = path + "example_sweep_cloud_400scans.bt";
   timeval start; 
   timeval stop; 
@@ -68,7 +70,6 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pcl::PointCloud<pcl::PointXYZR
 
   if (verbose_>=1) cout << "Creating tree\n===========================\n";
   OcTree* tree = new OcTree(res);
-
 
   gettimeofday(&start, NULL);  // start timer
   unsigned int numScans = graph->size();
@@ -97,7 +98,6 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pcl::PointCloud<pcl::PointXYZR
   delete graph;
   if (logfile.is_open())
     logfile.close();
-
 
   if (verbose_>=1) cout << "Done building tree.\n";
   if (verbose_>=1) cout << "time to insert scans: " << time_to_insert << " sec" << endl;
@@ -204,7 +204,7 @@ void backupFiles(){
 
 
 
-void ConvertOctomap::doWork(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud){
+void ConvertOctomap::doWork(pronto::PointCloud* &cloud){
             
   tree_ = convertPointCloudToOctree(cloud);
   publishOctree(tree_,"OCTOMAP");
@@ -232,9 +232,10 @@ void ConvertOctomap::doWork(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud){
     std::stringstream s1;
     s1 <<  getDataPath() <<   "/octomap.pcd" ;
     printf("Saving original point cloud to: %s\n", s1.str().c_str());
-    pcl::PCDWriter writer;
-    writer.write (s1.str(), *cloud, true); // binary =true
-    cout << "Finished writing "<< cloud->points.size() <<" points to:\n" << s1.str() <<"\n";
+    pc_vis_->writePCD(s1.str(), *cloud);
+    //pcl::PCDWriter writer;
+    //writer.write (s1.str(), *cloud, true); // binary =true
+    //cout << "Finished writing "<< cloud->points.size() <<" points to:\n" << s1.str() <<"\n";
     
     std::stringstream s;
     s <<  getDataPath() <<   "/octomap.bt" ;

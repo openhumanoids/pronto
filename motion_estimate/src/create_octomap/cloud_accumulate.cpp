@@ -1,4 +1,5 @@
 #include "cloud_accumulate.hpp"
+#include <iomanip>      // std::setprecision
 
 CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_):
     lcm_(lcm_), ca_cfg_(ca_cfg_){
@@ -11,15 +12,15 @@ CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudA
   // obj: id name type reset
   // pts: id name type reset objcoll usergb rgb
   pc_vis_->obj_cfg_list.push_back( obj_cfg(60000,"Pose - Laser",5,reset) );
-  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60001,"Cloud - Laser"         ,1,reset, 60000,0, {0.0, 0.0, 1.0} ));
+  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60001,"Cloud - Laser"         ,1,reset, 60000,1, {0.0, 0.0, 1.0} ));
   pc_vis_->obj_cfg_list.push_back( obj_cfg(60010,"Pose - Null",5,reset) );
-  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60011,"Cloud (scan-by-scan) - Null"         ,1,reset, 60010,0, {0.0, 0.0, 1.0} ));
-  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60012,"Cloud (full sweep) - Null"         ,1,1, 60010,0, {0.0, 0.0, 1.0} ));
+  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60011,"Cloud (scan-by-scan) - Null"         ,1,reset, 60010,1, {0.0, 1.0, 0.0} ));
+  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60012,"Cloud (full sweep) - Null"         ,1,1, 60010,1, {1.0, 0.0, 0.0} ));
   
   counter_ =0;  
   verbose_=3; // 1 important, 2 useful 3, lots
   
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pronto::PointCloud* cloud_ptr (new pronto::PointCloud ());
   combined_cloud_ = cloud_ptr;    
   
   finished_ = false;
@@ -62,20 +63,19 @@ int get_trans_with_utime(BotFrames *bot_frames,
 }
 
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
+pronto::PointCloud*  CloudAccumulate::convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
  
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_laser (new pcl::PointCloud<pcl::PointXYZRGB> ());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_local (new pcl::PointCloud<pcl::PointXYZRGB> ());
+    pronto::PointCloud* scan_laser (new pronto::PointCloud ());
+    pronto::PointCloud* scan_local (new pronto::PointCloud ());
     
     // 1. Convert scan into simple XY point cloud:  
     double validBeamAngles[] ={-10,10}; 
-    convertLidar(this_msg->ranges, this_msg->nranges, this_msg->rad0,
+    pc_vis_->convertLidar(this_msg->ranges, this_msg->nranges, this_msg->rad0,
         this_msg->radstep, scan_laser, ca_cfg_.min_range, ca_cfg_.max_range,
         validBeamAngles[0], validBeamAngles[1]);  
     
     // 4. Visualize the scan:
     Eigen::Isometry3d scan_to_local;
-    //botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN", "local"  , this_msg->utime, scan_to_local);
     get_trans_with_utime( botframes_ , "SCAN", "local"  , this_msg->utime, scan_to_local);
     
     Isometry3dTime scan_to_local_T = Isometry3dTime(counter_, scan_to_local);
@@ -85,18 +85,16 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode1(std::share
     
     /////////////////
     // 2. Project the scan into local frame:
-    Eigen::Isometry3f scan_to_local_f= scan_to_local.cast<float>();
-    pcl::transformPointCloud (*scan_laser, *scan_local,
-        scan_to_local_f.translation(), Eigen::Quaternionf(scan_to_local_f.rotation())  );    
+    pc_vis_->transformPointCloud(*scan_laser, *scan_local, Eigen::Affine3f ( scan_to_local.cast<float>() ) );
     Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
     if (verbose_>=2) pc_vis_->pose_to_lcm_from_list(60010, null_T);
-    if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);      
+    if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);
   
     return scan_local;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
-   pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_local (new pcl::PointCloud<pcl::PointXYZRGB> ());
+pronto::PointCloud*  CloudAccumulate::convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
+   pronto::PointCloud* scan_local (new pronto::PointCloud ());
     
   ////////////////////
   ////////////////////
@@ -189,9 +187,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::share
     return scan_local;
   }
   
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_body (new pcl::PointCloud<pcl::PointXYZRGB> ());
-  scan_body->width   = projected_laser_scan_->npoints;
-  scan_body->height   = 1;
+  pronto::PointCloud* scan_body (new pronto::PointCloud ());
   scan_body->points.resize (projected_laser_scan_->npoints);
   
   int n_valid =0;
@@ -206,7 +202,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::share
     }
   }  
   // Resize outgoing cloud
-  scan_body->width   = n_valid;
   scan_body->points.resize (n_valid);  
   
   bot_core_planar_lidar_t_destroy(laser_msg_c);
@@ -235,9 +230,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::share
   
     /////////////////
     // 2. Project the scan into local frame:
-    Eigen::Isometry3f body_to_local_f= body_to_local.cast<float>();
-    pcl::transformPointCloud (*scan_body, *scan_local,
-        body_to_local_f.translation(), Eigen::Quaternionf(body_to_local_f.rotation())  );    
+    pc_vis_->transformPointCloud(*scan_body, *scan_local, Eigen::Affine3f ( body_to_local.cast<float>() ) );
     Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
     if (verbose_>=2) pc_vis_->pose_to_lcm_from_list(60010, null_T);
     if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);     
@@ -250,8 +243,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode2(std::share
 }
 
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
-   pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_local (new pcl::PointCloud<pcl::PointXYZRGB> ());
+pronto::PointCloud*  CloudAccumulate::convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
+   pronto::PointCloud* scan_local (new pronto::PointCloud ());
 
 
   std::vector<Eigen::Vector3f> points;
@@ -262,15 +255,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode3(std::share
 
   // std::cout << scan_start_utime << " and " << scan_end_utime << "\n";
   
-  //botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN","local"  , scan_start_utime, local_to_scan_start);  
-  //botframes_cpp_->get_trans_with_utime( botframes_ , "SCAN", "local"  , scan_end_utime, local_to_scan_end);  
   get_trans_with_utime( botframes_ , "SCAN","local"  , scan_start_utime, local_to_scan_start);  
   get_trans_with_utime( botframes_ , "SCAN", "local"  , scan_end_utime, local_to_scan_end);  
-  lidar_utils_.interpolateScan(this_msg->ranges, this_msg->rad0, this_msg->radstep,
+  pc_vis_->interpolateScan(this_msg->ranges, this_msg->rad0, this_msg->radstep,
           local_to_scan_start, local_to_scan_end, points);    
 
-  scan_local->width   = points.size();
-  scan_local->height   = 1;
   scan_local->points.resize (points.size());
   
   int n_valid =0;
@@ -283,7 +272,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode3(std::share
     }
   }  
   // Resize outgoing cloud
-  scan_local->width   = n_valid;
   scan_local->points.resize (n_valid);    
 
   Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
@@ -294,7 +282,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr  CloudAccumulate::convertMode3(std::share
 }
 
 
-void CloudAccumulate::publishCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud){
+void CloudAccumulate::publishCloud(pronto::PointCloud* &cloud){
   Isometry3dTime null_T = Isometry3dTime(1, Eigen::Isometry3d::Identity()  );
   pc_vis_->pose_to_lcm_from_list(60010, null_T);
   pc_vis_->ptcld_to_lcm_from_list(60012, *cloud, 1,1);    
@@ -306,7 +294,7 @@ void CloudAccumulate::publishCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud
 
 void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   
-  if (!frame_check_utils_.isLocalToScanValid(botframes_)){
+  if (!frame_check_tools_.isLocalToScanValid(botframes_)){
     return;
   }
   
@@ -340,7 +328,7 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   }
   
 
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_local (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pronto::PointCloud* scan_local (new pronto::PointCloud ());
   
   if (convert_mode==1){  
     scan_local = convertMode1( this_msg );
@@ -351,9 +339,11 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   }
     
   // Accumulate
-  *combined_cloud_ += *scan_local;
-  
-  
+  //*combined_cloud_ += *scan_local;
+  combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
+  //for (size_t i=0; i <scan_local->points.size() ; i++){
+  //  combined_cloud_->points.push_back( scan_local->points[i] );
+  //}
   
   counter_++;  
   if (counter_ > ca_cfg_.batch_size){
@@ -362,5 +352,6 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   }
 
 }
+
 
 

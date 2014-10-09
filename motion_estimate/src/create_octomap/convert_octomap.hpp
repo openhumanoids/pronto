@@ -5,16 +5,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
 #include <octomap/octomap.h>
 #include <octomap_utils/octomap_util.hpp>
 #include <lcmtypes/octomap_utils.h>
 
 #include <path_util/path_util.h>
+#include <pronto_utils/pronto_vis.hpp>
 
 using namespace std;
 using namespace octomap;
@@ -33,15 +31,16 @@ class ConvertOctomap{
     ~ConvertOctomap(){
     }    
 
-    void doWork(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud);
+    void doWork(pronto::PointCloud* &cloud);
     OcTree* getTree(){ return tree_; }
     void publishOctree(OcTree* tree, std::string channel);
     
   private:
 
-    OcTree* convertPointCloudToOctree(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud);
+    OcTree* convertPointCloudToOctree(pronto::PointCloud* &cloud);
 
-    
+    pronto_vis* pc_vis_ ;
+
     OcTree* tree_;    
 
     boost::shared_ptr<lcm::LCM> lcm_;
