@@ -8,7 +8,7 @@ pkg_check_modules(PCL_IO pcl_io-1.7)
 if(PCL_IO_FOUND)
   message("---- PCL IO was found (in pronto_vis)\n")
   set(PCL_IO_PKG_CONFIG "pcl_io-1.7")
-  set(USE_PCL TRUE)
+  set(USE_PRONTO_VIS_PCL TRUE)
 endif()
 
 if(NOT PCL_IO_FOUND)
