@@ -24,11 +24,11 @@ pods_use_pkg_config_packages(mav-est-legodo ${REQUIRED_LIBS}
 pods_install_libraries(mav-est-legodo)
 pods_install_pkg_config_file(mav-est-legodo
     CFLAGS
-    LIBS -lmav-est-legodo -lpcl_io
-    REQUIRES 	${REQUIRED_LIBS} pcl_io-1.7
+    LIBS -lmav-est-legodo 
+    REQUIRES 	${REQUIRED_LIBS} 
     VERSION 0.0.1)
 
-
+# -lpcl_io pcl_io-1.7
 
 
 # This was originally used but I no longer use it:
