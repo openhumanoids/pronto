@@ -9,7 +9,7 @@ endif(NOT BOT2_VIS_FOUND)
 
 link_libraries(boost_thread)
 
-add_executable(pronto_viewer pronto-viewer.cpp)
+add_executable(pronto-viewer pronto_viewer.cpp)
 pods_use_pkg_config_packages(pronto-viewer bot2-vis 
   bot2-frames-renderers
   octomap-renderer
