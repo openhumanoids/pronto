@@ -130,7 +130,7 @@ float foot_contact_classify::update (int64_t utime, Eigen::Isometry3d primary_fo
   }
 
   // Determine which points are in contact with the ground (stub)
-  determineContactPoints(utime, primary_foot, secondary_foot);
+  // determineContactPoints(utime, primary_foot, secondary_foot);
 
   // Determine center of pressure, works but i am not using it currently
   if (verbose_>=3) determineCenterOfPressure(utime, primary_foot, secondary_foot,standing_foot);

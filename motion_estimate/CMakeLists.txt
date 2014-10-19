@@ -27,9 +27,11 @@ add_subdirectory(src/pose_meas)
 # estimator proper
 add_subdirectory(src/fusion)
 
-
-
+# map creator:
 add_subdirectory(src/create_octomap)
+
+# gui:
+add_subdirectory(src/pronto_viewer)
 
 
 pods_install_python_script(se-bdi-imu-individually scripts/republish_bdi_imu_individually.py)
