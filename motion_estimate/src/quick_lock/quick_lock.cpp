@@ -104,8 +104,8 @@ void App::filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& 
 
   if (!cl_cfg_.correct_all_modes){
     if (last_controller_state_!=2){
-      std::cout << "not walking, lock disabled, returning\n";
-      return;
+//      std::cout << "not walking, lock disabled, returning\n";
+//      return;
     }
   }
 
