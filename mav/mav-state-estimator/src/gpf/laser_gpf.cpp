@@ -19,6 +19,7 @@
 
 #include <lcmtypes/pronto/utime_t.hpp>
 #include <lcmtypes/pronto/atlas_status_t.hpp>
+#include <lcmtypes/pronto/controller_status_t.hpp>
 
 #include <Eigen/Dense>
 #include <eigen_utils/eigen_utils.hpp>
@@ -66,16 +67,17 @@ public:
 
     lcm_front->lcm_recv->subscribe(laser_handler->laser_channel.c_str(), &app_t::laser_message_handler, this);
     lcm_front->lcm_recv->subscribe(lcm_front->filter_state_channel.c_str(), &app_t::filter_state_handler, this);
-    
-    // pronto integration:
+
+    // drc integration:
     lcm_front->lcm_recv->subscribe("STATE_EST_LASER_DISABLE", &app_t::laser_disable_handler, this);
     lcm_front->lcm_recv->subscribe("STATE_EST_LASER_ENABLE", &app_t::laser_enable_handler, this);
     //
-    lcm_front->lcm_recv->subscribe("ATLAS_STATUS", &app_t::atlas_status_handler, this);
+    lcm_front->lcm_recv->subscribe("ATLAS_STATUS", &app_t::atlas_status_handler, this); // from BDI
+    lcm_front->lcm_recv->subscribe("CONTROLLER_STATUS", &app_t::controller_status_handler, this); // from MIT controller
     lcm_front->lcm_recv->subscribe("STATE_EST_USE_NEW_MAP", &app_t::use_new_map_handler, this);
-    behavior_prev = pronto::atlas_status_t::BEHAVIOR_NONE;
+    behavior_prev = drc::atlas_status_t::BEHAVIOR_NONE;
     utime_standing_trans = 0;
-    
+
   }
 
   //--------------------LCM stuff-----------------------
@@ -100,65 +102,141 @@ public:
   // Modules to Bit flip the laser on or off, added by mfallon
   int behavior_prev ;
   int64_t utime_standing_trans;
-  
+
   void laser_disable_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::utime_t * msg)
+      const drc::utime_t * msg)
   {
     gpf->laser_enabled = false;
     //fprintf(stderr, "D\n");
   }
-  
+
   void laser_enable_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::utime_t * msg)
+      const drc::utime_t * msg)
   {
     gpf->laser_enabled = true;
     //fprintf(stderr, "E\n");
-    
+
     // this will allow the laser to function for 2 seconds:
     fprintf(stderr, "Forcing enabling of laser from viewer\n");
     utime_standing_trans = msg->utime;
   }
 
   void use_new_map_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::utime_t * msg){
+      const drc::utime_t * msg){
     std::cout << "Deleting current gpf and restarting\n";
     delete laser_handler;
-    
+
     laser_handler = new LaserGPFHandler(lcm_front->lcm_pub->getUnderlyingLCM(), lcm_front->param, lcm_front->frames);
-    
-        
-  } 
-  
+
+
+  }
+
   void atlas_status_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::atlas_status_t * msg){
-    
-    if ( (msg->behavior != pronto::atlas_status_t::BEHAVIOR_STAND) &&  (msg->behavior != pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+      const drc::atlas_status_t * msg){
+
+    if (msg->behavior == drc::atlas_status_t::BEHAVIOR_USER){
+      // Don't change the behavior variable in user mode
+      //fprintf(stderr, "\nIn BDI user-mode\n");
+      behavior_prev = msg->behavior;
+      return;
+    }
+
+    if ( (msg->behavior != drc::atlas_status_t::BEHAVIOR_STAND) &&  (msg->behavior != drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
       if ( !gpf->laser_enabled ){
         fprintf(stderr, "\nNot Standing or Manipulating - enabling  laser\n");
       }
       gpf->laser_enabled = true;
     }
-    
-    if ( (behavior_prev != pronto::atlas_status_t::BEHAVIOR_STAND) &&  (behavior_prev != pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
-      if ( (msg->behavior == pronto::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
-	fprintf(stderr, "\nEntering stand\n");
-	utime_standing_trans = msg->utime;
+
+    if ( (behavior_prev != drc::atlas_status_t::BEHAVIOR_STAND) &&  (behavior_prev != drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+      if ( (msg->behavior == drc::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+        fprintf(stderr, "\nEntering stand\n");
+        utime_standing_trans = msg->utime;
       }
     }
-    
-    if ( (msg->behavior == pronto::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+
+    if ( (msg->behavior == drc::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
       if ( msg->utime - utime_standing_trans > 2E6){
-	if (gpf->laser_enabled){
+        if (gpf->laser_enabled){
           fprintf(stderr, "\nBeen standing for some time %f - disabling laser\n", ( (double) (msg->utime - utime_standing_trans)*1E-6) );
-	}
-	gpf->laser_enabled = false;
+        }
+        gpf->laser_enabled = false;
       }
     }
     behavior_prev = msg->behavior;
   }
-  
+
+
+  void controller_status_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
+      const drc::controller_status_t * msg){
+
+    if (behavior_prev != drc::atlas_status_t::BEHAVIOR_USER){
+      // Don't change the behavior variable when not in user mode
+      //fprintf(stderr, "\nIn BDI user-mode\n");
+      return;
+    }
+
+    // std::cout << (int) behavior_prev << " is bdi\n";
+    bool laser_enabled_after = gpf->laser_enabled;
+
+    if (msg->state == drc::controller_status_t::DUMMY){
+      //std::cout << msg->utime << " got " << (int) msg->state << " MIT dummy\n";
+      // Dummy is usually very short, so don't do anything
+      laser_enabled_after = false;
+    }else if (msg->state == drc::controller_status_t::UNKNOWN){
+      //std::cout << msg->utime << " got " << (int) msg->state << " MIT unknown\n";
+      // Unknown is usually very short (1 tic)
+      laser_enabled_after = false;
+    }else if (msg->state == drc::controller_status_t::STANDING){
+      //std::cout << msg->utime << " got " << (int) msg->state << " MIT standing\n";
+      laser_enabled_after = false;
+    }else if (msg->state == drc::controller_status_t::WALKING){
+      //std::cout << msg->utime << " got " << (int) msg->state << " MIT walking\n";
+      laser_enabled_after = true;
+    }else{
+      // other modes?
+      std::cout << msg->utime << " got " << (int) msg->state << " MIT other---------------------\n";
+    }
+
+    if (gpf->laser_enabled != laser_enabled_after){
+      std::cout << "Changing Laser mode: " << (int) gpf->laser_enabled << " --> " << (int) laser_enabled_after << "\n";
+    }
+
+    gpf->laser_enabled = laser_enabled_after;
+
+
+    /*
+    if ( (msg->behavior != drc::atlas_status_t::BEHAVIOR_STAND) &&  (msg->behavior != drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+      if ( !gpf->laser_enabled ){
+        fprintf(stderr, "\nNot Standing or Manipulating - enabling  laser\n");
+      }
+      gpf->laser_enabled = true;
+    }
+
+    if ( (behavior_prev != drc::atlas_status_t::BEHAVIOR_STAND) &&  (behavior_prev != drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+      if ( (msg->behavior == drc::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+        fprintf(stderr, "\nEntering stand\n");
+        utime_standing_trans = msg->utime;
+      }
+    }
+
+    if ( (msg->behavior == drc::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == drc::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+      if ( msg->utime - utime_standing_trans > 2E6){
+        if (gpf->laser_enabled){
+          fprintf(stderr, "\nBeen standing for some time %f - disabling laser\n", ( (double) (msg->utime - utime_standing_trans)*1E-6) );
+        }
+        gpf->laser_enabled = false;
+      }
+    }
+    behavior_prev = msg->behavior;
+    */
+  }
+
+
+
+
   ////////////
-  
+
   void filter_state_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
       const mav::filter_state_t * msg)
   {
@@ -278,4 +356,3 @@ int main(int argc, char **argv)
   printf("all_done!\n");
   return 0;
 }
-
