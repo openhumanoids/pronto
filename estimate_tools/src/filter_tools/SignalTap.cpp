@@ -71,7 +71,13 @@ void SchmittTrigger::Reset() {
   first_call = true;
 }
 void SchmittTrigger::forceHigh() {
-	current_status = true;
+  current_status = true;
+  timer = 0;
+}
+
+void SchmittTrigger::forceLow() {
+  current_status = false;
+  timer = 0;
 }
 
 void SchmittTrigger::UpdateState(long present_time, double value) {

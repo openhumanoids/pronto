@@ -46,14 +46,15 @@ private:
 	bool first_call;
 	
 public:
-	SchmittTrigger();
-	SchmittTrigger(double lt, double ht, long low_delay, long high_delay);
-	void setParameters(double lt, double ht, long low_delay, long high_delay);
-	void UpdateState(long present_time, double value);
-	void Reset();
-	float getState();
-	double getCurrentValue();
-	void forceHigh();
+  SchmittTrigger();
+  SchmittTrigger(double lt, double ht, long low_delay, long high_delay);
+  void setParameters(double lt, double ht, long low_delay, long high_delay);
+  void UpdateState(long present_time, double value);
+  void Reset();
+  float getState();
+  double getCurrentValue();
+  void forceHigh();
+  void forceLow();
 };
 
 class BipolarSchmittTrigger {
