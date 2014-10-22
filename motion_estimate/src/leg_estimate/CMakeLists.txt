@@ -12,7 +12,6 @@ pods_use_pkg_config_packages(leg_estimate estimate_tools  filter_tools foot_cont
   foot_contact_alt
   ${REQUIRED_PACKAGES} 
   lcmtypes_bot2-core 
-  pronto_math
   pronto_vis 
   eigen3)
 # lcmtypes_fovis-bot2 

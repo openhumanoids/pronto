@@ -17,7 +17,7 @@ add_library(mav-est-legodo SHARED
                 rbis_legodo_update.cpp
                 rbis_legodo_common.cpp)
 
-pods_use_pkg_config_packages(mav-est-legodo ${REQUIRED_LIBS} 
+pods_use_pkg_config_packages(mav-est-legodo ${REQUIRED_LIBS}  pronto_vis
     leg_estimate torque_adjustment_tools)
 #    bot2-frames_cpp
 # joint-utils)

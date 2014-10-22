@@ -9,6 +9,7 @@ pods_use_pkg_config_packages(se-fusion
     mav-est-legodo-external
     lcmtypes_pronto-lcmtypes
     model-client 
+    pronto_vis
     mav-est-pose-init)
 
 # don't know why this is necessary (something to do with concise args):

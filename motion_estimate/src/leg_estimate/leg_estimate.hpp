@@ -24,8 +24,8 @@
 #include <bot_param/param_client.h>
 #include <bot_param/param_util.h>
 
-#include <pronto_utils/pronto_math.hpp>
-#include <pronto_utils/pronto_lcm.hpp>
+// #include <pronto_utils/pronto_math.hpp>
+// #include <pronto_utils/pronto_lcm.hpp>
 #include <pronto_utils/pronto_vis.hpp>
 
 #include <lcmtypes/bot_core.hpp>
