@@ -194,7 +194,7 @@ pronto::PointCloud*  CloudAccumulate::convertMode2(std::shared_ptr<bot_core::pla
   for (int i = 0; i < projected_laser_scan_->npoints; i++) {
     // std::cout << i << " " << projected_laser_scan_->points[i].x << "\n";
     // std::cout << i << " " << projected_laser_scan_->points[i].z << "\n";   
-    if (( projected_laser_scan_->rawScan->ranges[i] < 30.0) && ( projected_laser_scan_->rawScan->ranges[i] > 2.0)){
+    if (( projected_laser_scan_->rawScan->ranges[i] < 30.0) && ( projected_laser_scan_->rawScan->ranges[i] > 1.85)){
       scan_body->points[n_valid].x = projected_laser_scan_->points[i].x;
       scan_body->points[n_valid].y = projected_laser_scan_->points[i].y;
       scan_body->points[n_valid].z = projected_laser_scan_->points[i].z;
@@ -264,7 +264,7 @@ pronto::PointCloud*  CloudAccumulate::convertMode3(std::shared_ptr<bot_core::pla
   
   int n_valid =0;
   for (int i = 0; i < points.size(); i++) {
-    if ( (this_msg->ranges[i]<30.0)  && (this_msg->ranges[i]>2.0)  ){
+    if ( (this_msg->ranges[i]<30.0)  && (this_msg->ranges[i]>1.85)  ){
       scan_local->points[n_valid].x = points[i](0);;
       scan_local->points[n_valid].y = points[i](1);;
       scan_local->points[n_valid].z = points[i](2);;
