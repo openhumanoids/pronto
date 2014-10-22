@@ -167,8 +167,11 @@ int main(int argc, char ** argv) {
   cl_cfg.correct_all_modes = false;
   // higher is weaker.
   // 100 seemed necessary to clamp close to current position
-  cl_cfg.xyz_cov = 200; // looked vaguely appropriate
-  cl_cfg.yaw_cov = pow(5.0*M_PI/180.0,2); // this is taken from viewer UI
+  //cl_cfg.xyz_cov = 200; // looked vaguely appropriate
+  //cl_cfg.yaw_cov = pow(5.0*M_PI/180.0,2); // this is taken from viewer UI
+  // 200/400 were used in the experiments for the walking journal paper and seem about right
+  cl_cfg.xyz_cov = 200;
+  cl_cfg.yaw_cov = 400;
   ConciseArgs opt(argc, (char**)argv);
   opt.add(cl_cfg.mode, "f", "mode","Filter Type");
   opt.add(cl_cfg.output_channel, "o", "output_channel","Output measurement channel");
