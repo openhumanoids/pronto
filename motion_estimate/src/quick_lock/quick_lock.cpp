@@ -13,8 +13,8 @@
 
 #include <Eigen/Core>
 #include <lcmtypes/bot_core/pose_t.hpp>
-#include <lcmtypes/drc/controller_status_t.hpp>
-#include <lcmtypes/drc/double_array_t.hpp>
+#include <lcmtypes/pronto/controller_status_t.hpp>
+#include <lcmtypes/pronto/double_array_t.hpp>
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
 #include <lcmtypes/mav/filter_state_t.hpp>
 
@@ -46,7 +46,7 @@ class App{
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
     void filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  mav::filter_state_t* msg);
-    void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drc::controller_status_t* msg);
+    void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
 
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
     void poseLaserHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
@@ -83,7 +83,7 @@ void App::poseLaserHandler(const lcm::ReceiveBuffer* rbuf, const std::string& ch
 }
 
 
-void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drc::controller_status_t* msg){
+void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg){
   if (last_controller_state_ != msg->state){
     if(msg->state == 1){
       std::cout << "changing to standing, disable lock\n";

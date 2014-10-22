@@ -13,8 +13,7 @@
 
 #include <Eigen/Core>
 #include <lcmtypes/bot_core/pose_t.hpp>
-#include <lcmtypes/drc/controller_status_t.hpp>
-#include <lcmtypes/drc/double_array_t.hpp>
+#include <lcmtypes/pronto/double_array_t.hpp>
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
 #include <lcmtypes/mav/filter_state_t.hpp>
 
@@ -74,7 +73,7 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
   double dposz = -msg->pos[2] + laser_pose_msg_.pos[2];
   //std::cout << dposx << "\n";
 
-  drc::double_array_t out;
+  pronto::double_array_t out;
   out.utime = msg->utime;
   out.num_values = 6;
   out.values = {dposroll, dpospitch, dposyaw, dposx, dposy, dposz};
