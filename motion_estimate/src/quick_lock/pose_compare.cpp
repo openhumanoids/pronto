@@ -12,12 +12,13 @@
 #include <ConciseArgs>
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/pronto/double_array_t.hpp>
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
 #include <lcmtypes/mav/filter_state_t.hpp>
 
-#include <pointcloud_tools/pointcloud_math.hpp>
+#include <pronto_utils/pronto_math.hpp>
 
 using namespace std;
 using namespace boost::assign; // bring 'operator+()' into scope
