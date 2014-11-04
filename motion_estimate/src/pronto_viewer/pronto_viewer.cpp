@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
   bot_lcmgl_add_renderer_to_viewer(viewer,lcm, 1);
   laser_util_add_renderer_to_viewer(viewer, 1, lcm, bot_param, bot_frames);
   bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
+  bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
+  bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
 
   add_octomap_renderer_to_viewer(viewer, 1, lcm);
   add_map_measurement_renderer_to_viewer(viewer, 1, lcm, bot_param, bot_frames);
