@@ -20,5 +20,5 @@ add_subdirectory(src/pronto_joint_tools)
 
 
 add_subdirectory(src/test)
-
+add_subdirectory(src/tools)
 
