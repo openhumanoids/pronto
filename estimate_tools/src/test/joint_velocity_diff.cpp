@@ -7,8 +7,8 @@
 #include <lcm/lcm-cpp.hpp>
 
 
-#include <lcmtypes/drc/atlas_state_t.hpp>
-#include <lcmtypes/drc/robot_state_t.hpp>
+#include <lcmtypes/pronto/atlas_state_t.hpp>
+#include <lcmtypes/pronto/robot_state_t.hpp>
 
 
 #include <drc_utils/joint_utils.hpp>
