@@ -7,7 +7,6 @@ endif(NOT BOT2_VIS_FOUND)
 
 #add_definitions(-Wall -std=gnu99)
 
-link_libraries(boost_thread)
 
 add_executable(collections_example collections_example.cpp)
 pods_use_pkg_config_packages(collections_example lcm)
@@ -18,5 +17,7 @@ pods_install_executables(collections_example)
 add_executable(collections_viewer collections_viewer.cpp)
 pods_use_pkg_config_packages(collections_viewer bot2-vis 
   bot2-lcmgl-renderer lcm collections_renderer)
+
+target_link_libraries(collections_viewer ${Boost_LIBRARIES})
 
 pods_install_executables(collections_viewer)
