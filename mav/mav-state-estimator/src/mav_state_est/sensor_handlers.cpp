@@ -19,7 +19,7 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames)
   cov_accel_bias = bot_sq(cov_accel_bias);
 
   dt = bot_param_get_double_or_fail(_param, "state_estimator.ins.timestep_dt"); // nominally dt = 0.01 for 100 Hz IMU messages
-  
+
   // added by mfallon for atlas: 3 notch filters for the pump
   atlas_filter = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.atlas_filter");
   double notch_freq = bot_param_get_double_or_fail(_param, "state_estimator.ins.atlas_filter_freq");
@@ -27,15 +27,15 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames)
   for (int i=0; i < 3 ; i++){
     IIRNotch* x_filter = new IIRNotch ( notch_freq*pow(2,i) , fs );
     notchfilter_x[i] = x_filter;
-    
+
     IIRNotch* y_filter = new IIRNotch ( notch_freq*pow(2,i) , fs);
     notchfilter_y[i] = y_filter;
 
     IIRNotch* z_filter = new IIRNotch ( notch_freq*pow(2,i) , fs);
     notchfilter_z[i] = z_filter;
-  }  
-  
-  
+  }
+
+
   char * ins_frame = bot_param_get_str_or_fail(_param, "state_estimator.ins.frame");
   bot_frames_get_trans(_frames, ins_frame, "body", &ins_to_body);
   free(ins_frame);
@@ -61,7 +61,7 @@ RBISUpdateInterface * InsHandler::processMessage(const mav::ins_t * msg)
   //bot_trans_apply_vec(&ins_to_body, msg->gyro, body_gyro);
   bot_quat_rotate_to(ins_to_body.rot_quat, msg->gyro, body_gyro);
   Eigen::Map<Eigen::Vector3d> gyro(body_gyro);
-  
+
   return new RBISIMUProcessStep(gyro, accelerometer, cov_gyro, cov_accel, cov_gyro_bias, cov_accel_bias, dt, msg->utime);
 }
 
@@ -104,28 +104,28 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_im
   double delta_rotation[3];
   double raw_dt;
   int64_t utime;
-  
+
   if (atlas_filter){
     // Decode the data and split out the new packets:
     pronto::atlas_raw_imu_batch_t msg_copy = pronto::atlas_raw_imu_batch_t(*msg);
-    IMUBatch batch = imu_data_.convertFromLCMBatch(&msg_copy);  
+    IMUBatch batch = imu_data_.convertFromLCMBatch(&msg_copy);
     // Only filter new packets:
     for (int i=0 ; i < batch.packets.size() ; i++ ){
       doFilter( batch.packets[i] );
-    }  
+    }
     if (batch.packets.size() ==0){
       //std::cout << msg->utime << " IMPORTANT: No new IMU packets detected - shouldn't happen. Skipping iteration\n";
-      // mfallon: I observed this once or twice in my logs from 2014-01-21: exactly the 
+      // mfallon: I observed this once or twice in my logs from 2014-01-21: exactly the
       // same imu data from two consecutive batch messages
       // update: happens all the time at 1kHz
       return NULL;
     }//else{
     //  std::cout << batch.packets.size() << " new packets\n";
     //}
-    
+
     // Get the most recent filtered packet:
     IMUPacket p = batch.packets[batch.packets.size() -1 ];
-    
+
     raw_dt =  p.utime_delta*1E-6;
     memcpy(linear_acceleration, p.linear_acceleration.data(),p.linear_acceleration.size() * sizeof(double));
     memcpy(delta_rotation, p.delta_rotation.data(),p.delta_rotation.size() * sizeof(double));
@@ -137,7 +137,7 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_im
     raw_dt = (msg->raw_imu[0].utime - msg->raw_imu[1].utime)*1E-6;
     utime = msg->utime;
   }
-  
+
 
 
   // Convert Rotation Amounts to rotation rates:
@@ -149,19 +149,19 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_im
   if (1==0){
     std::cout << "===\n";
     std::cout << "rotation\n";
-    std::cout << delta_rotation[0] << ", " << delta_rotation[1] << ", " 
+    std::cout << delta_rotation[0] << ", " << delta_rotation[1] << ", "
               << delta_rotation[2] << " delta_rot\n";
     std::cout << "rotation rate\n";
     std::cout << raw_dt << "\n";
-    std::cout << sensor_gyro[0] << ", " << sensor_gyro[1] << ", " 
-              << sensor_gyro[2] << " gyro\n";  
+    std::cout << sensor_gyro[0] << ", " << sensor_gyro[1] << ", "
+              << sensor_gyro[2] << " gyro\n";
   }
 
   //    get everything into the right frame
   double body_accel[3];
   bot_trans_apply_vec(&ins_to_body, linear_acceleration, body_accel);
-  Eigen::Map<Eigen::Vector3d> accelerometer(body_accel);  
-  
+  Eigen::Map<Eigen::Vector3d> accelerometer(body_accel);
+
   double body_gyro[3];
   // was this. mfallon thinks this is incorrect as the addition of the trans seems wrong:
   // experimentally the bias estimator estimates the body-imu translation (fixed may 2014)
@@ -175,14 +175,14 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_im
   if (prev_utime_atlas==0){
     integration_dt = dt; // use default
   }else{
-    integration_dt = (utime - prev_utime_atlas)*1E-6; 
+    integration_dt = (utime - prev_utime_atlas)*1E-6;
   }
   if (integration_dt > 0.1){ // until dt integrity is confirmed..
     std::cout << "dt was : " << integration_dt << " - there is an issue with timestamps\n";
-    //exit(-1); 
+    //exit(-1);
   }
   prev_utime_atlas = utime;
-  // std::cout << utime << " ins utime\n";  
+  // std::cout << utime << " ins utime\n";
   return new RBISIMUProcessStep(gyro, accelerometer, cov_gyro, cov_accel, cov_gyro_bias, cov_accel_bias, integration_dt, utime);
 }
 
@@ -194,7 +194,7 @@ bool InsHandler::processMessageInitAtlas(const pronto::atlas_raw_imu_batch_t * m
   init_state.utime = msg->utime;
 
   RBISIMUProcessStep * update = dynamic_cast<RBISIMUProcessStep *>(processMessageAtlas(msg));
-  
+
   if (update == NULL){
     // ... this happens regularly at 1000Hz, so nothing to worry about
     //std::cout << "Didn't get a new Atlas packet during initialization, skipping\n";
@@ -313,6 +313,53 @@ if(  update == NULL) {
   return true;
 }
 
+AltimeterHandler::AltimeterHandler(BotParam * _param)
+{
+  r_altimeter = bot_param_get_double_or_fail(_param, "state_estimator.altimeter.r");
+}
+
+RBISUpdateInterface * AltimeterHandler::processMessage(const mav::altimeter_t * msg)
+{
+
+  Eigen::Vector3i inds = eigen_utils::RigidBodyState::positionInds();
+
+  Eigen::VectorXi thisInd(1);
+  thisInd[0] = inds[2]; // altimeter measures on the z axis
+
+  Eigen::VectorXd thisMeasurement(1);
+  thisMeasurement[0] = msg->altitude;
+
+  Eigen::MatrixXd thisRMat(1,1);
+  thisRMat(0,0) = r_altimeter;
+
+  return new RBISIndexedMeasurement(thisInd, thisMeasurement, thisRMat, RBISUpdateInterface::altimeter, msg->utime);
+
+}
+
+
+AirspeedHandler::AirspeedHandler(BotParam * _param)
+{
+  r_airspeed = bot_param_get_double_or_fail(_param, "state_estimator.airspeed.r");
+}
+
+RBISUpdateInterface * AirspeedHandler::processMessage(const mav::airspeed_t * msg)
+{
+
+  Eigen::Vector3i inds = eigen_utils::RigidBodyState::velocityInds();
+
+  Eigen::VectorXi thisInd(1);
+  thisInd[0] = inds[0]; // forward speed is on the x-axis
+
+  Eigen::VectorXd thisMeasurement(1);
+  thisMeasurement[0] = msg->airspeed;
+
+  Eigen::MatrixXd thisRMat(1,1);
+  thisRMat(0,0) = r_airspeed;
+
+  return new RBISIndexedMeasurement(thisInd, thisMeasurement, thisRMat, RBISUpdateInterface::airspeed, msg->utime);
+
+}
+
 ViconHandler::ViconHandler(BotParam * param, BotFrames * frames)
 {
   char* mode_str = bot_param_get_str_or_fail(param, "state_estimator.vicon.mode");
@@ -336,7 +383,7 @@ ViconHandler::ViconHandler(BotParam * param, BotFrames * frames)
     char* frame_to   = bot_param_get_str_or_fail(param, "state_estimator.vicon.frame_to");
     bot_frames_get_trans(frames, frame_from, frame_to, &body_to_vicon);
   }
-    
+
   free(mode_str);
   init(param);
 }
@@ -368,22 +415,22 @@ void ViconHandler::init(BotParam * param)
 
 RBISUpdateInterface * ViconHandler::processMessage(const bot_core::rigid_transform_t * msg)
 {
-  
+
   BotTrans local_to_vicon;
   memset(&local_to_vicon, 0, sizeof(local_to_vicon));
   memcpy(local_to_vicon.trans_vec, msg->trans, 3*sizeof(double));
   memcpy(local_to_vicon.rot_quat, msg->quat, 4*sizeof(double));
-  
+
   BotTrans local_to_body;
   memset(&local_to_body, 0, sizeof(local_to_body));
   if (apply_frame){
     bot_trans_apply_trans_to( &local_to_vicon,&body_to_vicon, &local_to_body);
   }else{
-    bot_trans_copy(&local_to_body, &local_to_vicon);    
-  }  
+    bot_trans_copy(&local_to_body, &local_to_vicon);
+  }
   int64_t utime = msg->utime;
   ////////////////////////////////////
-  
+
   if ((Eigen::Map<const Eigen::Array3d>( local_to_vicon.trans_vec ).abs() < 1e-5).all())
     return NULL;
 
@@ -414,7 +461,7 @@ bool ViconHandler::processMessageInit(const bot_core::rigid_transform_t * msg,
   memset(&local_to_vicon, 0, sizeof(local_to_vicon));
   memcpy(local_to_vicon.trans_vec, msg->trans, 3*sizeof(double));
   memcpy(local_to_vicon.rot_quat, msg->quat, 4*sizeof(double));
-  
+
   BotTrans local_to_body;
   memset(&local_to_body, 0, sizeof(local_to_body));
   if (apply_frame){
@@ -423,7 +470,7 @@ bool ViconHandler::processMessageInit(const bot_core::rigid_transform_t * msg,
     bot_trans_copy(&local_to_body, &local_to_vicon);
   }
   ////////////////////////////////////
-  
+
   init_state.utime = msg->utime;
 
   init_state.position() = Eigen::Map<const Eigen::Vector3d>(local_to_body.trans_vec);

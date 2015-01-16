@@ -8,6 +8,8 @@
 #include <eigen_utils/eigen_utils.hpp>
 #include <lcmtypes/mav/ins_t.hpp>
 #include <lcmtypes/mav/gps_data_t.hpp>
+#include <lcmtypes/mav/altimeter_t.hpp>
+#include <lcmtypes/mav/airspeed_t.hpp>
 #include <lcmtypes/mav/optical_flow_t.hpp>
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
 #include <lcmtypes/bot_core/rigid_transform_t.hpp>
@@ -26,7 +28,7 @@ protected:
   void create(BotParam * _param, BotFrames * _frames);
   public:
   InsHandler(BotParam * _param, BotFrames * _frames);
-  
+
   // channel is used to determine which signal to subscribe to:
   std::string channel;
 
@@ -41,12 +43,12 @@ protected:
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
   //////////// Members Particular to Atlas:
   double prev_utime_atlas; // cached previous time
-  IMUStream imu_data_;  
+  IMUStream imu_data_;
   void doFilter(IMUPacket &raw);
   // An cascade of 3 notch filters in xyz
   IIRNotch* notchfilter_x[3];
   IIRNotch* notchfilter_y[3];
-  IIRNotch* notchfilter_z[3];  
+  IIRNotch* notchfilter_z[3];
   bool atlas_filter;
   ////////////
 
@@ -56,7 +58,7 @@ protected:
       RBIS & init_state, RBIM & init_cov,
       RBISIMUProcessStep * update, Eigen::Vector3d mag_vec);
 
-  
+
   BotTrans ins_to_body;
 
   double cov_accel;
@@ -87,6 +89,24 @@ protected:
   Eigen::Matrix3d cov_xyz;
 };
 
+class AltimeterHandler {
+protected:
+  public:
+  AltimeterHandler(BotParam * _param);
+  RBISUpdateInterface * processMessage(const mav::altimeter_t * msg);
+
+  double r_altimeter;
+};
+
+class AirspeedHandler {
+protected:
+  public:
+  AirspeedHandler(BotParam * _param);
+  RBISUpdateInterface * processMessage(const mav::airspeed_t * msg);
+
+  double r_airspeed;
+};
+
 
 class ViconHandler {
 public:
@@ -106,7 +126,7 @@ public:
   // added mfallon, to allow a plate-to-body transform
   BotTrans body_to_vicon;
   bool apply_frame;
-  
+
   ViconMode mode;
   Eigen::VectorXi z_indices;
   Eigen::MatrixXd cov_vicon;

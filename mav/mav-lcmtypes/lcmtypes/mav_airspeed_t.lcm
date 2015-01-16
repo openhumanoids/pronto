@@ -1,0 +1,10 @@
+package mav;
+
+struct airspeed_t
+{
+    int64_t utime;              // utime that the actual measurement took place
+
+    double airspeed;            // Measured airspeed (likely from a pitot tube) in m/s
+                                // NOTE: if you are using this for a state-estimate,
+                                // you will want to correct for any wind beforehand
+}
