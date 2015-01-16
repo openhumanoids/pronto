@@ -48,6 +48,8 @@ public:
 
     vicon_handler = NULL;
     gps_handler = NULL;
+    altimeter_handler = NULL;
+    airspeed_handler = NULL;
     scan_matcher_handler = NULL;
     laser_gpf_handler = NULL;
     indexed_measurement_handler = new IndexedMeasurementHandler();
@@ -100,9 +102,20 @@ public:
           front_end->frames);
       front_end->addSensor("laser_gpf", &MavStateEst::LaserGPFHandler::processMessage, laser_gpf_handler);
     }
+
     if (front_end->isActive("laser_gpf_out_of_process")) {
       front_end->addSensor("laser_gpf_out_of_process", &IndexedMeasurementHandler::processMessage,
           indexed_measurement_handler);
+    }
+
+    if (front_end->isActive("altimeter") || rbis_initializer->initializingWith("altimeter")) {
+      altimeter_handler = new AltimeterHandler(front_end->param);
+      front_end->addSensor("altimeter", &MavStateEst::AltimeterHandler::processMessage, altimeter_handler);
+    }
+
+    if (front_end->isActive("airspeed") || rbis_initializer->initializingWith("airspeed")) {
+      airspeed_handler = new AirspeedHandler(front_end->param);
+      front_end->addSensor("airspeed", &MavStateEst::AirspeedHandler::processMessage, airspeed_handler);
     }
 
   }
@@ -137,6 +150,8 @@ public:
   ViconHandler * vicon_handler;
   InsHandler * ins_handler;
   GpsHandler * gps_handler;
+  AltimeterHandler * altimeter_handler;
+  AirspeedHandler * airspeed_handler;
   LaserGPFHandler * laser_gpf_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
   ScanMatcherHandler * scan_matcher_handler;
