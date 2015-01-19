@@ -32,6 +32,6 @@ target_link_libraries(pronto_lcm
     z)
 pods_install_pkg_config_file(pronto_lcm
     LIBS -lpronto_lcm -lz
-    REQUIRES bot2-vis  image-utils eigen3 ${PCL_IO_PKG_CONFIG}
+    REQUIRES bot2-vis  eigen3 ${PCL_IO_PKG_CONFIG}
     VERSION 0.0.1)
 
