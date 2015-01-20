@@ -8,7 +8,6 @@
 #include <lcmtypes/drc/map_image_t.hpp>
 #include <bot_core/camtrans.h>
 #include <Eigen/Geometry>
-#include <image_utils/pixels.h>
 
 class FilterColorize {
 
