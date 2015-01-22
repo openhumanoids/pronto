@@ -101,7 +101,8 @@ leg_estimate::leg_estimate( boost::shared_ptr<lcm::LCM> &lcm_publish_,
   foot_contact_logic_ = new TwoLegs::FootContact(false, atlas_weight, standing_schmitt_level);
   foot_contact_logic_->setStandingFoot( FOOT_LEFT );
 
-  foot_contact_logic_alt_ = new TwoLegs::FootContactAlt(false, atlas_weight);
+  float typical_schmitt_level = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.typical_schmitt_level");
+  foot_contact_logic_alt_ = new TwoLegs::FootContactAlt(false, typical_schmitt_level);
   foot_contact_logic_alt_->setStandingFoot( F_LEFT );
 
   // Should I use a very heavy contact classifier (standing) or one that allows toe off (typical)?
