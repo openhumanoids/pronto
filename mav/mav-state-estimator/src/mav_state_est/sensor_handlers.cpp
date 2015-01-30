@@ -382,7 +382,7 @@ RBISUpdateInterface * SideslipHandler::processMessage(const mav::sideslip_t * ms
   Eigen::Vector3i inds = eigen_utils::RigidBodyState::velocityInds();
 
   Eigen::VectorXi thisInd(1);
-  thisInd[1] = inds[1]; // sideslip is on the y-axis
+  thisInd[0] = inds[1]; // sideslip is on the y-axis
 
   Eigen::VectorXd thisMeasurement(1);
   thisMeasurement[0] = msg->sideslip;

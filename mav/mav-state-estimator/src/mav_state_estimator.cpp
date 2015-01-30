@@ -50,6 +50,7 @@ public:
     gps_handler = NULL;
     altimeter_handler = NULL;
     airspeed_handler = NULL;
+    sideslip_handler = NULL;
     scan_matcher_handler = NULL;
     laser_gpf_handler = NULL;
     indexed_measurement_handler = new IndexedMeasurementHandler();
@@ -118,6 +119,11 @@ public:
       front_end->addSensor("airspeed", &MavStateEst::AirspeedHandler::processMessage, airspeed_handler);
     }
 
+    if (front_end->isActive("sideslip") || rbis_initializer->initializingWith("sideslip")) {
+      sideslip_handler = new SideslipHandler(front_end->param);
+      front_end->addSensor("sideslip", &MavStateEst::SideslipHandler::processMessage, sideslip_handler);
+    }
+
   }
 
   void run()
@@ -152,6 +158,7 @@ public:
   GpsHandler * gps_handler;
   AltimeterHandler * altimeter_handler;
   AirspeedHandler * airspeed_handler;
+  SideslipHandler * sideslip_handler;
   LaserGPFHandler * laser_gpf_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
   ScanMatcherHandler * scan_matcher_handler;
