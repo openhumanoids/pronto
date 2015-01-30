@@ -360,6 +360,29 @@ RBISUpdateInterface * AirspeedHandler::processMessage(const mav::airspeed_t * ms
 
 }
 
+SideslipHandler::SideslipHandler(BotParam * _param)
+{
+  r_sideslip = bot_param_get_double_or_fail(_param, "state_estimator.sideslip.r");
+}
+
+RBISUpdateInterface * SideslipHandler::processMessage(const mav::sideslip_t * msg)
+{
+
+  Eigen::Vector3i inds = eigen_utils::RigidBodyState::velocityInds();
+
+  Eigen::VectorXi thisInd(1);
+  thisInd[1] = inds[1]; // sideslip is on the y-axis
+
+  Eigen::VectorXd thisMeasurement(1);
+  thisMeasurement[0] = msg->sideslip;
+
+  Eigen::MatrixXd thisRMat(1,1);
+  thisRMat(0,0) = r_sideslip;
+
+  return new RBISIndexedMeasurement(thisInd, thisMeasurement, thisRMat, RBISUpdateInterface::sideslip, msg->utime);
+
+}
+
 ViconHandler::ViconHandler(BotParam * param, BotFrames * frames)
 {
   char* mode_str = bot_param_get_str_or_fail(param, "state_estimator.vicon.mode");

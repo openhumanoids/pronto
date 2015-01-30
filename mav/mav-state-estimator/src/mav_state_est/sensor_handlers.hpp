@@ -10,6 +10,7 @@
 #include <lcmtypes/mav/gps_data_t.hpp>
 #include <lcmtypes/mav/altimeter_t.hpp>
 #include <lcmtypes/mav/airspeed_t.hpp>
+#include <lcmtypes/mav/sideslip_t.hpp>
 #include <lcmtypes/mav/optical_flow_t.hpp>
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
 #include <lcmtypes/bot_core/rigid_transform_t.hpp>
@@ -105,6 +106,15 @@ protected:
   RBISUpdateInterface * processMessage(const mav::airspeed_t * msg);
 
   double r_airspeed;
+};
+
+class SideslipHandler {
+protected:
+  public:
+  SideslipHandler(BotParam * _param);
+  RBISUpdateInterface * processMessage(const mav::sideslip_t * msg);
+
+  double r_sideslip;
 };
 
 
