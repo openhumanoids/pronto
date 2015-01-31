@@ -23,6 +23,13 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   string config_file = "drc_robot_02_mit.cfg";
+  bool use_param_server = false;
+
+  ConciseArgs parser(argc, argv);
+  parser.add(config_file, "c", "config-file", "Configuration file for use with the viewer.");
+  parser.add(use_param_server, "p", "param-server", "Use param-server instead of a configuration file.  This overrides the -c option.");
+  parser.parse();
+
 
 
   gtk_init(&argc, &argv);
@@ -36,7 +43,7 @@ int main(int argc, char *argv[])
   lcm_t * lcm = bot_lcm_get_global(NULL);
   bot_glib_mainloop_attach_lcm(lcm);
   BotParam * bot_param;
-  if(config_file.size()) {
+  if(!use_param_server && config_file.size()) {
     fprintf(stderr,"Reading config from file\n");
     std::string config_path = std::string(getConfigPath()) +'/' + std::string(config_file);
     bot_param = bot_param_new_from_file(config_path.c_str());
