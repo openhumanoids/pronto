@@ -57,8 +57,9 @@ public:
     optical_flow_handler = NULL;
     init_message_handler = NULL;
 
-    if (rbis_initializer->initializingWith("init_message")) {
+    if (front_end->isActive("init_message") || rbis_initializer->initializingWith("init_message")) {
       init_message_handler = new InitMessageHandler();
+      front_end->addSensor("init_message", &MavStateEst::InitMessageHandler::processMessage, init_message_handler);
       rbis_initializer->addSensor("init_message", &MavStateEst::InitMessageHandler::processMessageInit,
           init_message_handler);
     }
