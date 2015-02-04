@@ -154,12 +154,18 @@ void SensorHandler<lcmType, SensorHandlerClass>::lcm_message_handler(const lcm::
     lcm_front->state_estimator->addUpdate(update, roll_forward_on_receive);
   }
 
-  if (init_message_channel != "" && init_complete_channel != "" && channel == init_message_channel) {
+  if (lcm_front->init_message_channel != "" && lcm_front->init_complete_channel != "" && channel == lcm_front->init_message_channel) {
       // send a message informing the world that we have just performed a reset
       pronto::utime_t init_complete_msg;
-      init_complete_msg.utime = state->utime;
 
-      lcm_pub->publish(init_complete_channel, &init_complete_msg);
+      RBIS head_state;
+      RBIM head_cov;
+
+      lcm_front->state_estimator->getHeadState(head_state, head_cov);
+
+      init_complete_msg.utime = head_state.utime;
+
+      lcm_front->lcm_pub->publish(lcm_front->init_complete_channel, &init_complete_msg);
   }
 
   if (lcm_front->lcm_pub != lcm_front->lcm_recv && lcm_front->republish_sensors) {

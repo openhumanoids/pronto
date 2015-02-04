@@ -87,14 +87,23 @@ LCMFrontEnd::LCMFrontEnd(const std::string & in_log_fname, const std::string & o
   publish_pose = bot_param_get_boolean_or_fail(param, "state_estimator.publish_pose");
   republish_sensors = bot_param_get_boolean_or_fail(param, "state_estimator.republish_sensors");
 
-  if (bot_param_get_string(param, "state_estimator.init_message.channel", &init_message_channel) != 0) {
+  char *init_message_channel_char;
+  char *init_complete_channel_char;
+
+  if (bot_param_get_str(param, "state_estimator.init_message.channel", &init_message_channel_char) != 0) {
     // failed to get this key
     init_message_channel = "";
+  } else {
+    init_message_channel = string(init_message_channel_char);
+    free(init_message_channel_char);
   }
 
-  if (bot_param_get_string(param, "state_estimator.init_message.init_complete_channel", &init_complete_channel) != 0) {
+  if (bot_param_get_str(param, "state_estimator.init_message.init_complete_channel", &init_complete_channel_char) != 0) {
     // failed to get this key
     init_complete_channel = "";
+  } else {
+    init_complete_channel = string(init_complete_channel_char);
+    free(init_complete_channel_char);
   }
 
 
@@ -113,7 +122,7 @@ LCMFrontEnd::~LCMFrontEnd()
 
 void LCMFrontEnd::setStateEstimator(MavStateEstimator * _state_estimator)
 {
-  state_estimator = _state_estimator;
+    state_estimator = _state_estimator;
 }
 
 bool LCMFrontEnd::isActive(const std::string & sensor_prefix)
