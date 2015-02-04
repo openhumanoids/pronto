@@ -6,7 +6,7 @@ using namespace Eigen;
 namespace MavStateEst {
 
 LCMFrontEnd::LCMFrontEnd(const std::string & in_log_fname, const std::string & out_log_fname,
-    const std::string & param_fname, const std::string & param_override_str, 
+    const std::string & param_fname, const std::string & param_override_str,
     const std::string & begin_timestamp, double processing_rate)
 {
 
@@ -86,6 +86,19 @@ LCMFrontEnd::LCMFrontEnd(const std::string & in_log_fname, const std::string & o
   publish_filter_state = bot_param_get_boolean_or_fail(param, "state_estimator.publish_filter_state");
   publish_pose = bot_param_get_boolean_or_fail(param, "state_estimator.publish_pose");
   republish_sensors = bot_param_get_boolean_or_fail(param, "state_estimator.republish_sensors");
+
+  if (bot_param_get_string(param, "state_estimator.init_message.channel", &init_message_channel) != 0) {
+    // failed to get this key
+    init_message_channel = "";
+  }
+
+  if (bot_param_get_string(param, "state_estimator.init_message.init_complete_channel", &init_complete_channel) != 0) {
+    // failed to get this key
+    init_complete_channel = "";
+  }
+
+
+
 
   exit_estimator = false; // when this is true, we exit the estimator handlers, mfallon
 }
