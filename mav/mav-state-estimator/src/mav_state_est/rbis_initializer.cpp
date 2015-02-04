@@ -170,6 +170,14 @@ bool InitMessageHandler::processMessageInit(const mav::filter_state_t * msg,
   return true;
 }
 
+RBISUpdateInterface * InitMessageHandler::processMessage(const mav::filter_state_t * msg)
+{
+  Eigen::Map<const MatrixXd> cov_map(&msg->cov[0], msg->num_states, msg->num_states);
+  RBIM init_cov = cov_map;
+
+  return new RBISResetUpdate(RBIS(*msg), cov_map, RBISUpdateInterface::init_message, msg->utime);
+
+}
 
 
 }
