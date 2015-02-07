@@ -173,8 +173,6 @@ bool InitMessageHandler::processMessageInit(const mav::filter_state_t * msg,
 /**
  * When subscribed as a normal sensor, the reset message will reset the state estimator
  * on the fly.
- *
- * TODO: This also sends an LCM message to confirm that it worked
  */
 RBISUpdateInterface * InitMessageHandler::processMessage(const mav::filter_state_t * msg)
 {
