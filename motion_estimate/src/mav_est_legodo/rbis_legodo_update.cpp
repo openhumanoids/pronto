@@ -26,9 +26,20 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   use_torque_adjustment_ = bot_param_get_boolean_or_fail(param, "state_estimator.legodo.torque_adjustment");
   if (use_torque_adjustment_){
     std::cout << "Torque-based joint angle adjustment: Using\n";
+
+    int n_gains = bot_param_get_array_len (param, "state_estimator.legodo.adjustment_gain");
+    double gains_in[n_gains];
+    bot_param_get_double_array_or_fail(param, "state_estimator.legodo.adjustment_gain", &gains_in[0], n_gains);
+    std::vector<float> k;
+    for (int i =0; i < n_gains;i++){
+      k.push_back( (float) gains_in[i] );
+    }
+    torque_adjustment_ = new EstimateTools::TorqueAdjustment(k);
+
   }else{
     std::cout << "Torque-based joint angle adjustment: Not Using\n";
   }
+
 
   publish_diagnostics_ = bot_param_get_boolean_or_fail(param, "state_estimator.legodo.publish_diagnostics");  
   republish_incoming_poses_ = bot_param_get_boolean_or_fail(param, "state_estimator.legodo.republish_incoming_poses");  
@@ -68,6 +79,8 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   
   JointUtils* joint_utils = new JointUtils();
   joint_names_ = joint_utils->atlas_joint_names;
+
+
 }
 
 /// Extra-class Functions  /////////////////////////////
@@ -216,7 +229,7 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t 
   mod_position = msg->joint_position;
   mod_effort = msg->joint_effort;
   if (use_torque_adjustment_){
-    torque_adjustment_.processSample(mod_position, mod_effort );
+    torque_adjustment_->processSample(mod_position, mod_effort );
   }
 
   float odo_delta_status = leg_est_->updateOdometry(joint_names_, mod_position, // msg->joint_position,

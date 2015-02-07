@@ -30,13 +30,8 @@ namespace TwoLegs {
 class FootContactAlt {
   private:
 
-    // Parameters:
-    float schmitt_level_;
-    int64_t transition_timeout_;
-
     /////////////////////////////////////////////////
     footid_alt standing_foot;
-    float expectedweight;
     int64_t transition_timespan;
     bool foottransitionintermediateflag;
 
@@ -54,7 +49,7 @@ class FootContactAlt {
 
     bool verbose_;
   public:     
-    FootContactAlt (bool _log_data_files, const float atlasWeight);
+    FootContactAlt (bool _log_data_files, const float schmitt_level);
 
     void terminate();
 

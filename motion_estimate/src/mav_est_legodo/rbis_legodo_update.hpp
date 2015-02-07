@@ -72,7 +72,7 @@ public:
   
   // Torque Adjustment:
   bool use_torque_adjustment_;
-  EstimateTools::TorqueAdjustment torque_adjustment_;
+  EstimateTools::TorqueAdjustment* torque_adjustment_;
 
   
   // Vicon state (just used for republishing):
