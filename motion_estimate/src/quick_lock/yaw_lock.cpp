@@ -63,8 +63,8 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   counter_=0;
 
   last_controller_state_ = pronto::controller_status_t::UNKNOWN; // 
-  // correction_state_ = pronto::controller_status_t::STANDING;
-  correction_state_ = pronto::controller_status_t::DUMMY; // for testing
+  correction_state_ = pronto::controller_status_t::STANDING;
+  //correction_state_ = pronto::controller_status_t::DUMMY; // for testing
 
   reference_yaw_angle_ = cl_cfg_.initial_yaw_angle;
 }
