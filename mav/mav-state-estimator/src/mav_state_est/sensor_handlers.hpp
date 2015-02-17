@@ -128,7 +128,7 @@ public:
 class ScanMatcherHandler {
 public:
   typedef enum {
-    MODE_POSITION, MODE_POSITION_YAW, MODE_VELOCITY, MODE_VELOCITY_YAW
+    MODE_POSITION, MODE_POSITION_YAW, MODE_VELOCITY, MODE_VELOCITY_YAW, MODE_YAW
   } ScanMatchingMode;
 
   ScanMatcherHandler(BotParam * param);
