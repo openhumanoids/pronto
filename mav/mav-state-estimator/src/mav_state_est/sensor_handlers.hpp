@@ -68,6 +68,7 @@ protected:
 
   //initialization
   int num_to_init;
+  double max_initial_gyro_bias;
   int init_counter;
 
   Eigen::Vector3d g_vec_sum;

@@ -41,6 +41,7 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames)
   free(ins_frame);
 
   num_to_init = bot_param_get_int_or_fail(_param, "state_estimator.ins.num_to_init");
+  max_initial_gyro_bias = bot_param_get_double_or_fail(_param, "state_estimator.ins.max_initial_gyro_bias");
   init_counter = 0;
   g_vec_sum.setZero();
   mag_vec_sum.setZero();
@@ -237,6 +238,16 @@ bool InsHandler::processMessageInitCommon(const std::map<std::string, bool> & se
 
     Eigen::Vector3d ins_g_vec_est = g_vec_sum / (double) init_counter;
     Eigen::Vector3d ins_gyro_bias_est = gyro_bias_sum / (double) init_counter;
+
+    if ( (  (fabs(ins_gyro_bias_est(0))>max_initial_gyro_bias)
+          ||(fabs(ins_gyro_bias_est(1))>max_initial_gyro_bias))
+         || (fabs(ins_gyro_bias_est(2))>max_initial_gyro_bias) ){
+      fprintf(stderr, "Initial gyro bias estimates: %f,%f,%f\n", ins_gyro_bias_est(0),
+              ins_gyro_bias_est(1), ins_gyro_bias_est(2));
+      fprintf(stderr, "Warning: initial gyro bias estimates exceed max (%f), setting to (0,0,0)\n",
+              max_initial_gyro_bias);
+      ins_gyro_bias_est = Eigen::Vector3d(0,0,0);
+    }
 
     //set orientation
     Eigen::Quaterniond quat_g_vec;
