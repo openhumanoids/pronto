@@ -21,3 +21,13 @@ pods_use_pkg_config_packages(se-pose-compare
 target_link_libraries (se-pose-compare lcm pronto_math
                         boost_system boost_thread)
 pods_install_executables(se-pose-compare )
+
+
+
+add_executable(se-yaw-lock yaw_lock.cpp)
+pods_use_pkg_config_packages(se-yaw-lock
+    path-util ${REQUIRED_PACKAGES}
+    pronto_vis)
+target_link_libraries (se-yaw-lock lcm pronto_math
+                        boost_system boost_thread)
+pods_install_executables(se-yaw-lock )
