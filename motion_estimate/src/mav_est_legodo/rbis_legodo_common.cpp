@@ -164,12 +164,21 @@ RBISUpdateInterface * LegOdoCommon::createMeasurement(BotTrans &odo_positionT, B
   
 
   if (mode_current == MODE_LIN_AND_ROT_RATE) {
-    // Working on this:
-    Eigen::VectorXd z_meas(3); // I think this should be 3, but was 6 (and unused code)
-    Eigen::Quaterniond quat;
-    eigen_utils::botDoubleToQuaternion(quat, odo_velT.rot_quat);
+    // Apply a linear and rotation rate correction
+    // This was finished in Feb 2015 but not tested on the robot
+    Eigen::VectorXd z_meas(6);
+
+    double rpy[3];
+    bot_quat_to_roll_pitch_yaw(odo_deltaT.rot_quat,rpy);
+    double elapsed_time = ( (double) utime -  prev_utime)/1000000;
+    double rpy_rate[3];
+    rpy_rate[0] = rpy[0]/elapsed_time;
+    rpy_rate[1] = rpy[1]/elapsed_time;
+    rpy_rate[2] = rpy[2]/elapsed_time;
+
     z_meas.head<3>() = Eigen::Map<const Eigen::Vector3d>(odo_velT.trans_vec);
-    return new RBISIndexedPlusOrientationMeasurement(z_indices, z_meas, cov_legodo, quat, RBISUpdateInterface::legodo,
+    z_meas.tail<3>() = Eigen::Map<const Eigen::Vector3d>(rpy_rate);
+    return new RBISIndexedMeasurement(z_indices, z_meas, cov_legodo, RBISUpdateInterface::legodo,
            utime);
   }else if (mode_current == MODE_LIN_RATE) {
     return new RBISIndexedMeasurement(z_indices,
