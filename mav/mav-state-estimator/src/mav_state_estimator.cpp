@@ -53,9 +53,10 @@ public:
     sideslip_handler = NULL;
     scan_matcher_handler = NULL;
     laser_gpf_handler = NULL;
-    indexed_measurement_handler = new IndexedMeasurementHandler();
+    viewer_handler = NULL;
     optical_flow_handler = NULL;
     init_message_handler = NULL;
+    laser_gpf_out_of_process_handler = NULL;
 
     if (front_end->isActive("init_message") || rbis_initializer->initializingWith("init_message")) {
       init_message_handler = new InitMessageHandler();
@@ -65,10 +66,11 @@ public:
     }
 
     if (front_end->isActive("viewer") || rbis_initializer->initializingWith("viewer")) {
+      viewer_handler = new IndexedMeasurementHandler(RBISUpdateInterface::viewer);
       front_end->addSensor("viewer", &MavStateEst::IndexedMeasurementHandler::processMessage,
-          indexed_measurement_handler);
+          viewer_handler);
       rbis_initializer->addSensor("viewer", &MavStateEst::IndexedMeasurementHandler::processMessageInit,
-          indexed_measurement_handler);
+          viewer_handler);
     }
 
     if (front_end->isActive("ins") || rbis_initializer->initializingWith("ins")) {
@@ -106,8 +108,9 @@ public:
     }
 
     if (front_end->isActive("laser_gpf_out_of_process")) {
+      laser_gpf_out_of_process_handler = new IndexedMeasurementHandler(RBISUpdateInterface::laser_gpf);
       front_end->addSensor("laser_gpf_out_of_process", &IndexedMeasurementHandler::processMessage,
-          indexed_measurement_handler);
+          laser_gpf_out_of_process_handler);
     }
 
     if (front_end->isActive("altimeter") || rbis_initializer->initializingWith("altimeter")) {
@@ -161,7 +164,8 @@ public:
   IndexedMeasurementHandler * airspeed_handler;
   IndexedMeasurementHandler * sideslip_handler;
   LaserGPFHandler * laser_gpf_handler;
-  IndexedMeasurementHandler * indexed_measurement_handler;
+  IndexedMeasurementHandler * viewer_handler;
+  IndexedMeasurementHandler * laser_gpf_out_of_process_handler;
   ScanMatcherHandler * scan_matcher_handler;
   OpticalFlowHandler * optical_flow_handler;
   InitMessageHandler * init_message_handler;

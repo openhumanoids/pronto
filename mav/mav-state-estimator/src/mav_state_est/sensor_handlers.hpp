@@ -115,7 +115,7 @@ public:
 
 class IndexedMeasurementHandler {
 public:
-  IndexedMeasurementHandler(sensor_enum this_sensor)
+  IndexedMeasurementHandler(RBISUpdateInterface::sensor_enum this_sensor)
   {
       indexed_sensor = this_sensor;
   }
