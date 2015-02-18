@@ -115,13 +115,17 @@ public:
 
 class IndexedMeasurementHandler {
 public:
-  IndexedMeasurementHandler()
+  IndexedMeasurementHandler(sensor_enum this_sensor)
   {
+      indexed_sensor = this_sensor;
   }
   RBISUpdateInterface * processMessage(const mav::indexed_measurement_t * msg);
   bool processMessageInit(const mav::indexed_measurement_t * msg, const std::map<std::string, bool> & sensors_initialized
         , const RBIS & default_state, const RBIM & default_cov,
         RBIS & init_state, RBIM & init_cov);
+
+private:
+    RBISUpdateInterface::sensor_enum indexed_sensor;
 
 };
 

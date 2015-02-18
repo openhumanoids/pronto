@@ -111,17 +111,17 @@ public:
     }
 
     if (front_end->isActive("altimeter") || rbis_initializer->initializingWith("altimeter")) {
-      altimeter_handler = new IndexedMeasurementHandler();
+      altimeter_handler = new IndexedMeasurementHandler(RBISUpdateInterface::altimeter);
       front_end->addSensor("altimeter", &MavStateEst::IndexedMeasurementHandler::processMessage, altimeter_handler);
     }
 
     if (front_end->isActive("airspeed") || rbis_initializer->initializingWith("airspeed")) {
-      airspeed_handler = new IndexedMeasurementHandler();
+      airspeed_handler = new IndexedMeasurementHandler(RBISUpdateInterface::airspeed);
       front_end->addSensor("airspeed", &MavStateEst::IndexedMeasurementHandler::processMessage, airspeed_handler);
     }
 
     if (front_end->isActive("sideslip") || rbis_initializer->initializingWith("sideslip")) {
-      sideslip_handler = new IndexedMeasurementHandler();
+      sideslip_handler = new IndexedMeasurementHandler(RBISUpdateInterface::sideslip);
       front_end->addSensor("sideslip", &MavStateEst::IndexedMeasurementHandler::processMessage, sideslip_handler);
     }
 
