@@ -34,16 +34,16 @@ public:
       lcm_->subscribe( "STATE_EST_READY" ,&StandingPrep::navReadyHandler,this);
       ready_ =false;
     }
-    ~StandingPrep(){}    
+    ~StandingPrep(){}
     void listenForReady(){
       std::cout << "Waiting for MAV_STATE_EST_READY before starting\n";
       std::cout << "Send this message when the robot is standing still\n";
       while(0 == lcm_->handle()  && (!ready_) );
-    } 
+    }
 private:
     boost::shared_ptr<lcm::LCM> lcm_;
     bool ready_;
-    void navReadyHandler(const lcm::ReceiveBuffer* rbuf, 
+    void navReadyHandler(const lcm::ReceiveBuffer* rbuf,
                            const std::string& channel, const  pronto::utime_t* msg){
       std::cout << "Received Ready\n";
       ready_ = true;
@@ -82,31 +82,31 @@ public:
     opt.add(output_likelihood_filename, "M", "meas_like", "save the measurement likelihood to this file");
     opt.add(begin_timestamp, "t", "begin_timestamp", "Run estimation from this timestamp"); // mfallon
     opt.add(urdf_file, "U", "urdf_file", "Pull params from this file instead of LCM"); // mfallon
-    opt.add(processing_rate, "pr", "processing_rate","Processing Rate from a log [0=ASAP, 1=realtime]");        
+    opt.add(processing_rate, "pr", "processing_rate","Processing Rate from a log [0=ASAP, 1=realtime]");
     opt.add(wait_for_viewer_ready, "v", "viewer_ready","Wait for trigger from Viewer to start");
     opt.parse();
 
-    
+
     if (wait_for_viewer_ready){// Listen for a message from the viewer to start
       boost::shared_ptr<lcm::LCM> lcm(new lcm::LCM);
       StandingPrep prep(lcm);
       prep.listenForReady();
     }
-    
-    std::string param_file_full = std::string(getConfigPath()) +'/' + std::string(param_file);    
+
+    std::string param_file_full = std::string(getConfigPath()) +'/' + std::string(param_file);
     if (param_file.empty()) { // get param from lcm
       param_file_full = "";
     }
- 
+
 
     relaunch_app = false; // processing from log, exit at the end
-    if (in_log_fname.empty()) { 
+    if (in_log_fname.empty()) {
       relaunch_app = true; // listening live, relaunch at exit
     }
 
- 
+
     //create front end
-    front_end = new LCMFrontEnd(in_log_fname, out_log_fname, param_file_full , 
+    front_end = new LCMFrontEnd(in_log_fname, out_log_fname, param_file_full ,
                                 override_str,begin_timestamp, processing_rate);
     rbis_initializer = new RBISInitializer(front_end, RBISInitializer::getDefaultState(front_end->param),
         RBISInitializer::getDefaultCov(front_end->param));
@@ -117,7 +117,7 @@ public:
     scan_matcher_handler = NULL;
     laser_gpf_handler = NULL;
     //rgbd_gpf_handler = NULL;
-    indexed_measurement_handler = new IndexedMeasurementHandler();
+    indexed_measurement_handler = new IndexedMeasurementHandler(RBISUpdateInterface::viewer);
     optical_flow_handler = NULL;
     init_message_handler = NULL;
 
@@ -210,13 +210,13 @@ public:
       // legodo_handler = new LegOdoHandler(front_end->param);
 
       ModelClient* model;
-      if (urdf_file == ""){           
+      if (urdf_file == ""){
         model = new ModelClient(  front_end->lcm_recv->getUnderlyingLCM(), 0);
       }else{
-        //std::string urdf_file = "model_LH_RH.urdf";            
+        //std::string urdf_file = "model_LH_RH.urdf";
         std::string urdf_filename_full = std::string(getModelsPath()) +"/mit_gazebo_models/mit_robot/" + std::string( urdf_file );
         model = new ModelClient( urdf_filename_full );
-      }  
+      }
       legodo_handler = new LegOdoHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, model, front_end->frames);
 
       front_end->addSensor("legodo", &MavStateEst::LegOdoHandler::processMessage, legodo_handler);
@@ -226,21 +226,21 @@ public:
       legodo_external_handler = new LegOdoExternalHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
       front_end->addSensor("legodo_external", &MavStateEst::LegOdoExternalHandler::processMessage, legodo_external_handler);
     }
-    
-    
-    
+
+
+
     restart_sub =  front_end->lcm_recv->subscribe( "STATE_EST_RESTART" ,&App::restartHandler,this);
 
   }
 
   void restartHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::utime_t* msg){
-    // exit 
-    front_end->exit_estimator = true; 
-    
+    // exit
+    front_end->exit_estimator = true;
+
     front_end->lcm_recv->unsubscribe( restart_sub );
   }
-  
-  
+
+
   void run()
   {
     //initialization
@@ -288,24 +288,24 @@ public:
 
   string output_likelihood_filename;
   bool smooth_at_end;
-  
+
   lcm::Subscription * restart_sub;
-  
+
   bool relaunch_app;
 };
 
 
 
 bool launchApp(int argc, char **argv){
-  
+
   App * app = new App(argc, argv);
   app->run();
-  
+
   bool relaunch_app = app->relaunch_app;
-  
+
   delete app->front_end;
   delete app;
-  
+
   return relaunch_app;
 }
 
@@ -314,7 +314,7 @@ bool launchApp(int argc, char **argv){
 int main(int argc, char **argv)
 {
   signal(SIGINT, shutdown_module);
-  
+
   bool relaunch_app = true;
   while (relaunch_app){ // mfallon: added infinite loop, application continually restarts
     relaunch_app = launchApp(argc, argv);

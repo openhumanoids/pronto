@@ -448,7 +448,7 @@ RBISUpdateInterface * IndexedMeasurementHandler::processMessage(const mav::index
   return new RBISIndexedMeasurement(Eigen::Map<const Eigen::VectorXi>(&msg->z_indices[0], msg->measured_dim),
       Eigen::Map<const Eigen::VectorXd>(&msg->z_effective[0], msg->measured_dim),
       Eigen::Map<const Eigen::MatrixXd>(&msg->R_effective[0], msg->measured_dim, msg->measured_dim),
-      this_sensor, msg->utime);
+      indexed_sensor, msg->utime);
 }
 
 bool IndexedMeasurementHandler::processMessageInit(const mav::indexed_measurement_t * msg,
