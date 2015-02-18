@@ -13,7 +13,7 @@
 
 
 #include <lcmtypes/pronto/utime_t.hpp>
-
+#include <lcmtypes/bot_core/pose_t.hpp>
 
 #include <ConciseArgs>
 
@@ -32,12 +32,14 @@ class StandingPrep{
 public:
     StandingPrep(boost::shared_ptr<lcm::LCM> &lcm_):lcm_(lcm_){
       lcm_->subscribe( "STATE_EST_READY" ,&StandingPrep::navReadyHandler,this);
+      lcm_->subscribe( "POSE_BDI" ,&StandingPrep::poseBDIHandler,this);
       ready_ =false;
     }
     ~StandingPrep(){}    
     void listenForReady(){
       std::cout << "Waiting for MAV_STATE_EST_READY before starting\n";
       std::cout << "Send this message when the robot is standing still\n";
+      std::cout << "Sending BDI pitch and roll for now\n";
       while(0 == lcm_->handle()  && (!ready_) );
     } 
 private:
@@ -48,6 +50,24 @@ private:
       std::cout << "Received Ready\n";
       ready_ = true;
     }
+    void poseBDIHandler(const lcm::ReceiveBuffer* rbuf,
+                           const std::string& channel, const  bot_core::pose_t* msg){
+      bot_core::pose_t m;
+      m.utime = msg->utime;
+      // fixed height
+      m.pos[0] = 0;           m.pos[1] = 0;           m.pos[2] = 0.85;
+      m.vel[0] = 0;           m.vel[1] = 0;           m.vel[2] = 0;
+      m.rotation_rate[0] = 0; m.rotation_rate[1] = 0; m.rotation_rate[2] = 0;
+      m.accel[0] = 0;         m.accel[1] = 0;         m.accel[2] = 0;
+
+      // the incoming message orientation, except the yaw:
+      double rpy[3];
+      bot_quat_to_roll_pitch_yaw(msg->orientation, rpy);
+      rpy[2] = 0;
+      bot_roll_pitch_yaw_to_quat(rpy,m.orientation);
+      lcm_->publish("POSE_BODY",&m);
+    }
+
 };
 
 
