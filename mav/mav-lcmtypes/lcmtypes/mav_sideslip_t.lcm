@@ -1,8 +1,0 @@
-package mav;
-
-struct sideslip_t
-{
-    int64_t utime;              // utime that the actual measurement took place
-
-    double sideslip;            // Slideslip in m/s
-}

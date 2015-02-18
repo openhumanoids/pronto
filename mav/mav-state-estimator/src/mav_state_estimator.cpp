@@ -111,18 +111,18 @@ public:
     }
 
     if (front_end->isActive("altimeter") || rbis_initializer->initializingWith("altimeter")) {
-      altimeter_handler = new AltimeterHandler(front_end->param);
-      front_end->addSensor("altimeter", &MavStateEst::AltimeterHandler::processMessage, altimeter_handler);
+      altimeter_handler = new IndexedMeasurementHandler();
+      front_end->addSensor("altimeter", &MavStateEst::IndexedMeasurementHandler::processMessage, altimeter_handler);
     }
 
     if (front_end->isActive("airspeed") || rbis_initializer->initializingWith("airspeed")) {
-      airspeed_handler = new AirspeedHandler(front_end->param);
-      front_end->addSensor("airspeed", &MavStateEst::AirspeedHandler::processMessage, airspeed_handler);
+      airspeed_handler = new IndexedMeasurementHandler();
+      front_end->addSensor("airspeed", &MavStateEst::IndexedMeasurementHandler::processMessage, airspeed_handler);
     }
 
     if (front_end->isActive("sideslip") || rbis_initializer->initializingWith("sideslip")) {
-      sideslip_handler = new SideslipHandler(front_end->param);
-      front_end->addSensor("sideslip", &MavStateEst::SideslipHandler::processMessage, sideslip_handler);
+      sideslip_handler = new IndexedMeasurementHandler();
+      front_end->addSensor("sideslip", &MavStateEst::IndexedMeasurementHandler::processMessage, sideslip_handler);
     }
 
   }
@@ -157,9 +157,9 @@ public:
   ViconHandler * vicon_handler;
   InsHandler * ins_handler;
   GpsHandler * gps_handler;
-  AltimeterHandler * altimeter_handler;
-  AirspeedHandler * airspeed_handler;
-  SideslipHandler * sideslip_handler;
+  IndexedMeasurementHandler * altimeter_handler;
+  IndexedMeasurementHandler * airspeed_handler;
+  IndexedMeasurementHandler * sideslip_handler;
   LaserGPFHandler * laser_gpf_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
   ScanMatcherHandler * scan_matcher_handler;

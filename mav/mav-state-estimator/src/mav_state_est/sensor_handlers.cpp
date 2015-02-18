@@ -310,7 +310,7 @@ bool GpsHandler::processMessageInit(const mav::gps_data_t * msg,
   init_state.utime = msg->utime;
   RBISIndexedMeasurement * update = dynamic_cast<RBISIndexedMeasurement *>(GpsHandler::processMessage(msg));
 
-if(  update == NULL) {
+  if(update == NULL) {
     return false;
   }
 
@@ -324,75 +324,6 @@ if(  update == NULL) {
   return true;
 }
 
-AltimeterHandler::AltimeterHandler(BotParam * _param)
-{
-  r_altimeter = bot_param_get_double_or_fail(_param, "state_estimator.altimeter.r");
-}
-
-RBISUpdateInterface * AltimeterHandler::processMessage(const mav::altimeter_t * msg)
-{
-
-  Eigen::Vector3i inds = eigen_utils::RigidBodyState::positionInds();
-
-  Eigen::VectorXi thisInd(1);
-  thisInd[0] = inds[2]; // altimeter measures on the z axis
-
-  Eigen::VectorXd thisMeasurement(1);
-  thisMeasurement[0] = msg->altitude;
-
-  Eigen::MatrixXd thisRMat(1,1);
-  thisRMat(0,0) = r_altimeter;
-
-  return new RBISIndexedMeasurement(thisInd, thisMeasurement, thisRMat, RBISUpdateInterface::altimeter, msg->utime);
-
-}
-
-
-AirspeedHandler::AirspeedHandler(BotParam * _param)
-{
-  r_airspeed = bot_param_get_double_or_fail(_param, "state_estimator.airspeed.r");
-}
-
-RBISUpdateInterface * AirspeedHandler::processMessage(const mav::airspeed_t * msg)
-{
-
-  Eigen::Vector3i inds = eigen_utils::RigidBodyState::velocityInds();
-
-  Eigen::VectorXi thisInd(1);
-  thisInd[0] = inds[0]; // forward speed is on the x-axis
-
-  Eigen::VectorXd thisMeasurement(1);
-  thisMeasurement[0] = msg->airspeed;
-
-  Eigen::MatrixXd thisRMat(1,1);
-  thisRMat(0,0) = r_airspeed;
-
-  return new RBISIndexedMeasurement(thisInd, thisMeasurement, thisRMat, RBISUpdateInterface::airspeed, msg->utime);
-
-}
-
-SideslipHandler::SideslipHandler(BotParam * _param)
-{
-  r_sideslip = bot_param_get_double_or_fail(_param, "state_estimator.sideslip.r");
-}
-
-RBISUpdateInterface * SideslipHandler::processMessage(const mav::sideslip_t * msg)
-{
-
-  Eigen::Vector3i inds = eigen_utils::RigidBodyState::velocityInds();
-
-  Eigen::VectorXi thisInd(1);
-  thisInd[0] = inds[1]; // sideslip is on the y-axis
-
-  Eigen::VectorXd thisMeasurement(1);
-  thisMeasurement[0] = msg->sideslip;
-
-  Eigen::MatrixXd thisRMat(1,1);
-  thisRMat(0,0) = r_sideslip;
-
-  return new RBISIndexedMeasurement(thisInd, thisMeasurement, thisRMat, RBISUpdateInterface::sideslip, msg->utime);
-
-}
 
 ViconHandler::ViconHandler(BotParam * param, BotFrames * frames)
 {

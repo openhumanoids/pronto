@@ -1,9 +1,0 @@
-package mav;
-
-struct altimeter_t
-{
-    int64_t utime;              // utime that the actual measurement took place
-
-    double altitude;            // Measured altitude (likely from a barometric sensor) in meters
-    double temperature;         // Often these sensors will also report temperature (in degrees C)
-}
