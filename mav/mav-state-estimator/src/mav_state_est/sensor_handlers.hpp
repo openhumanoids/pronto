@@ -26,7 +26,7 @@ protected:
   void create(BotParam * _param, BotFrames * _frames);
   public:
   InsHandler(BotParam * _param, BotFrames * _frames);
-  
+
   // channel is used to determine which signal to subscribe to:
   std::string channel;
 
@@ -41,12 +41,12 @@ protected:
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
   //////////// Members Particular to Atlas:
   double prev_utime_atlas; // cached previous time
-  IMUStream imu_data_;  
+  IMUStream imu_data_;
   void doFilter(IMUPacket &raw);
   // An cascade of 3 notch filters in xyz
   IIRNotch* notchfilter_x[3];
   IIRNotch* notchfilter_y[3];
-  IIRNotch* notchfilter_z[3];  
+  IIRNotch* notchfilter_z[3];
   bool atlas_filter;
   ////////////
 
@@ -56,7 +56,7 @@ protected:
       RBIS & init_state, RBIM & init_cov,
       RBISIMUProcessStep * update, Eigen::Vector3d mag_vec);
 
-  
+
   BotTrans ins_to_body;
 
   double cov_accel;
@@ -88,7 +88,6 @@ protected:
   Eigen::Matrix3d cov_xyz;
 };
 
-
 class ViconHandler {
 public:
   typedef enum {
@@ -107,7 +106,7 @@ public:
   // added mfallon, to allow a plate-to-body transform
   BotTrans body_to_vicon;
   bool apply_frame;
-  
+
   ViconMode mode;
   Eigen::VectorXi z_indices;
   Eigen::MatrixXd cov_vicon;
@@ -116,13 +115,17 @@ public:
 
 class IndexedMeasurementHandler {
 public:
-  IndexedMeasurementHandler()
+  IndexedMeasurementHandler(RBISUpdateInterface::sensor_enum this_sensor)
   {
+      indexed_sensor = this_sensor;
   }
   RBISUpdateInterface * processMessage(const mav::indexed_measurement_t * msg);
   bool processMessageInit(const mav::indexed_measurement_t * msg, const std::map<std::string, bool> & sensors_initialized
         , const RBIS & default_state, const RBIM & default_cov,
         RBIS & init_state, RBIM & init_cov);
+
+private:
+    RBISUpdateInterface::sensor_enum indexed_sensor;
 
 };
 

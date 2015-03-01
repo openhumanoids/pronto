@@ -11,6 +11,8 @@
 
 #include <Eigen/Dense>
 
+#include <lcmtypes/pronto/utime_t.hpp>
+
 //TODO remove when front end is templated on FilterState and Update
 #include "rbis.hpp"
 #include "rbis_update_interface.hpp"
@@ -108,6 +110,8 @@ public:
   //params
   std::string pose_channel;
   std::string filter_state_channel;
+  std::string init_message_channel;
+  std::string init_complete_channel; // used to publish a message after reset
   bool publish_filter_state;
   bool publish_pose;
   bool republish_sensors;
@@ -148,6 +152,20 @@ void SensorHandler<lcmType, SensorHandlerClass>::lcm_message_handler(const lcm::
   if (update != NULL) {
     update->utime -= utime_delay;
     lcm_front->state_estimator->addUpdate(update, roll_forward_on_receive);
+  }
+
+  if (lcm_front->init_message_channel != "" && lcm_front->init_complete_channel != "" && channel == lcm_front->init_message_channel) {
+      // send a message informing the world that we have just performed a reset
+      pronto::utime_t init_complete_msg;
+
+      RBIS head_state;
+      RBIM head_cov;
+
+      lcm_front->state_estimator->getHeadState(head_state, head_cov);
+
+      init_complete_msg.utime = head_state.utime;
+
+      lcm_front->lcm_pub->publish(lcm_front->init_complete_channel, &init_complete_msg);
   }
 
   if (lcm_front->lcm_pub != lcm_front->lcm_recv && lcm_front->republish_sensors) {

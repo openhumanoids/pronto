@@ -2,9 +2,9 @@
 
 namespace MavStateEst {
 
-const char * RBISUpdateInterface::sensor_enum_chars = "igvlfsorxdukep";
+const char * RBISUpdateInterface::sensor_enum_chars = "igvlfsorxdukepabmtw";
 const char * RBISUpdateInterface::sensor_enum_strings[] =
-    { "ins", "gps", "vicon", "laser", "laser_gpf", "scan_matcher", "optic_flow", "reset", "invalid", "rgbd", "fovis", "legodo", "legodo_external", "pose_meas" };
+    { "ins", "gps", "vicon", "laser", "laser_gpf", "scan_matcher", "optic_flow", "reset", "invalid", "rgbd", "fovis", "legodo", "legodo_external", "pose_meas", "altimeter", "airspeed", "sideslip", "init_message", "viewer" };
 
 RBISUpdateInterface::sensor_enum RBISUpdateInterface::sensor_enum_from_char(char sensor_char)
 {
@@ -55,7 +55,7 @@ void RBISIndexedMeasurement::updateFilter(const RBIS & prior_state, const RBIM &
 {
   RBIS dstate;
   RBIM dcov;
-  
+
   bool verbose= false;
   bool verbose_cov = false;
   if (verbose){
@@ -66,24 +66,24 @@ void RBISIndexedMeasurement::updateFilter(const RBIS & prior_state, const RBIM &
     std::cout << "prior: " << prior_state << "\n";
     if (verbose_cov) std::cout << "pcov : " << prior_cov << "\n";
   }
-  
+
   double current_loglikelihood = indexedMeasurement(measurement, measurement_cov, index, prior_state, prior_cov, dstate,
       dcov);
-  
+
   if (verbose){
     std::cout << "dstat: " << dstate <<"\n";
     if (verbose_cov) std::cout << " dcov: " << dcov <<"\n";
     std::cout << dstate.position() << " pos\n";
   }
-  
+
   rbisApplyDelta(prior_state, prior_cov, dstate, dcov, posterior_state, posterior_covariance);
-  
+
   if (verbose){
     std::cout << " post: " << posterior_state <<"\n";
     if (verbose_cov) std::cout << "ptcov: " << posterior_covariance <<"\n";
     std::cout << "mfallon b\n";
   }
-  
+
   loglikelihood = prior_loglikelihood + current_loglikelihood;
   //    eigen_dump(prior_state);
   //    eigen_dump(prior_cov);

@@ -1,4 +1,4 @@
-add_definitions(-Wall -fPIC -m64 -enable-shared  -enable-pic)
+add_definitions(-Wall -fPIC -enable-shared  -enable-pic)
 add_library(pronto_math  SHARED pronto_math.cpp)
 
 target_link_libraries(pronto_math jpeg ${LCMTYPES_LIBS})
