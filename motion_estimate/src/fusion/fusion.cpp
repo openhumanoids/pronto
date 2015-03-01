@@ -233,8 +233,9 @@ public:
       if (urdf_file == ""){
         model = new ModelClient(  front_end->lcm_recv->getUnderlyingLCM(), 0);
       }else{
-        //std::string urdf_file = "model_LH_RH.urdf";
-        std::string urdf_filename_full = std::string(getModelsPath()) +"/mit_gazebo_models/mit_robot/" + std::string( urdf_file );
+        // urdf_file should now be the path from the models directory including the robot's named folder
+        //std::string urdf_file = "atlas_v3/model_LH_RH.urdf";
+        std::string urdf_filename_full = std::string(getModelsPath()) + "/" + std::string( urdf_file );
         model = new ModelClient( urdf_filename_full );
       }
       legodo_handler = new LegOdoHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, model, front_end->frames);
