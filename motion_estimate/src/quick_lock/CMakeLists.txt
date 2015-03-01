@@ -23,9 +23,9 @@ target_link_libraries (se-pose-compare lcm pronto_math
 pods_install_executables(se-pose-compare )
 
 
-
 add_executable(se-yaw-lock yaw_lock.cpp)
 pods_use_pkg_config_packages(se-yaw-lock
+    model-client   bot2-param-client  urdf orocos-kdl kdl-parser forward-kinematics
     path-util ${REQUIRED_PACKAGES}
     pronto_vis)
 target_link_libraries (se-yaw-lock lcm pronto_math
