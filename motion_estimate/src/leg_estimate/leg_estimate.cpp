@@ -95,14 +95,19 @@ leg_estimate::leg_estimate( boost::shared_ptr<lcm::LCM> &lcm_publish_,
   pc_vis_->obj_cfg_list.push_back( obj_cfg(1023,"Secondary Foot [const] ",5,1) );
 
   // actually more like 1540N when standing still in Jan 2014, but don't change
-  float atlas_weight = 1550.0;
+  float atlas_weight = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.atlas_weight");
+
   float standing_schmitt_level = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.standing_schmitt_level");
   // originally foot shift was when s_foot - 1400*0.65  > p_foot   ... typically s_foot = 1180 | p_foot =200 (~75%)
   foot_contact_logic_ = new TwoLegs::FootContact(false, atlas_weight, standing_schmitt_level);
   foot_contact_logic_->setStandingFoot( FOOT_LEFT );
 
-  float typical_schmitt_level = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.typical_schmitt_level");
-  foot_contact_logic_alt_ = new TwoLegs::FootContactAlt(false, typical_schmitt_level);
+  float schmitt_low_threshold = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.schmitt_low_threshold");
+  float schmitt_high_threshold = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.schmitt_high_threshold");
+  int schmitt_low_delay = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.schmitt_low_delay");
+  int schmitt_high_delay = bot_param_get_double_or_fail(botparam_, "state_estimator.legodo.schmitt_high_delay");
+
+  foot_contact_logic_alt_ = new TwoLegs::FootContactAlt(false, schmitt_low_threshold, schmitt_high_threshold, schmitt_low_delay, schmitt_high_delay);
   foot_contact_logic_alt_->setStandingFoot( F_LEFT );
 
   // Should I use a very heavy contact classifier (standing) or one that allows toe off (typical)?

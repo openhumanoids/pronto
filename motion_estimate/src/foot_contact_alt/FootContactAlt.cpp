@@ -3,7 +3,7 @@
 using namespace TwoLegs;
 using namespace std;
 
-FootContactAlt::FootContactAlt(bool _log_data_files, const float schmitt_level){
+FootContactAlt::FootContactAlt(bool _log_data_files, const float schmitt_low_threshold, const float schmitt_high_threshold, const int schmitt_low_delay, const int schmitt_high_delay) {
   cout << "A new FootContactAlt object was created" << endl;
 
   standing_foot = F_UNKNOWN;
@@ -23,8 +23,8 @@ FootContactAlt::FootContactAlt(bool _log_data_files, const float schmitt_level){
   // originally 275/375 was ok, but some upward drift (3/4 of a block height) and backward drift (1/3 of a block length)
   // later 475/525 was better, upward drift (1/2 of block) and backward drift (about the same)
   // in Autumn 2014 used 525/575 and it worked very well
-  left_contact_state_strong_  = new SchmittTrigger(schmitt_level-25.0, schmitt_level+25.0, 7000, 7000);
-  right_contact_state_strong_ = new SchmittTrigger(schmitt_level-25.0, schmitt_level+25.0, 7000, 7000);
+  left_contact_state_strong_  = new SchmittTrigger(schmitt_low_threshold, schmitt_high_threshold, schmitt_low_delay, schmitt_high_delay);
+  right_contact_state_strong_ = new SchmittTrigger(schmitt_low_threshold, schmitt_high_threshold, schmitt_low_delay, schmitt_high_delay);
   
   left_contact_state_strong_->forceHigh();
   right_contact_state_strong_->forceHigh();
@@ -117,4 +117,3 @@ float FootContactAlt::getSecondaryFootZforce() {
     return r_foot_force_z;
   return l_foot_force_z;
 }
-

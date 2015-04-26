@@ -49,7 +49,7 @@ class FootContactAlt {
 
     bool verbose_;
   public:     
-    FootContactAlt (bool _log_data_files, const float schmitt_level);
+    FootContactAlt (bool _log_data_files, const float schmitt_low_threshold, const float schmitt_high_threshold, const int schmitt_low_delay, const int schmitt_high_delay);
 
     void terminate();
 
