@@ -30,7 +30,7 @@ const char* control_mode_strings[] = {
 leg_estimate::leg_estimate( boost::shared_ptr<lcm::LCM> &lcm_publish_,
   BotParam * botparam_, boost::shared_ptr<ModelClient> &model_):
   lcm_publish_(lcm_publish_),  botparam_(botparam_), model_(model_),
-  lfoot_sensing_(0,0,0), rfoot_sensing_(0,0,0) {
+  lfoot_sensing_(0,0,0), rfoot_sensing_(0,0,0), n_control_contacts_left_(-1), n_control_contacts_right_(-1) {
 
   initialization_mode_ = bot_param_get_str_or_fail(botparam_, "state_estimator.legodo.initialization_mode");
   std::cout << "Leg Odometry Initialize Mode: " << initialization_mode_ << " \n";
@@ -118,6 +118,11 @@ leg_estimate::leg_estimate( boost::shared_ptr<lcm::LCM> &lcm_publish_,
     control_mode_ = CONTROLLER_UNKNOWN; // for bdi control
   }
   std::cout << "Leg Odometry Contact Mode: " << control_mode_strings[control_mode_] << "\n";
+
+  // Should I use information from the controller to decide the stationary foot?
+  use_controller_input_ = bot_param_get_boolean_or_fail(botparam_, "state_estimator.legodo.use_controller_input");
+  std::cout << "Leg Odometry using input from controller about contact: " << (int) use_controller_input_ << "\n";
+
 
   // these two variables are probably duplicate - need to clean this up...
   primary_foot_ = F_LEFT; // ie left
@@ -490,6 +495,33 @@ contact_status_id leg_estimate::footTransitionAlt(){
   contact_status_id contact_status = foot_contact_logic_alt_->DetectFootTransition(current_utime_, lfoot_sensing_.force_z, rfoot_sensing_.force_z);
 
   standing_foot_ = foot_contact_logic_alt_->getStandingFoot();
+
+  if ( use_controller_input_ ){
+  // when standing foot is left but controller is only
+  // putting ~2 points of contact, then set right to be standing_foot
+  // F_LEFT_NEW   = 0, // just decided that left is in (primary) contact
+  // F_RIGHT_NEW   = 1, // just decided that right is in (primary) contact
+  // F_LEFT_FIXED = 2, // left continues to be in primary contact
+  // F_RIGHT_FIXED = 3, // right continues to be in primary contact
+  if ((standing_foot_ == F_LEFT_NEW) || (standing_foot_ == F_LEFT_FIXED)){
+    if (n_control_contacts_left_ < 4){
+      std::cout << "Signals: " << contact_status << " | Control: " << n_control_contacts_left_ << "  " << n_control_contacts_right_ <<" | Overruling left signals with right control **************\n";
+      contact_status = F_RIGHT_NEW;
+      foot_contact_logic_alt_->forceRightStandingFoot();
+      standing_foot_ = F_RIGHT;
+    }
+  } else if ((standing_foot_ == F_RIGHT_NEW) || (standing_foot_ == F_RIGHT_FIXED)){
+    if (n_control_contacts_right_ < 4){
+      std::cout << "Signals: " << contact_status << " | Control: " << n_control_contacts_left_ << "  " << n_control_contacts_right_ <<" | Overruling right signals with left control **************\n";
+      contact_status = F_LEFT_NEW;
+      foot_contact_logic_alt_->forceLeftStandingFoot();
+      standing_foot_ = F_LEFT;
+    }
+  }
+  }
+
+  // std::cout << "Signals: " << contact_status << " | " << n_control_contacts_left_ << "  " << n_control_contacts_right_ <<"\n";
+
   return contact_status;
 }
 

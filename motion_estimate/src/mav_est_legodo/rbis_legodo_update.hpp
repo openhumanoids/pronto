@@ -19,6 +19,7 @@
 #include <estimate_tools/torque_adjustment.hpp>
 
 #include <lcmtypes/pronto/atlas_state_t.hpp>
+#include "lcmtypes/drake/lcmt_qp_controller_input.hpp"
 
 namespace MavStateEst {
   
@@ -51,6 +52,8 @@ public:
   void poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
+  void controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drake::lcmt_qp_controller_input* msg);
+
   void sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel);
   
   // Utilities
@@ -85,7 +88,11 @@ public:
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
   bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
   
-  
+  // Contact points of the feet deemed to be in contact:
+  int n_control_contacts_left_;
+  int n_control_contacts_right_;
+
+
   // To locally integrate - to denoise
   Eigen::Isometry3d local_accum_;
   bool local_integration_;

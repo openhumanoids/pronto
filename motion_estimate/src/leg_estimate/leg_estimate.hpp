@@ -75,6 +75,10 @@ class leg_estimate{
       lfoot_sensing_ = lfoot_sensing_in;
       rfoot_sensing_ = rfoot_sensing_in;
     }
+    void setControlContacts(int n_control_contacts_left_in, int n_control_contacts_right_in){
+      n_control_contacts_left_  = n_control_contacts_left_in;
+      n_control_contacts_right_ = n_control_contacts_right_in;
+    }
     
     // Update the running leg odometry solution
     // returns: odometry_status - a foot contact classification
@@ -154,6 +158,10 @@ class leg_estimate{
     // Used to determine certain classifiers to use
     control_mode control_mode_;
     
+    // Use information from the controller about the contact points it is exerting
+    bool use_controller_input_;
+    // which contacts is the controller using
+    int n_control_contacts_left_, n_control_contacts_right_;
     
     /// Integration Methods:
     bool initializePose(Eigen::Isometry3d body_to_foot);
