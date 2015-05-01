@@ -66,7 +66,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     lcm_recv->subscribe("WEBCAM",&LegOdoHandler::republishHandler,this);  
   }
  
-  lcm_recv->subscribe("QP_CONTROLLER_INPUT",&LegOdoHandler::controllerInputHandler,this);
+  lcm_recv->subscribe("CONTROLLER_FOOT_CONTACT",&LegOdoHandler::controllerInputHandler,this);
   n_control_contacts_left_ = -1;
   n_control_contacts_right_ = -1;
 
@@ -200,20 +200,9 @@ void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::s
 }
 
 
-void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drake::lcmt_qp_controller_input* msg){
-  n_control_contacts_left_ = 0;
-  n_control_contacts_right_ = 0;
-  for (int i=0; i < msg->num_support_data; i++){
-
-    if (msg->support_data[i].body_id == 12)
-      n_control_contacts_left_ = msg->support_data[i].num_contact_pts;
-
-    if (msg->support_data[i].body_id == 25)
-      n_control_contacts_right_ = msg->support_data[i].num_contact_pts;
-  }
-
-  // std::cout << "got drake: " << n_control_contacts_left_ << " " << n_control_contacts_right_ << "\n";
-
+void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg){
+  n_control_contacts_left_ = msg->num_right_foot_contacts;
+  n_control_contacts_right_ = msg->num_left_foot_contacts;
 }
 
 RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t *msg){
