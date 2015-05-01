@@ -19,7 +19,7 @@
 #include <estimate_tools/torque_adjustment.hpp>
 
 #include <lcmtypes/pronto/atlas_state_t.hpp>
-#include "lcmtypes/drake/lcmt_qp_controller_input.hpp"
+#include <lcmtypes/pronto/controller_foot_contact_t.hpp>
 
 namespace MavStateEst {
   
@@ -52,7 +52,7 @@ public:
   void poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
-  void controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drake::lcmt_qp_controller_input* msg);
+  void controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg);
 
   void sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel);
   
