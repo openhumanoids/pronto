@@ -504,14 +504,14 @@ contact_status_id leg_estimate::footTransitionAlt(){
   // F_LEFT_FIXED = 2, // left continues to be in primary contact
   // F_RIGHT_FIXED = 3, // right continues to be in primary contact
   if ((standing_foot_ == F_LEFT_NEW) || (standing_foot_ == F_LEFT_FIXED)){
-    if (n_control_contacts_left_ < 4){
+    if (n_control_contacts_left_ > -1 && n_control_contacts_left_ < 3 && n_control_contacts_right_ >= 3){
       std::cout << "Signals: " << contact_status << " | Control: " << n_control_contacts_left_ << "  " << n_control_contacts_right_ <<" | Overruling left signals with right control **************\n";
       contact_status = F_RIGHT_NEW;
       foot_contact_logic_alt_->forceRightStandingFoot();
       standing_foot_ = F_RIGHT;
     }
   } else if ((standing_foot_ == F_RIGHT_NEW) || (standing_foot_ == F_RIGHT_FIXED)){
-    if (n_control_contacts_right_ < 4){
+    if (n_control_contacts_right_ > -1 && n_control_contacts_right_ < 3 && n_control_contacts_left_ >= 3){
       std::cout << "Signals: " << contact_status << " | Control: " << n_control_contacts_left_ << "  " << n_control_contacts_right_ <<" | Overruling right signals with left control **************\n";
       contact_status = F_LEFT_NEW;
       foot_contact_logic_alt_->forceLeftStandingFoot();

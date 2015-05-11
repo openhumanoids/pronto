@@ -201,8 +201,8 @@ void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::s
 
 
 void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg){
-  n_control_contacts_left_ = msg->num_right_foot_contacts;
-  n_control_contacts_right_ = msg->num_left_foot_contacts;
+  n_control_contacts_left_ = msg->num_left_foot_contacts;
+  n_control_contacts_right_ = msg->num_right_foot_contacts;
 }
 
 RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t *msg){
