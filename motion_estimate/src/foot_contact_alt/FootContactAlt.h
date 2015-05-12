@@ -66,6 +66,11 @@ class FootContactAlt {
     float rightContactStatus();
 
     void updateSingleFootContactStates(long utime, const double left_force, const double right_force);
+
+    // Added to help force FootContactAlt into a different state:
+    void forceRightStandingFoot();
+    void forceLeftStandingFoot();
+
 };
 
 }

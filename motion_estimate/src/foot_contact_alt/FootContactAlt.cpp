@@ -117,3 +117,16 @@ float FootContactAlt::getSecondaryFootZforce() {
     return r_foot_force_z;
   return l_foot_force_z;
 }
+
+void FootContactAlt::forceLeftStandingFoot() {
+  standing_foot = F_LEFT;
+  left_contact_state_strong_->forceHigh();
+  right_contact_state_strong_->forceLow();
+}
+
+void FootContactAlt::forceRightStandingFoot() {
+  left_contact_state_strong_->forceLow();
+  right_contact_state_strong_->forceHigh();
+  standing_foot = F_RIGHT;
+}
+
