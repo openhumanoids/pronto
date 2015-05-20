@@ -34,8 +34,17 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     for (int i =0; i < n_gains;i++){
       k.push_back( (float) gains_in[i] );
     }
-    torque_adjustment_ = new EstimateTools::TorqueAdjustment(k);
-
+    int n_offsets = bot_param_get_array_len(param, "state_estimator.legodo.adjustment_offset");
+    if (n_offsets != n_gains) {
+      throw std::runtime_error("number of torque adjustment offsets must match number of deflection gains");
+    }
+    double offsets_in[n_offsets];
+    bot_param_get_double_array_or_fail(param, "state_estimator.legodo.adjustment_offset", &offsets_in[0], n_offsets);
+    std::vector<float> offset;
+    for (int i=0; i < n_offsets; i++) {
+      offset.push_back( (float) offsets_in[i] );
+    }
+    torque_adjustment_ = new EstimateTools::TorqueAdjustment(k, offset);
   }else{
     std::cout << "Torque-based joint angle adjustment: Not Using\n";
   }
