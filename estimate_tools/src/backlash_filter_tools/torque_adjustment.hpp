@@ -12,7 +12,7 @@ namespace EstimateTools {
 class TorqueAdjustment{
   public:
     TorqueAdjustment(std::vector<float> k_);
-    TorqueAdjustment(std::vector<float> k_, std::vector<float> offset);
+    TorqueAdjustment(std::vector<float> k_, std::vector<float> position_offset_);
 
     ~TorqueAdjustment(){
     }
@@ -25,7 +25,7 @@ class TorqueAdjustment{
     float max_adjustment_;
 
     std::vector<float> k_;
-    std::vector<float> offset;
+    std::vector<float> position_offset_;
 
 };
 

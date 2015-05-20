@@ -22,13 +22,10 @@ TorqueAdjustment::TorqueAdjustment(std::vector<float> k_):k_(k_) {
 
   max_adjustment_ = 0.1; // 0.1 was always used
 
-  offset.resize(k_.size());
-  for (size_t i=0; i<k_.size(); i++) {
-    offset[i] = 0;
-  }
+  position_offset_ = std::vector<float>(k_.size(), 0.0);
 }
 
-TorqueAdjustment::TorqueAdjustment(std::vector<float> k_, std::vector<float> offset): k_(k_), offset(offset) {
+TorqueAdjustment::TorqueAdjustment(std::vector<float> k_, std::vector<float> position_offset_): k_(k_), position_offset_(position_offset_) {
   // Construct a torque adjustment tool with the given spring constants. The
   // vector k_ should be the same length as the number of efforts and
   // positions (and in the same order), and is measured in units of radians
@@ -47,12 +44,12 @@ TorqueAdjustment::TorqueAdjustment(std::vector<float> k_, std::vector<float> off
   std::cout << "\n";
 
   std::cout << "Offsets: ";
-  for( size_t i=0; i<offset.size(); i++)
-    std::cout << offset[i] << ' ';
+  for( size_t i=0; i<position_offset_.size(); i++)
+    std::cout << position_offset_[i] << ' ';
   std::cout << "\n";
 
-  if (offset.size() != k_.size()) {
-    throw std::runtime_error("offset and k_ should be the same size");
+  if (position_offset_.size() != k_.size()) {
+    throw std::runtime_error("position_offset_ and k_ should be the same size");
   }
 
   max_adjustment_ = 0.1; // 0.1 was always used
@@ -73,7 +70,7 @@ void TorqueAdjustment::processSample(std::vector<float> &position, std::vector<f
     if (std::isnormal(k_[i])) {
       // Don't do the correction if k_[i] is zero, NaN, or infinite. 
       position[i] -= magnitudeLimit( effort[i] / k_[i]);
-      position[i] += offset[i];
+      position[i] += position_offset_[i];
     }
   }
 
