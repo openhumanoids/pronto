@@ -70,8 +70,8 @@ void TorqueAdjustment::processSample(std::vector<float> &position, std::vector<f
     if (std::isnormal(k_[i])) {
       // Don't do the correction if k_[i] is zero, NaN, or infinite. 
       position[i] -= magnitudeLimit( effort[i] / k_[i]);
-      position[i] += position_offset_[i];
     }
+    position[i] += position_offset_[i];
   }
 
   return;
