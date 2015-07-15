@@ -27,7 +27,7 @@ pods_install_pkg_config_file(renderer_rs
     VERSION 0.0.1)
 
 pods_use_pkg_config_packages(renderer_rs
-  lcmtypes_drc_lcmtypes eigen3 ${REQUIRED_PACKAGES_ROBOT_STATE}
+  lcmtypes_pronto-lcmtypes eigen3 ${REQUIRED_PACKAGES_ROBOT_STATE}
   bot2-core bot2-vis bot2-frames)
 
 
