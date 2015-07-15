@@ -1,5 +1,5 @@
-#ifndef RENDERER_STATUS_HPP_
-#define RENDERER_STATUS_HPP_
+#ifndef RENDERER_STATE_HPP_
+#define RENDERER_STATE_HPP_
 
 /**
  * Linking: `pkg-config --libs renderer_status`
@@ -11,5 +11,5 @@
 
 void rs_add_renderer_to_viewer(BotViewer* viewer, int priority, lcm_t* lcm);
 
-#endif /* RENDERER_STATUS_HPP_ */
+#endif /* RENDERER_STATE_HPP_ */
 

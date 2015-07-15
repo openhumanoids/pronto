@@ -27,7 +27,7 @@
 #include "RobotStateListener.hpp"
 
 using namespace std;
-#define RENDERER_NAME "System_Status"
+#define RENDERER_NAME "State"
 
 #define ERR(fmt, ...) do { \
   fprintf(stderr, "["__FILE__":%d Error: ", __LINE__); \
@@ -49,28 +49,11 @@ typedef struct
     float alpha;
  
 
-} RendererSystemStatus;
+} RendererState;
 
-
-
-
-static void
-on_pose_body(const lcm_recv_buf_t * buf, const char *channel, const bot_core_pose_t *msg, void *user_data){
-  RendererSystemStatus *self = (RendererSystemStatus*) user_data;
-  cout << "got pose body\n";
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 // ------------------------------ Drawing Functions ------------------------- //
-////////////////////////////////////////////////////////////////////////////////
-
 static void _draw(BotViewer *viewer, BotRenderer *r){
- //int64_t tic = bot_timestamp_now();
-  RendererSystemStatus *self = (RendererSystemStatus*)r;
-
-  std::cout << "draw 1\n";
+  RendererState *self = (RendererState*)r;
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
@@ -93,69 +76,51 @@ static void _draw(BotViewer *viewer, BotRenderer *r){
   float alpha = self->alpha;
   if(self->robotStateListener->_gl_robot)
   {
-    //self->robotStateListener->_gl_robot->show_bbox(self->visualize_bbox);
-    //self->robotStateListener->_gl_robot->enable_link_selection(self->selection_enabled);
-    //self->robotStateListener->_gl_robot->highlight_link((*self->selection));
-    //self->robotStateListener->_gl_robot->highlight_marker((*self->marker_selection));
     self->robotStateListener->_gl_robot->draw_body (c,alpha);
-
   }
-  
-   
-
-// int64_t toc = bot_timestamp_now();
-// cout << bot_timestamp_useconds(toc-tic) << endl;
 }
 
 
 
 static void on_param_widget_changed(BotGtkParamWidget *pw, const char *param, void *user_data) {
-  RendererSystemStatus *self = (RendererSystemStatus*) user_data;
-
- 
+  RendererState *self = (RendererState*) user_data;
   bot_viewer_request_redraw (self->viewer);
 }
 
 // ------------------------------ Up and Down ------------------------------- //
 static void on_load_preferences (BotViewer *viewer, GKeyFile *keyfile, void *user_data) {
-  RendererSystemStatus *self = (RendererSystemStatus*)user_data;
+  RendererState *self = (RendererState*)user_data;
   bot_gtk_param_widget_load_from_key_file (self->pw, keyfile, RENDERER_NAME);
 }
 
 static void on_save_preferences (BotViewer *viewer, GKeyFile *keyfile, void *user_data){
-  RendererSystemStatus *self = (RendererSystemStatus*)user_data;
+  RendererState *self = (RendererState*)user_data;
   bot_gtk_param_widget_save_to_key_file (self->pw, keyfile, RENDERER_NAME);
 }
 
 static void _destroy(BotRenderer *r){
   if (!r) return;
 
-  RendererSystemStatus *self = (RendererSystemStatus*)r->user;
+  RendererState *self = (RendererState*)r->user;
   delete self;
 }
 
 BotRenderer *renderer_rs_new(BotViewer *viewer, int render_priority, lcm_t *lcm){
-//  RendererSystemStatus *self = (RendererSystemStatus*)calloc(1, sizeof(RendererSystemStatus));
-  
-  RendererSystemStatus *self = (RendererSystemStatus*)new (RendererSystemStatus);
-    self->lcm = boost::shared_ptr<lcm::LCM>(new lcm::LCM(lcm));
 
-int   operation_mode = 0;
+  //  RendererState *self = (RendererState*)calloc(1, sizeof(RendererState));
+  RendererState *self = (RendererState*)new (RendererState);
+  self->lcm = boost::shared_ptr<lcm::LCM>(new lcm::LCM(lcm));
+  int   operation_mode = 0;
 
-    self->robotStateListener = boost::shared_ptr<RobotStateListenerX>(new RobotStateListenerX(self->lcm, 
+  self->robotStateListener = boost::shared_ptr<RobotStateListenerX>(new RobotStateListenerX(self->lcm, 
               viewer, operation_mode));  
-  
   
   self->viewer = viewer;
   BotRenderer *r = &self->renderer;
   r->user = self;
-  self->renderer.name = "RS";
+  self->renderer.name = "State";
   self->renderer.draw = _draw;
   self->renderer.destroy = _destroy;
-
-//  bot_core_pose_t_subscribe(self->lcm,"POSE_BODY",on_pose_body,self);
-
-
   
   if (viewer) {
   self->renderer.widget = gtk_alignment_new (0, 0.5, 1.0, 0);
