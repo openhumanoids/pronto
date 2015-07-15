@@ -31,6 +31,7 @@ add_subdirectory(src/fusion)
 add_subdirectory(src/create_octomap)
 
 # gui:
+add_subdirectory(src/renderer_rs)
 add_subdirectory(src/pronto_viewer)
 
 

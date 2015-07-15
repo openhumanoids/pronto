@@ -19,10 +19,8 @@ pods_use_pkg_config_packages(pronto-viewer bot2-vis
   lcm
   collections_renderer
   mav-state-est-renderers
+  renderer_rs
   path-util)
-
-
-#        bot2-frames-renderers-drc  
 
 pods_install_executables(pronto-viewer)
 

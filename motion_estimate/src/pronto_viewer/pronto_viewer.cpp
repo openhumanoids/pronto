@@ -17,12 +17,13 @@
 #include <octomap_utils/renderer_octomap.h>
 #include <mav_state_est/mav_state_est_renderers.h>
 #include <occ_map/occ_map_renderers.h>
+#include <renderer_rs/renderer_rs.hpp>
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-  string config_file = "drc_robot_02_mit.cfg";
+  string config_file = "drc_robot.cfg";
   bool use_param_server = false;
 
   ConciseArgs parser(argc, argv);
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
   add_map_measurement_renderer_to_viewer(viewer, 1, lcm, bot_param, bot_frames);
   add_mav_state_est_renderer_to_viewer(viewer, 1, lcm, bot_param, bot_frames);
 
+  rs_add_renderer_to_viewer(viewer, 0, lcm);
 
   //load the renderer params from the config file.
   char *fname = g_build_filename(g_get_user_config_dir(), ".bot-plugin-viewerrc", NULL);
