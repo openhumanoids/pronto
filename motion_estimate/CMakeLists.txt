@@ -45,7 +45,10 @@ pods_install_python_script(se-footstep-spoof scripts/footstep_spoof.py)
 
 
 pods_install_python_script(se-state-sync-simple scripts/state-sync-simple.py)
-
 pods_install_python_script(se-simple-restart scripts/se-simple-restart.py)
-
 pods_install_python_script(se-filter-atlas-state scripts/filterAtlasState.py)
+
+
+
+pods_install_python_script(se-state-sync-simple-hyq scripts/state-sync-simple-hyq.py)
+
