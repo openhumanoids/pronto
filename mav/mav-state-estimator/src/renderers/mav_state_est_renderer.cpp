@@ -22,6 +22,7 @@
 
 #define RENDERER_NAME "Mav State Estimator"
 
+#define PARAM_INITIALIZE_HUMANOID "Initialize Humanoid"
 #define PARAM_INITIALIZE "Initialize"
 
 typedef enum {
@@ -427,6 +428,42 @@ mouse_release(BotViewer *viewer, BotEventHandler *ehandler, const double ray_sta
   return 1;
 }
 
+
+static void
+init_humanoid(RendererMavStateEst *self)
+{
+  Eigen::Vector3d xyz_cov_diagonal =
+      Eigen::Array3d(0.25, 0.25, 0.25).square();
+
+  Vector3d init_xyz;
+  init_xyz << 0,0, 0.85; //TODO: 0?
+
+  mav::indexed_measurement_t meas_msg;
+  meas_msg.state_utime = meas_msg.utime = bot_timestamp_now();
+  meas_msg.measured_dim = 4;
+  meas_msg.measured_cov_dim = bot_sq(meas_msg.measured_dim);
+  meas_msg.z_indices.resize(meas_msg.measured_dim);
+  meas_msg.z_effective.resize(meas_msg.measured_dim);
+  meas_msg.R_effective.resize(meas_msg.measured_cov_dim);
+
+  Eigen::Map<VectorXi> inds_map(&meas_msg.z_indices[0], meas_msg.measured_dim);
+  inds_map.head(3) = RBIS::positionInds();
+  inds_map(3) = RBIS::chi_ind + 2;
+
+  Eigen::Map<MatrixXd> cov_map(&meas_msg.R_effective[0], meas_msg.measured_dim, meas_msg.measured_dim);
+  cov_map.setZero();
+  cov_map.topLeftCorner(3, 3).diagonal() = xyz_cov_diagonal;
+  cov_map(3, 3) = bot_sq(bot_to_radians(5)); //FIXME hard coded meading cov
+
+  Eigen::Map<VectorXd> meas_map(&meas_msg.z_effective[0], 4);
+  meas_map.head(3) = init_xyz;
+  meas_map(3) = 0;
+
+  lcm::LCM lcm_cpp(self->lcm);
+  lcm_cpp.publish("MAV_STATE_EST_VIEWER_MEASUREMENT", &meas_msg);
+}
+
+
 static void
 activate(RendererMavStateEst *self)
 {
@@ -461,6 +498,10 @@ static void on_param_widget_changed(BotGtkParamWidget *pw, const char *name, voi
   RendererMavStateEst *self = (RendererMavStateEst*) user;
   if (!strcmp(name, PARAM_INITIALIZE)) {
     activate(self);
+  }
+
+  if (!strcmp(name, PARAM_INITIALIZE_HUMANOID)) {
+    init_humanoid(self);
   }
 
   self->nsigma = bot_gtk_param_widget_get_double(self->pw, PARAM_NSIGMA);
@@ -516,6 +557,7 @@ BotRenderer *renderer_mav_state_est_new(BotViewer *viewer, int render_priority, 
   self->frames = frames;
 
   self->pw = BOT_GTK_PARAM_WIDGET(bot_gtk_param_widget_new());
+  bot_gtk_param_widget_add_buttons(self->pw, PARAM_INITIALIZE_HUMANOID, NULL);
   bot_gtk_param_widget_add_buttons(self->pw, PARAM_INITIALIZE, NULL);
 
   bot_gtk_param_widget_add_separator(self->pw, "Cov Visualization");
