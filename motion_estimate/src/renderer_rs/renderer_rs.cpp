@@ -28,6 +28,7 @@
 
 using namespace std;
 #define RENDERER_NAME "State"
+#define PARAM_ALPHA "Alpha"
 
 #define ERR(fmt, ...) do { \
   fprintf(stderr, "["__FILE__":%d Error: ", __LINE__); \
@@ -66,8 +67,6 @@ static void _draw(BotViewer *viewer, BotRenderer *r){
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
   glEnable (GL_RESCALE_NORMAL);
 
-  self->alpha = 1.0;
- 
   float c[3] = {self->robotStateListener->_robot_color[0], 
                 self->robotStateListener->_robot_color[1],
                 self->robotStateListener->_robot_color[2]};
@@ -85,6 +84,8 @@ static void _draw(BotViewer *viewer, BotRenderer *r){
 static void on_param_widget_changed(BotGtkParamWidget *pw, const char *param, void *user_data) {
   RendererState *self = (RendererState*) user_data;
   bot_viewer_request_redraw (self->viewer);
+
+  self->alpha = bot_gtk_param_widget_get_double(self->pw, PARAM_ALPHA);
 }
 
 // ------------------------------ Up and Down ------------------------------- //
@@ -121,6 +122,7 @@ BotRenderer *renderer_rs_new(BotViewer *viewer, int render_priority, lcm_t *lcm)
   self->renderer.name = "State";
   self->renderer.draw = _draw;
   self->renderer.destroy = _destroy;
+  self->alpha = 1;
   
   if (viewer) {
   self->renderer.widget = gtk_alignment_new (0, 0.5, 1.0, 0);
@@ -138,7 +140,8 @@ BotRenderer *renderer_rs_new(BotViewer *viewer, int render_priority, lcm_t *lcm)
    //             FALSE, TRUE, 0);
 
     
-    
+    bot_gtk_param_widget_add_double(self->pw, PARAM_ALPHA, BOT_GTK_PARAM_WIDGET_SLIDER,
+        0, 1, .01, self->alpha);
     
     gtk_widget_show (GTK_WIDGET (self->pw));
         
