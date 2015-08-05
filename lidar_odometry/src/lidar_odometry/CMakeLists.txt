@@ -20,7 +20,7 @@ pods_install_pkg_config_file(lidar-odom
 add_executable (se-lidar-odometry lidar-odometry-app.cpp)
 target_link_libraries(se-lidar-odometry boost_system)
 pods_use_pkg_config_packages(se-lidar-odometry eigen3
-  lcm    bot2-frames_cpp
+  lcm    bot2-frames
   lcmtypes_bot2-core  
   lidar-odom
   ${FK_PACKAGES})

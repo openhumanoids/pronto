@@ -9,7 +9,6 @@
 
 #include <bot_param/param_client.h>
 #include <bot_frames/bot_frames.h>
-#include <bot_frames_cpp/bot_frames_cpp.hpp>
 
 using namespace std;
 
@@ -33,7 +32,6 @@ class App{
 
     BotParam* botparam_;
     BotFrames* botframes_;
-    bot::frames* botframes_cpp_;
 
     void lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::planar_lidar_t* msg);
     LidarOdom* lidarOdom_;
@@ -50,6 +48,9 @@ class App{
 
     bot_core::pose_t getPoseAsBotPose(Eigen::Isometry3d pose, int64_t utime);
 
+    int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d& mat);
 };    
 
 App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) : 
@@ -59,10 +60,10 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) :
   // Set up frames and config:
   botparam_ = bot_param_new_from_server(lcm_->getUnderlyingLCM(), 0);
   botframes_= bot_frames_get_global(lcm_->getUnderlyingLCM(), botparam_);
-  botframes_cpp_ = new bot::frames(botframes_);
 
   // Store fixed tf from the lidar to the robot's base link at launch:
-  body_to_lidar_ = botframes_cpp_->get_trans_with_utime( botframes_ ,  "SCAN", "body"  , 0);
+  Eigen::Isometry3d body_to_lidar_;
+  int status = get_trans_with_utime( botframes_ ,  "SCAN", "body"  , 0, body_to_lidar_);
   pose_initialized_ = false;
 
 
@@ -88,6 +89,21 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) :
   }
 
   lidarOdom_ = new LidarOdom(lcm_);
+}
+
+int App::get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }  
+
+  return status;
 }
 
 bot_core::pose_t App::getPoseAsBotPose(Eigen::Isometry3d pose, int64_t utime){
