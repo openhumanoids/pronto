@@ -5,8 +5,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/passthrough.h>
 
-#include <lcmtypes/drc/pointcloud2_t.hpp>
-#include <lcmtypes/drc/pointcloud_t.hpp>
+#include <lcmtypes/pronto/pointcloud2_t.hpp>
+#include <lcmtypes/pronto/pointcloud_t.hpp>
 
 #include <pronto_utils/pronto_vis.hpp> // visualize pt clds
 #include <ConciseArgs>
@@ -56,7 +56,7 @@ class StereoOdom{
     boost::shared_ptr<lcm::LCM> lcm_recv_;
     boost::shared_ptr<lcm::LCM> lcm_pub_;
 
-    void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drc::pointcloud2_t* msg);
+    void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg);
 };    
 
 StereoOdom::StereoOdom(boost::shared_ptr<lcm::LCM> &lcm_recv_, boost::shared_ptr<lcm::LCM> &lcm_pub_, const CommandLineConfig& cl_cfg_) : 
@@ -69,7 +69,7 @@ StereoOdom::StereoOdom(boost::shared_ptr<lcm::LCM> &lcm_recv_, boost::shared_ptr
 
 
 
-void StereoOdom::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  drc::pointcloud2_t* msg){
+void StereoOdom::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg){
    cout <<"got vdyne\n";
 
   pcl::PointCloud<pcl::PointXYZIR>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZIR> ());
@@ -90,7 +90,7 @@ void StereoOdom::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string&
   //pcl::io::savePCDFileASCII ("mm_filtered.pcd", *cloud_filtered);
 
   // republish beam as new message
-  drc::pointcloud_t out;
+  pronto::pointcloud_t out;
   out.utime = msg->utime;
   out.seq = msg->seq;
   out.frame_id = msg->frame_id;
