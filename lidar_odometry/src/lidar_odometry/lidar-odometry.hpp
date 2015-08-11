@@ -9,7 +9,7 @@
 #include <boost/function.hpp>
 
 #include <lcm/lcm-cpp.hpp>
-#include <lcmtypes/bot_core.hpp>
+#include <bot_lcmgl_client/lcmgl.h>
 // #include <lcmtypes/scanmatch.hpp>
 // #include <scanmatch/ScanMatcher.hpp>
 #include <frsm/frsm.hpp>
@@ -29,11 +29,13 @@ public:
     ~LidarOdom();
 
     void doOdometry(float* ranges, int nranges, float rad0, float radstep, int64_t utime);
+    void doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime);
 
     Eigen::Isometry3d getCurrentPose(){  return currOdom_;  }
 
     Eigen::Isometry3d getMotion(){ return  (currOdom_ *  prevOdom_.inverse()); }
 
+    void draw(frsmPoint * points, unsigned numPoints, const ScanTransform * T);
 
 private:
     boost::shared_ptr<lcm::LCM> lcm_;
@@ -41,6 +43,9 @@ private:
     int64_t utime_cur_, utime_prev_;
 
     ScanMatcher* sm_;
+    bot_lcmgl_t * lcmgl_state_;
+    bot_lcmgl_t * lcmgl_scan_;
+
     frsm_laser_type_t laserType_;
     int beamSkip_; //downsample ranges by only taking 1 out of every beam_skip points
     double spatialDecimationThresh_; //don't discard a point if its range is more than this many std devs from the mean range (end of hallway)
@@ -50,6 +55,7 @@ private:
     bool publishRelative_;
     bool publishPose_;
     bool doDrawing_;
+    double lastDrawTime_;
 
     Eigen::Isometry3d prevOdom_;
     Eigen::Isometry3d currOdom_;

@@ -4,7 +4,8 @@
 #include <lcmtypes/bot_core.hpp>
 #include <boost/shared_ptr.hpp>
 #include "lidar-odometry.hpp"
-
+#include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/pronto/pointcloud_t.hpp>
 #include <ConciseArgs>
 
 #include <bot_param/param_client.h>
@@ -14,7 +15,7 @@ using namespace std;
 
 struct CommandLineConfig
 {
-  bool verbose;
+  bool use_velodyne;
   bool init_with_message; // initialize off of a pose or vicon
   std::string output_channel;
 };
@@ -34,6 +35,7 @@ class App{
     BotFrames* botframes_;
 
     void lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::planar_lidar_t* msg);
+    void pointCloudHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud_t* msg);
     LidarOdom* lidarOdom_;
 
     Eigen::Isometry3d body_to_lidar_; // Fixed tf from the lidar to the robot's base link
@@ -55,18 +57,20 @@ class App{
 
 App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) : 
        lcm_(lcm_), cl_cfg_(cl_cfg_){
-  lcm_->subscribe("SCAN",&App::lidarHandler,this);
-
+  
   // Set up frames and config:
   botparam_ = bot_param_new_from_server(lcm_->getUnderlyingLCM(), 0);
   botframes_= bot_frames_get_global(lcm_->getUnderlyingLCM(), botparam_);
 
-  // Store fixed tf from the lidar to the robot's base link at launch:
-  Eigen::Isometry3d body_to_lidar_;
-  int status = get_trans_with_utime( botframes_ ,  "SCAN", "body"  , 0, body_to_lidar_);
+  if (cl_cfg_.use_velodyne){
+    lcm_->subscribe("VELODYNE_HORIZONTAL",&App::pointCloudHandler,this);
+    int status = get_trans_with_utime( botframes_ ,  "VELODYNE", "body"  , 0, body_to_lidar_);
+  }else{
+    lcm_->subscribe("SCAN",&App::lidarHandler,this);
+    int status = get_trans_with_utime( botframes_ ,  "SCAN", "body"  , 0, body_to_lidar_);
+  }
+
   pose_initialized_ = false;
-
-
   if (!cl_cfg_.init_with_message){
     std::cout << "Init internal est using default\n";
     world_to_body_init_ = Eigen::Isometry3d::Identity();
@@ -124,7 +128,7 @@ bot_core::pose_t App::getPoseAsBotPose(Eigen::Isometry3d pose, int64_t utime){
 void App::lidarHandler(const lcm::ReceiveBuffer* rbuf,
      const std::string& channel, const  bot_core::planar_lidar_t* msg){
   if (!pose_initialized_){
-    std::cout << "Estimate not initialised, exiting\n";
+    std::cout << "Estimate not initialised, exiting lidarHandler\n";
     return;
   }
 
@@ -132,6 +136,35 @@ void App::lidarHandler(const lcm::ReceiveBuffer* rbuf,
   std::vector<float> ranges_copy = msg->ranges;
   float* ranges = &ranges_copy[0];
   lidarOdom_->doOdometry(ranges, msg->nranges, msg->rad0, msg->radstep, msg->utime);
+
+  // 2. Determine the body position using the LIDAR motion estimate:
+  Eigen::Isometry3d lidar_init_to_lidar_now = lidarOdom_->getCurrentPose();
+  Eigen::Isometry3d world_to_lidar_now = world_to_body_init_*body_to_lidar_*lidar_init_to_lidar_now;
+  world_to_body_now_ = world_to_lidar_now * body_to_lidar_.inverse();
+
+  //bot_core::pose_t pose_msg = getPoseAsBotPose( lidar_init_to_lidar_now , msg->utime);
+  //lcm_->publish("POSE_BODY_ALT", &pose_msg );
+  bot_core::pose_t pose_msg_body = getPoseAsBotPose( world_to_body_now_ , msg->utime);
+  lcm_->publish(cl_cfg_.output_channel, &pose_msg_body );
+}
+
+
+void App::pointCloudHandler(const lcm::ReceiveBuffer* rbuf,
+     const std::string& channel, const  pronto::pointcloud_t* msg){
+  if (!pose_initialized_){
+    std::cout << "Estimate not initialised, exiting pointCloudHandler\n";
+    return;
+  }
+
+  // 1. Update LIDAR Odometry
+  std::vector<float> x;
+  std::vector<float> y;
+  for (size_t i=0;i<msg->n_points; i++){
+    x.push_back( msg->points[i][0] );
+    y.push_back( msg->points[i][1] );
+  }
+
+  lidarOdom_->doOdometry(x, y, msg->n_points, msg->utime);
 
   // 2. Determine the body position using the LIDAR motion estimate:
   Eigen::Isometry3d lidar_init_to_lidar_now = lidarOdom_->getCurrentPose();
@@ -170,14 +203,14 @@ void App::poseInitHandler(const lcm::ReceiveBuffer* rbuf, const std::string& cha
 
 int main(int argc, char **argv){
   CommandLineConfig cl_cfg;
-  cl_cfg.verbose = false;
+  cl_cfg.use_velodyne = false;
   cl_cfg.init_with_message = TRUE;
   cl_cfg.output_channel = "POSE_BODY";
 
   ConciseArgs parser(argc, argv, "simple-fusion");
-  parser.add(cl_cfg.verbose, "v", "verbose", "Verbose printf");
   parser.add(cl_cfg.init_with_message, "g", "init_with_message", "Bootstrap internal estimate using VICON or POSE_INIT");
   parser.add(cl_cfg.output_channel, "o", "output_channel", "Output message e.g POSE_BODY");
+  parser.add(cl_cfg.use_velodyne, "v", "use_velodyne", "Use a velodyne instead of the LIDAR");
   parser.parse();
 
   boost::shared_ptr<lcm::LCM> lcm(new lcm::LCM);
