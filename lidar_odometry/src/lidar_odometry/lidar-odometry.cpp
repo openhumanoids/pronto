@@ -16,6 +16,7 @@ LidarOdom::LidarOdom(boost::shared_ptr<lcm::LCM> &lcm_):
   publishRelative_ = FALSE;
   publishPose_ = TRUE;
   doDrawing_ = TRUE;
+  lastDrawTime_ =0;
 
   //hardcoded scan matcher params
   double metersPerPixel = .02; //translational resolution for the brute force search
@@ -56,6 +57,14 @@ LidarOdom::LidarOdom(boost::shared_ptr<lcm::LCM> &lcm_):
             matchingMode, addScanHitThresh,
             stationaryMotionModel,motionModelPriorWeight,&startPose);
 
+  if (doDrawing_) {
+    lcmgl_state_ = bot_lcmgl_init(lcm_->getUnderlyingLCM(), "FRSM_state");
+    lcmgl_scan_ = bot_lcmgl_init(lcm_->getUnderlyingLCM(), "FRSM_scan");
+  }
+  else {
+    lcmgl_state_ = NULL;
+    lcmgl_scan_ = NULL;
+  }
 
 
   cout <<"LidarOdom Constructed\n";
@@ -67,7 +76,13 @@ LidarOdom::~LidarOdom()
 {
 }
 
-
+void LidarOdom::draw(frsmPoint * points, unsigned numPoints, const ScanTransform * T)
+{
+  sm_->draw_state_lcmgl(lcmgl_state_);
+  sm_->draw_scan_lcmgl(lcmgl_scan_, points, numPoints, T);
+  bot_lcmgl_switch_buffer(lcmgl_scan_);
+  bot_lcmgl_switch_buffer(lcmgl_state_);
+}
 
 
 
@@ -111,10 +126,7 @@ Eigen::Isometry3d getScanTransformAsIsometry3d(ScanTransform tf){
 
 void LidarOdom::doOdometry(float* ranges, int nranges, float rad0, float radstep, int64_t utime){
 
-
-    ////////////////////////////////////////////////////////////////////
     //Project ranges into points, and decimate points so we don't have too many
-    ////////////////////////////////////////////////////////////////////
     frsmPoint * points = (frsmPoint *) calloc(nranges, sizeof(frsmPoint));
     int numValidPoints = frsm_projectRangesAndDecimate(beamSkip_,
             spatialDecimationThresh_, ranges, nranges, rad0,
@@ -127,9 +139,7 @@ void LidarOdom::doOdometry(float* ranges, int nranges, float rad0, float radstep
         return;
     }
 
-    ////////////////////////////////////////////////////////////////////
     //Actually do the matching
-    ////////////////////////////////////////////////////////////////////
     ScanTransform r = sm_->matchSuccessive(points, numValidPoints,
             laserType_, utime, NULL); //don't have a better estimate than prev, so just set prior to NULL
                                       //utime is ONLY used to tag the scans that get added to the map, doesn't actually matter
@@ -151,10 +161,17 @@ void LidarOdom::doOdometry(float* ranges, int nranges, float rad0, float radstep
 
     //Do drawing periodically
     // This was disabled when moving to the frsm library. it would be easily re-added on a fork
-    static double lastDrawTime = 0;
-    if (doDrawing_ && frsm_get_time() - lastDrawTime > .2) {
-        //lastDrawTime = frsm_get_time();
-        //sm_->drawGUI(points, numValidPoints, r, NULL);
+    //Do drawing periodically!
+    if (doDrawing_ && frsm_get_time() - lastDrawTime_ > .2) {
+        lastDrawTime_ = frsm_get_time();
+        //frsm_tictoc("drawing");
+        draw(points, numValidPoints, &r);
+        //frsm_tictoc("drawing");
+    }
+
+    //cleanup
+    free(points);
+}
     }
 
     //cleanup
