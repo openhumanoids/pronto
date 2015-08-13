@@ -1,5 +1,7 @@
 #include "cloud_accumulate.hpp"
 #include <iomanip>      // std::setprecision
+#include <pronto_utils/point_types.hpp> // velodyne data type
+#include <pronto_utils/conversions_lcm.hpp>
 
 CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_):
     lcm_(lcm_), ca_cfg_(ca_cfg_){
@@ -25,7 +27,13 @@ CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudA
   
   finished_ = false;
   
-  laser_projector_ = laser_projector_new(botparam_, botframes_, "laser", 1); //TODO: laser name should be a param
+  
+  
+  if (ca_cfg_.lidar_channel != "VELODYNE"){
+    laser_projector_ = laser_projector_new(botparam_, botframes_, "laser", 1); //TODO: laser name should be a param
+  }else{
+    std::cout << "Not using laser_utils and laser_projector for Velodyne\n";
+  }
 }
 
 
@@ -83,7 +91,7 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
     return scan_local;
   }
 
-  // 2. Convert set of points into a PCL point cloud
+  // 2. Convert set of points into a point cloud
   pronto::PointCloud* scan_body (new pronto::PointCloud ());
   scan_body->points.resize (projected_laser_scan_->npoints);
   int n_valid =0;
@@ -133,6 +141,60 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
     std::cout << "Finished Collecting: " << this_msg->utime << "\n";
     finished_ = true;
   }
+
+}
+
+
+void CloudAccumulate::processVelodyne(const  pronto::pointcloud2_t* msg){
+
+  std::cout << "velodyne: " << msg->utime << "\n";
+
+
+  // 1. convert to a Velodyne PCL point cloud:
+  pcl::PointCloud<pcl::PointXYZIR>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZIR> ());
+  pcl::fromLCMPointCloud2( *msg, *cloud);
+  //pcl::io::savePCDFileASCII ("mm.pcd", *cloud);
+
+  // 2. convert to an rgb PCL point cloud:
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
+
+  // 3. convert to a pronto PointCloud
+  pronto::PointCloud* scan_velodyne (new pronto::PointCloud ());
+  pc_vis_->convertCloudPclToPronto(*cloud_xyzrgb, *scan_velodyne);
+
+  // 4. Project the scan into local frame:
+  pronto::PointCloud* scan_local (new pronto::PointCloud ());
+  Eigen::Isometry3d velodyne_to_local;
+  get_trans_with_utime( botframes_ , "VELODYNE", "local"  , msg->utime, velodyne_to_local);
+  pc_vis_->transformPointCloud(*scan_velodyne, *scan_local, Eigen::Affine3f ( velodyne_to_local.cast<float>() ) );
+
+/*
+  // 2. republish the velodyne as a collections message (on the velodyne frame
+  Isometry3dTime velodyne_to_local_T = Isometry3dTime(msg->utime, velodyne_to_local);
+  pc_vis_->pose_to_lcm_from_list(70000, velodyne_to_local_T);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
+  pc_vis_->ptcld_to_lcm_from_list(70001, *cloud_xyzrgb, msg->utime, msg->utime); 
+
+
+  // Convert Scan to local frame:
+  std::shared_ptr<bot_core::planar_lidar_t>  this_msg;
+  this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
+  pronto::PointCloud* scan_local (new pronto::PointCloud ());
+  scan_local = convertPlanarScanToCloud( this_msg );
+
+*/
+    
+  // Accumulate
+  combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
+  
+  counter_++;  
+  if (counter_ > ca_cfg_.batch_size){
+    std::cout << "Finished Collecting: " << msg->utime << "\n";
+    finished_ = true;
+  }
+
 
 }
 
