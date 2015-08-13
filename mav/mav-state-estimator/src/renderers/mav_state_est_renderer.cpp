@@ -19,11 +19,13 @@
 #include <laser_utils/laser_util.h>
 #include <bot_param/param_util.h>
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
+#include <lcmtypes/pronto/utime_t.hpp>
 
 #define RENDERER_NAME "Mav State Estimator"
 
 #define PARAM_INITIALIZE_HUMANOID "Initialize Humanoid"
 #define PARAM_INITIALIZE "Initialize"
+#define PARAM_INITIALIZE_OCTOMAP "Start Octomap"
 
 typedef enum {
   GPS_INIT, VICON_INIT, GUI_INIT, ORIGIN_INIT
@@ -465,6 +467,17 @@ init_humanoid(RendererMavStateEst *self)
 
 
 static void
+init_octomap(RendererMavStateEst *self)
+{
+  pronto::utime_t out_msg;
+  out_msg.utime = bot_timestamp_now();
+
+  lcm::LCM lcm_cpp(self->lcm);
+  lcm_cpp.publish("STATE_EST_START_NEW_MAP", &out_msg);
+}
+
+
+static void
 activate(RendererMavStateEst *self)
 {
 
@@ -502,6 +515,10 @@ static void on_param_widget_changed(BotGtkParamWidget *pw, const char *name, voi
 
   if (!strcmp(name, PARAM_INITIALIZE_HUMANOID)) {
     init_humanoid(self);
+  }
+
+  if (!strcmp(name, PARAM_INITIALIZE_OCTOMAP)) {
+    init_octomap(self);
   }
 
   self->nsigma = bot_gtk_param_widget_get_double(self->pw, PARAM_NSIGMA);
@@ -559,6 +576,7 @@ BotRenderer *renderer_mav_state_est_new(BotViewer *viewer, int render_priority, 
   self->pw = BOT_GTK_PARAM_WIDGET(bot_gtk_param_widget_new());
   bot_gtk_param_widget_add_buttons(self->pw, PARAM_INITIALIZE_HUMANOID, NULL);
   bot_gtk_param_widget_add_buttons(self->pw, PARAM_INITIALIZE, NULL);
+  bot_gtk_param_widget_add_buttons(self->pw, PARAM_INITIALIZE_OCTOMAP, NULL);
 
   bot_gtk_param_widget_add_separator(self->pw, "Cov Visualization");
 
