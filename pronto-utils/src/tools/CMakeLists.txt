@@ -8,7 +8,7 @@ pods_install_executables(pronto-multisense-to-frame)
 
 
 ##################################################
-pods_install_headers(conversions_lcm.hpp DESTINATION pronto_utils)
+pods_install_headers(conversions_lcm.hpp point_types.hpp DESTINATION pronto_utils)
 
 set(PCL_LIBRARIES  pcl_io-1.7 pcl_filters-1.7)
 
