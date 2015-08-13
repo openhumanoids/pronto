@@ -42,7 +42,6 @@ class CloudAccumulate{
     }
     
     void publishCloud(pronto::PointCloud* &cloud);
-    
     void processLidar(const  bot_core::planar_lidar_t* msg);
 
   private:
@@ -63,18 +62,10 @@ class CloudAccumulate{
     
     bool finished_;
     
-    std::deque<std::shared_ptr<bot_core::planar_lidar_t> > laser_queue_;
-    
     Laser_projector * laser_projector_;
     laser_projected_scan * projected_laser_scan_;  
     
-    Eigen::Isometry3d body_to_scan_last_;
-    int64_t body_to_scan_last_utime_;
-    
-    
-    pronto::PointCloud* convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
-    pronto::PointCloud* convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
-    pronto::PointCloud* convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
+    pronto::PointCloud* convertPlanarScanToCloud(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
     
 };
 
