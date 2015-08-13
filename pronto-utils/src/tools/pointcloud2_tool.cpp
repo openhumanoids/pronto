@@ -4,6 +4,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/passthrough.h>
 
+
 #include <path_util/path_util.h>
 #include <laser_utils/laser_util.h>
 
@@ -12,34 +13,14 @@
 
 #include <pronto_utils/pronto_vis.hpp> // visualize pt clds
 #include <pronto_utils/conversions_lcm.hpp>
+#include <pronto_utils/point_types.hpp> // velodyne data type
 
 #include <ConciseArgs>
 
-
-namespace pcl
-{
-  // Euclidean Velodyne coordinate, including intensity and ring number. 
-  struct PointXYZIR
-  {
-    PCL_ADD_POINT4D;                    // quad-word XYZ
-    float    intensity;                 ///< laser intensity reading
-    uint16_t ring;                      ///< laser ring number
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW     // ensure proper alignment
-  } EIGEN_ALIGN16;
-
-};
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(pcl::PointXYZIR,
-                                  (float, x, x)
-                                  (float, y, y)
-                                  (float, z, z)
-                                  (float, intensity, intensity)
-                                  (uint16_t, ring, ring))
-
-
 struct CommandLineConfig
 {
-  bool verbose;
+  bool reset;
+  int publish_every;
 };
 
 class App{
@@ -50,7 +31,8 @@ class App{
     }
 
   private:
-    const CommandLineConfig cl_cfg_;    
+    const CommandLineConfig cl_cfg_;   
+    int counter_; 
     
     boost::shared_ptr<lcm::LCM> lcm_recv_;
     boost::shared_ptr<lcm::LCM> lcm_pub_;
@@ -69,16 +51,16 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_recv_, boost::shared_ptr<lcm::LCM> &lc
   lcm_recv_->subscribe("VELODYNE",&App::viconHandler,this);
   cout <<"App Constructed\n";
 
-  bool reset = 1;
   pc_vis_ = new pronto_vis( lcm_pub_->getUnderlyingLCM() );
   // obj: id name type reset
   // pts: id name type reset objcoll usergb rgb
-  pc_vis_->obj_cfg_list.push_back( obj_cfg(70000,"Pose - Velodyne",5,reset) );
-  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(70001,"Cloud - Velodyne"         ,1,reset, 70000,1, {0.0, 0.0, 1.0} ));
+  pc_vis_->obj_cfg_list.push_back( obj_cfg(70000,"Pose - Velodyne",5,cl_cfg_.reset) );
+  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(70001,"Cloud - Velodyne"         ,1,cl_cfg_.reset, 70000,1, {0.0, 0.0, 1.0} ));
 
   botparam_ = bot_param_new_from_server(lcm_recv_->getUnderlyingLCM(), 0);
   botframes_= bot_frames_get_global(lcm_recv_->getUnderlyingLCM(), botparam_);
 
+  counter_ =0;
 }
 
 int get_trans_with_utime(BotFrames *bot_frames,
@@ -96,6 +78,7 @@ int get_trans_with_utime(BotFrames *bot_frames,
 }
 
 void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg){
+  counter_++;
 
   // 1. convert to a pcl point cloud:
   pcl::PointCloud<pcl::PointXYZIR>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZIR> ());
@@ -103,7 +86,9 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
   //pcl::io::savePCDFileASCII ("mm.pcd", *cloud);
 
 
-  // 2. republish the velodyne as a collections message (on the velodyne frame
+  // 2. republish the velodyne as a collections message (on the velodyne frame)
+  if (counter_ % cl_cfg_.publish_every == 0){
+
   Eigen::Isometry3d velodyne_to_local;
   get_trans_with_utime( botframes_ , "VELODYNE", "local"  , msg->utime, velodyne_to_local);
   Isometry3dTime velodyne_to_local_T = Isometry3dTime(msg->utime, velodyne_to_local);
@@ -111,6 +96,7 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
   pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
   pc_vis_->ptcld_to_lcm_from_list(70001, *cloud_xyzrgb, msg->utime, msg->utime);  
+  }
 
   // 3. Find the horizontal lidar beam - could use the ring value but PCL filter doesnt handle it
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ> ());
@@ -147,8 +133,11 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
 
 int main(int argc, char **argv){
   CommandLineConfig cl_cfg;
-
+  cl_cfg.publish_every = 1;
+  cl_cfg.reset = true;
   ConciseArgs parser(argc, argv, "fovision-odometry");
+  parser.add(cl_cfg.publish_every, "p", "publish_every","Publish every X scans to collections");
+  parser.add(cl_cfg.reset, "r", "reset","Reset the collections");
   parser.parse();
 
   boost::shared_ptr<lcm::LCM> lcm_recv;
