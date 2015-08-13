@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/pronto/pointcloud2_t.hpp>
 
 #include <laser_utils/laser_util.h>
 #include <path_util/path_util.h>
@@ -42,8 +43,8 @@ class CloudAccumulate{
     }
     
     void publishCloud(pronto::PointCloud* &cloud);
-    
     void processLidar(const  bot_core::planar_lidar_t* msg);
+    void processVelodyne(const  pronto::pointcloud2_t* msg);
 
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
@@ -63,18 +64,10 @@ class CloudAccumulate{
     
     bool finished_;
     
-    std::deque<std::shared_ptr<bot_core::planar_lidar_t> > laser_queue_;
-    
     Laser_projector * laser_projector_;
     laser_projected_scan * projected_laser_scan_;  
     
-    Eigen::Isometry3d body_to_scan_last_;
-    int64_t body_to_scan_last_utime_;
-    
-    
-    pronto::PointCloud* convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
-    pronto::PointCloud* convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
-    pronto::PointCloud* convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
+    pronto::PointCloud* convertPlanarScanToCloud(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
     
 };
 

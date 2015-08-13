@@ -47,9 +47,12 @@ class App{
     void startMapHandler(const lcm::ReceiveBuffer* rbuf, 
                       const std::string& channel, const  pronto::utime_t* msg);
     
-    void lidarHandler(const lcm::ReceiveBuffer* rbuf, 
+    void planarLidarHandler(const lcm::ReceiveBuffer* rbuf, 
                       const std::string& channel, const  bot_core::planar_lidar_t* msg);   
     
+    void velodyneHandler(const lcm::ReceiveBuffer* rbuf, 
+                      const std::string& channel, const  pronto::pointcloud2_t* msg);   
+
     void sendSystemStatus(std::string message);
 
 private:
@@ -94,7 +97,7 @@ void App::sendSystemStatus(std::string message){
 }
 
 
-void App::lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::planar_lidar_t* msg){
+void App::planarLidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::planar_lidar_t* msg){
   if ( do_accum_ ){
     
      if ( accu_->getCounter() % 200 == 0){
@@ -104,10 +107,7 @@ void App::lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
       std::cout << message.str() << "\n";
     }
     
-    
     accu_->processLidar(msg);
-    
-    
     
     if ( accu_->getFinished()  ){//finished_accumating?
       do_convert_cloud_ = true;
@@ -116,6 +116,25 @@ void App::lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
   }
 }
 
+
+void App::velodyneHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg){
+  if ( do_accum_ ){
+    
+     if ( accu_->getCounter() % 200 == 0){
+      std::stringstream message;
+      message << accu_->getCounter() <<  " of " << ca_cfg_.batch_size << " scans collected";
+      sendSystemStatus( message.str() ); 
+      std::cout << message.str() << "\n";
+    }
+    
+    accu_->processVelodyne(msg);
+    
+    if ( accu_->getFinished()  ){//finished_accumating?
+      do_convert_cloud_ = true;
+      do_accum_ = false;
+    }
+  }
+}
 
 
 ////////// Threads //////////////////////
@@ -178,6 +197,7 @@ void commsThread(App& app) {
 
 int main(int argc, char ** argv) {
   ConvertOctomapConfig co_cfg;
+  co_cfg.octomap_resolution = 0.1; // was always 0.1 for mav and atlas
   co_cfg.blur_sigma = 0.1; // default was .5
   co_cfg.blur_map = true;
   CloudAccumulateConfig ca_cfg;
@@ -196,7 +216,7 @@ int main(int argc, char ** argv) {
   
   ConciseArgs opt(argc, (char**)argv);
   //
-  // opt.add(co_cfg.blur_map, "u", "blur_map","Blur map here");
+  opt.add(co_cfg.octomap_resolution, "R", "octomap_resolution","Resolution of underlying octomap");
   opt.add(co_cfg.blur_sigma, "b", "blur_sigma","Radius of the blur kernel");
   //
   opt.add(ca_cfg.lidar_channel, "l", "lidar_channel","lidar_channel");
@@ -221,7 +241,14 @@ int main(int argc, char ** argv) {
   
   boost::thread_group thread_group;
   
-  lcm->subscribe( ca_cfg.lidar_channel, &App::lidarHandler, app);
+  if (ca_cfg.lidar_channel != "VELODYNE"){
+    std::cout << "Subscribing to planar lidar on " << ca_cfg.lidar_channel << "\n";
+    lcm->subscribe( ca_cfg.lidar_channel, &App::planarLidarHandler, app);
+  }else{
+    std::cout << "Subscribing to velodyne lidar on " << ca_cfg.lidar_channel << "\n";
+    lcm->subscribe( ca_cfg.lidar_channel, &App::velodyneHandler, app);
+  }
+
   lcm->subscribe( "STATE_EST_START_NEW_MAP", &App::startMapHandler, app);
 
   thread_group.create_thread(boost::bind(processThread, boost::ref( *app)));

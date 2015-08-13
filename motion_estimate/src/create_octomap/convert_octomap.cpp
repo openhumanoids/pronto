@@ -14,8 +14,8 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pronto::PointCloud* &cloud){
   //  Takes about 2.5 sec to convert 400scans or 400k points into an octree
   
   bool write_output_detailed = false;
-  double res = 0.1; // used 0.1 and blur of 0.1 was too sharp
-  std::cout << "using a base resolution of " << res << "  ========================\n";
+  // double res = 0.1; // used 0.1 and blur of 0.1 was too sharp
+  std::cout << "using a base resolution of " << co_cfg_.octomap_resolution << "  ========================\n";
   double maxrange = -1;
   int max_scan_no = -1;
   unsigned char compression = 0;
@@ -64,12 +64,12 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pronto::PointCloud* &cloud){
   if (write_output_detailed){
     logfile.open((treeFilename+".log").c_str());
     logfile << "# Memory of processing " << "graph" << " over time\n";
-    logfile << "# Resolution: "<< res <<"; compression: " << int(compression) << "; scan endpoints: "<< num_points_in_graph << std::endl;
+    logfile << "# Resolution: "<< co_cfg_.octomap_resolution <<"; compression: " << int(compression) << "; scan endpoints: "<< num_points_in_graph << std::endl;
     logfile << "# [scan number] [bytes octree] [bytes full 3D grid]\n";
   }
 
   if (verbose_>=1) cout << "Creating tree\n===========================\n";
-  OcTree* tree = new OcTree(res);
+  OcTree* tree = new OcTree(co_cfg_.octomap_resolution);
 
   gettimeofday(&start, NULL);  // start timer
   unsigned int numScans = graph->size();

@@ -1,5 +1,7 @@
 #include "cloud_accumulate.hpp"
 #include <iomanip>      // std::setprecision
+#include <pronto_utils/point_types.hpp> // velodyne data type
+#include <pronto_utils/conversions_lcm.hpp>
 
 CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_):
     lcm_(lcm_), ca_cfg_(ca_cfg_){
@@ -25,9 +27,14 @@ CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudA
   
   finished_ = false;
   
-  laser_projector_ = laser_projector_new(botparam_, botframes_, "laser", 1); //TODO: laser name should be a param
+  
+  
+  if (ca_cfg_.lidar_channel != "VELODYNE"){
+    laser_projector_ = laser_projector_new(botparam_, botframes_, "laser", 1); //TODO: laser name should be a param
+  }else{
+    std::cout << "Not using laser_utils and laser_projector for Velodyne\n";
+  }
 }
-
 
 
 bot_core_planar_lidar_t * convertPlanarLidarCppToC(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
@@ -63,137 +70,32 @@ int get_trans_with_utime(BotFrames *bot_frames,
 }
 
 
-pronto::PointCloud*  CloudAccumulate::convertMode1(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
- 
-    pronto::PointCloud* scan_laser (new pronto::PointCloud ());
-    pronto::PointCloud* scan_local (new pronto::PointCloud ());
-    
-    // 1. Convert scan into simple XY point cloud:  
-    double validBeamAngles[] ={-10,10}; 
-    pc_vis_->convertLidar(this_msg->ranges, this_msg->nranges, this_msg->rad0,
-        this_msg->radstep, scan_laser, ca_cfg_.min_range, ca_cfg_.max_range,
-        validBeamAngles[0], validBeamAngles[1]);  
-    
-    // 4. Visualize the scan:
-    Eigen::Isometry3d scan_to_local;
-    get_trans_with_utime( botframes_ , "SCAN", "local"  , this_msg->utime, scan_to_local);
-    
-    Isometry3dTime scan_to_local_T = Isometry3dTime(counter_, scan_to_local);
-    if (verbose_>=3) pc_vis_->pose_to_lcm_from_list(60000, scan_to_local_T);
-    if (verbose_>=3) pc_vis_->ptcld_to_lcm_from_list(60001, *scan_laser, counter_, counter_);  
-    
-    
-    /////////////////
-    // 2. Project the scan into local frame:
-    pc_vis_->transformPointCloud(*scan_laser, *scan_local, Eigen::Affine3f ( scan_to_local.cast<float>() ) );
-    Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
-    if (verbose_>=2) pc_vis_->pose_to_lcm_from_list(60010, null_T);
-    if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);
-  
-    return scan_local;
+void CloudAccumulate::publishCloud(pronto::PointCloud* &cloud){
+  Isometry3dTime null_T = Isometry3dTime(1, Eigen::Isometry3d::Identity()  );
+  pc_vis_->pose_to_lcm_from_list(60010, null_T);
+  pc_vis_->ptcld_to_lcm_from_list(60012, *cloud, 1,1);
 }
 
-pronto::PointCloud*  CloudAccumulate::convertMode2(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
+
+pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
    pronto::PointCloud* scan_local (new pronto::PointCloud ());
     
-  ////////////////////
-  ////////////////////
-  ////////////////////
-  Eigen::Isometry3d body_to_scan;
-  //botframes_cpp_->get_trans_with_utime( botframes_ , "body", "SCAN"  , this_msg->utime, body_to_scan);
-  get_trans_with_utime( botframes_ , "body", "SCAN"  , this_msg->utime, body_to_scan);    
-  Eigen::Vector3d t(body_to_scan.translation());
-  Eigen::Quaterniond r(body_to_scan.rotation());
-  double rpy[3];
-  quat_to_euler(r, rpy[0], rpy[1], rpy[2]);
-  
-
-  Eigen::Vector3d lin_last(body_to_scan_last_.translation());
-  Eigen::Quaterniond r_last(body_to_scan_last_.rotation());
-  double rpy_last[3];
-  quat_to_euler(r_last, rpy_last[0], rpy_last[1], rpy_last[2]);
-
-  double rpy_diff[3];
-  rpy_diff[0] = rpy[0] - rpy_last[0];
-  rpy_diff[1] = rpy[1] - rpy_last[1];
-  rpy_diff[2] = rpy[2] - rpy_last[2];
-
-  double elapsed_time = (this_msg->utime - body_to_scan_last_utime_)*1E-6;
-  double rpy_rate[3];
-  rpy_rate[0] = rpy_diff[0]/ elapsed_time;
-  rpy_rate[1] = rpy_diff[1]/ elapsed_time;
-  rpy_rate[2] = rpy_diff[2]/ elapsed_time;  
-  
-  
-  
-  Eigen::Isometry3d tf_diff =  body_to_scan_last_.inverse()  * body_to_scan  ; // this works fine
-//  Eigen::Isometry3d tf_diff =   ( body_to_scan.inverse()  *  body_to_scan_last_  ).inverse();
-  Eigen::Vector3d lin_diff_tf(tf_diff.translation());
-  Eigen::Quaterniond r_diff_tf(tf_diff.rotation());
-  double rpy_last_tf[3];
-  quat_to_euler(r_diff_tf, rpy_last_tf[0], rpy_last_tf[1], rpy_last_tf[2]);
-  
-  double rpy_rate_tf[3];
-  rpy_rate_tf[0] = rpy_last_tf[0]/ elapsed_time;
-  rpy_rate_tf[1] = rpy_last_tf[1]/ elapsed_time;
-  rpy_rate_tf[2] = rpy_last_tf[2]/ elapsed_time;  
-  
-  double lin_rate_tf[3];
-  lin_rate_tf[0] = lin_diff_tf[0]/ elapsed_time;
-  lin_rate_tf[1] = lin_diff_tf[1]/ elapsed_time;
-  lin_rate_tf[2] = lin_diff_tf[2]/ elapsed_time;
-  
-  if (1==0){
-    std::cout << std::setprecision(5) << std::fixed 
-              << rpy[0] << ", " << rpy[1] << ", " << rpy[2] << " | " 
-              << rpy_last[0] << ", " << rpy_last[1] << ", " << rpy_last[2] << " | "
-              << rpy_diff[0] << ", " << rpy_diff[1] << ", " << rpy_diff[2] << " | "
-              << rpy_rate[0] << ", " << rpy_rate[1] << ", " << rpy_rate[2] << " | "
-              << rpy_rate_tf[0] << ", " << rpy_rate_tf[1] << ", " << rpy_rate_tf[2] << "\n";            
-
-    std::cout << std::setprecision(5) << std::fixed 
-              << elapsed_time << " | "
-              << lin_diff_tf[0] << ", " << lin_diff_tf[1] << ", " << lin_diff_tf[2] << " | "
-              << lin_rate_tf[0] << ", " << lin_rate_tf[1] << ", " << lin_rate_tf[2] << "\n";            
-  }  
-
-  body_to_scan_last_ =  body_to_scan;
-  body_to_scan_last_utime_ = this_msg->utime;  
-  
-  
+  // 1. Convert the Lidar scan into a libbot set of points
   bot_core_planar_lidar_t * laser_msg_c = convertPlanarLidarCppToC(this_msg);
-  
-  double zeros_lin[3] = { 0 };
-  double zeros_ang[3] = { 0 };
-  //zeros_ang[2] = -2.5; 
-  // 100 scans per rev = 2.5 sec per rev = 24 rpm = 144 deg per second = 2.5136 rad/sec
-  // 3.6 deg per scan. 
-  
-  // 600 scans per rev = 15 sec per rev = 4rpm = 24 deg per second = 0.4189 rad/sec
-  // 0.6 deg per scan.
-  
-  // Old Buggy mode:
-  //projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_motion(laser_projector_,
-  //  laser_msg_c, "body", zeros_ang, zeros_lin);
-
+  // 100 scans per rev = 2.5 sec per rev = 24 rpm = 144 deg per second = 2.5136 rad/sec, 3.6 deg per scan.
+  // 600 scans per rev = 15 sec per rev = 4rpm = 24 deg per second = 0.4189 rad/sec, 0.6 deg per scan.
   projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_interpolation(laser_projector_,
     laser_msg_c, "body");
-  
-  
-  //projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_motion(laser_projector_,
-  //   laser_msg_c, "body", rpy_rate_tf, lin_rate_tf);
   if (projected_laser_scan_ == NULL){
     std::cout << "projection failed\n";
     return scan_local;
   }
-  
+
+  // 2. Convert set of points into a point cloud
   pronto::PointCloud* scan_body (new pronto::PointCloud ());
   scan_body->points.resize (projected_laser_scan_->npoints);
-  
   int n_valid =0;
   for (int i = 0; i < projected_laser_scan_->npoints; i++) {
-    // std::cout << i << " " << projected_laser_scan_->points[i].x << "\n";
-    // std::cout << i << " " << projected_laser_scan_->points[i].z << "\n";   
     if (( projected_laser_scan_->rawScan->ranges[i] < 30.0) && ( projected_laser_scan_->rawScan->ranges[i] > 1.85)){
       scan_body->points[n_valid].x = projected_laser_scan_->points[i].x;
       scan_body->points[n_valid].y = projected_laser_scan_->points[i].y;
@@ -201,95 +103,22 @@ pronto::PointCloud*  CloudAccumulate::convertMode2(std::shared_ptr<bot_core::pla
       n_valid++;
     }
   }  
-  // Resize outgoing cloud
   scan_body->points.resize (n_valid);  
-  
   bot_core_planar_lidar_t_destroy(laser_msg_c);
   laser_destroy_projected_scan(projected_laser_scan_);  
   
+  // 3. Visualize the scan:
+  Eigen::Isometry3d body_to_local;
+  get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);
   
-  /*
-  double rpy_cal[3];
-  double q_cal[4] ={    0.495782, -0.493099, -0.504123, -0.506866};
-  quat_to_euler(q_cal, rpy_cal[0], rpy_cal[1], rpy_cal[2]);
-    
-  std::cout << std::setprecision(5) << std::fixed 
-              << rpy_cal[0]*180.0/M_PI << ", " << rpy_cal[1]*180.0/M_PI << ", " << rpy_cal[2]*180.0/M_PI << " cal\n";     
-  */
-  
-
-      
-  // std::string body_to_scan_string = print_Isometry3d(body_to_scan);
-  // std::cout << this_msg->utime << ", " << body_to_scan_string << "\n";
-  
-  
-    // 4. Visualize the scan:
-    Eigen::Isometry3d body_to_local;
-    //botframes_cpp_->get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);  
-    get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);  
-  
-    /////////////////
-    // 2. Project the scan into local frame:
-    pc_vis_->transformPointCloud(*scan_body, *scan_local, Eigen::Affine3f ( body_to_local.cast<float>() ) );
-    Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
-    if (verbose_>=2) pc_vis_->pose_to_lcm_from_list(60010, null_T);
-    if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);     
-  
-  ////////////////////
-  ////////////////////
-  ////////////////////
-  return scan_local;
-      
-}
-
-
-pronto::PointCloud*  CloudAccumulate::convertMode3(std::shared_ptr<bot_core::planar_lidar_t> this_msg){
-   pronto::PointCloud* scan_local (new pronto::PointCloud ());
-
-
-  std::vector<Eigen::Vector3f> points;
-  Eigen::Isometry3d local_to_scan_start;
-  Eigen::Isometry3d local_to_scan_end;
-  int64_t scan_start_utime = this_msg->utime ; // for old logs
-  int64_t scan_end_utime = this_msg->utime +  1E6*3/(40*4) ; // for old logs suould be 18750 = 0.75
-
-  // std::cout << scan_start_utime << " and " << scan_end_utime << "\n";
-  
-  get_trans_with_utime( botframes_ , "SCAN","local"  , scan_start_utime, local_to_scan_start);  
-  get_trans_with_utime( botframes_ , "SCAN", "local"  , scan_end_utime, local_to_scan_end);  
-  pc_vis_->interpolateScan(this_msg->ranges, this_msg->rad0, this_msg->radstep,
-          local_to_scan_start, local_to_scan_end, points);    
-
-  scan_local->points.resize (points.size());
-  
-  int n_valid =0;
-  for (int i = 0; i < points.size(); i++) {
-    if ( (this_msg->ranges[i]<30.0)  && (this_msg->ranges[i]>1.85)  ){
-      scan_local->points[n_valid].x = points[i](0);;
-      scan_local->points[n_valid].y = points[i](1);;
-      scan_local->points[n_valid].z = points[i](2);;
-      n_valid++;
-    }
-  }  
-  // Resize outgoing cloud
-  scan_local->points.resize (n_valid);    
-
+  // 4. Project the scan into local frame:
+  pc_vis_->transformPointCloud(*scan_body, *scan_local, Eigen::Affine3f ( body_to_local.cast<float>() ) );
   Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
   if (verbose_>=2) pc_vis_->pose_to_lcm_from_list(60010, null_T);
-  if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);   
+  if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);
   
   return scan_local;
 }
-
-
-void CloudAccumulate::publishCloud(pronto::PointCloud* &cloud){
-  Isometry3dTime null_T = Isometry3dTime(1, Eigen::Isometry3d::Identity()  );
-  pc_vis_->pose_to_lcm_from_list(60010, null_T);
-  pc_vis_->ptcld_to_lcm_from_list(60012, *cloud, 1,1);    
-}
-
-
-
 
 
 void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
@@ -298,52 +127,14 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
     return;
   }
   
+  // Convert Scan to local frame:
   std::shared_ptr<bot_core::planar_lidar_t>  this_msg;
-  
-  int use_deque =1;
-  int convert_mode =2;
-  if (convert_mode ==2){ // deque fails with laser_create_projected_scan_from_planar_lidar_with_interpolation
-    use_deque =0;
-  }
-  
-  if (use_deque){  
-    std::shared_ptr<bot_core::planar_lidar_t> data
-        (new bot_core::planar_lidar_t(*msg));  
-    
-    laser_queue_.push_back( data );  
-    if (laser_queue_.size() >= 5){
-      //for (size_t i=0; i< laser_queue_.size(); i++){
-      //  std::cout << i << " " << laser_queue_[i]->utime << "\n";
-      //}
-      
-      this_msg =  laser_queue_.front();
-      laser_queue_.pop_front();
-      //std::cout << this_msg->utime << " is utime\n";
-    }else{
-      std::cout << "not processing this iteration\n";
-      return; 
-    }
-  }else{
-    this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));      
-  }
-  
-
+  this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
   pronto::PointCloud* scan_local (new pronto::PointCloud ());
-  
-  if (convert_mode==1){  
-    scan_local = convertMode1( this_msg );
-  }else if (convert_mode==2){
-    scan_local = convertMode2( this_msg );
-  }else{
-    scan_local = convertMode3( this_msg );
-  }
+  scan_local = convertPlanarScanToCloud( this_msg );
     
   // Accumulate
-  //*combined_cloud_ += *scan_local;
   combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
-  //for (size_t i=0; i <scan_local->points.size() ; i++){
-  //  combined_cloud_->points.push_back( scan_local->points[i] );
-  //}
   
   counter_++;  
   if (counter_ > ca_cfg_.batch_size){
@@ -354,4 +145,56 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
 }
 
 
+void CloudAccumulate::processVelodyne(const  pronto::pointcloud2_t* msg){
+
+  std::cout << "velodyne: " << msg->utime << "\n";
+
+
+  // 1. convert to a Velodyne PCL point cloud:
+  pcl::PointCloud<pcl::PointXYZIR>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZIR> ());
+  pcl::fromLCMPointCloud2( *msg, *cloud);
+  //pcl::io::savePCDFileASCII ("mm.pcd", *cloud);
+
+  // 2. convert to an rgb PCL point cloud:
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
+
+  // 3. convert to a pronto PointCloud
+  pronto::PointCloud* scan_velodyne (new pronto::PointCloud ());
+  pc_vis_->convertCloudPclToPronto(*cloud_xyzrgb, *scan_velodyne);
+
+  // 4. Project the scan into local frame:
+  pronto::PointCloud* scan_local (new pronto::PointCloud ());
+  Eigen::Isometry3d velodyne_to_local;
+  get_trans_with_utime( botframes_ , "VELODYNE", "local"  , msg->utime, velodyne_to_local);
+  pc_vis_->transformPointCloud(*scan_velodyne, *scan_local, Eigen::Affine3f ( velodyne_to_local.cast<float>() ) );
+
+/*
+  // 2. republish the velodyne as a collections message (on the velodyne frame
+  Isometry3dTime velodyne_to_local_T = Isometry3dTime(msg->utime, velodyne_to_local);
+  pc_vis_->pose_to_lcm_from_list(70000, velodyne_to_local_T);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
+  pc_vis_->ptcld_to_lcm_from_list(70001, *cloud_xyzrgb, msg->utime, msg->utime); 
+
+
+  // Convert Scan to local frame:
+  std::shared_ptr<bot_core::planar_lidar_t>  this_msg;
+  this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
+  pronto::PointCloud* scan_local (new pronto::PointCloud ());
+  scan_local = convertPlanarScanToCloud( this_msg );
+
+*/
+    
+  // Accumulate
+  combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
+  
+  counter_++;  
+  if (counter_ > ca_cfg_.batch_size){
+    std::cout << "Finished Collecting: " << msg->utime << "\n";
+    finished_ = true;
+  }
+
+
+}
 

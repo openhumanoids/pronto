@@ -19,6 +19,7 @@ using namespace octomap;
 
 struct ConvertOctomapConfig
 {
+    double octomap_resolution;
     double blur_sigma;
     bool blur_map;
 };
