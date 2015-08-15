@@ -21,6 +21,7 @@ struct CommandLineConfig
 {
   bool reset;
   int publish_every;
+  int downsample_factor;
 };
 
 class App{
@@ -42,6 +43,8 @@ class App{
     BotFrames* botframes_;
 
     void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg);
+
+    pronto::pointcloud_t convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud_in, int64_t utime, int32_t seq, std::string frame_id);
 };    
 
 App::App(boost::shared_ptr<lcm::LCM> &lcm_recv_, boost::shared_ptr<lcm::LCM> &lcm_pub_, const CommandLineConfig& cl_cfg_) : 
@@ -55,7 +58,8 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_recv_, boost::shared_ptr<lcm::LCM> &lc
   // obj: id name type reset
   // pts: id name type reset objcoll usergb rgb
   pc_vis_->obj_cfg_list.push_back( obj_cfg(70000,"Pose - Velodyne",5,cl_cfg_.reset) );
-  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(70001,"Cloud - Velodyne"         ,1,cl_cfg_.reset, 70000,1, {0.0, 0.0, 1.0} ));
+  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(70002,"Cloud - Velodyne"         ,1,cl_cfg_.reset, 70000,1, {0.0, 0.0, 1.0} ));
+  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(70001,"Cloud - downsampled"         ,1,cl_cfg_.reset, 70000,1, {1.0, 0.0, 0.0} ));
 
   botparam_ = bot_param_new_from_server(lcm_recv_->getUnderlyingLCM(), 0);
   botframes_= bot_frames_get_global(lcm_recv_->getUnderlyingLCM(), botparam_);
@@ -77,6 +81,26 @@ int get_trans_with_utime(BotFrames *bot_frames,
   return status;
 }
 
+
+pronto::pointcloud_t App::convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud_in, int64_t utime, int32_t seq, std::string frame_id){
+  // Create an generic pointcloud lcm message from a pcl message
+  pronto::pointcloud_t out;
+  out.utime = utime;
+  out.seq = seq;
+  out.frame_id = frame_id;
+
+  for (size_t i = 0; i < cloud_in.points.size(); i++) {
+    std::vector<float> point = { cloud_in.points[i].x, cloud_in.points[i].y, cloud_in.points[i].z};
+    out.points.push_back(point);
+    std::vector<float> channels = { };
+    out.channels.push_back(channels);
+  }
+  out.n_points = out.points.size();
+  out.n_channels = 0;
+  return out;
+}
+
+
 void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg){
   counter_++;
 
@@ -89,13 +113,30 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
   // 2. republish the velodyne as a collections message (on the velodyne frame)
   if (counter_ % cl_cfg_.publish_every == 0){
 
-  Eigen::Isometry3d velodyne_to_local;
-  get_trans_with_utime( botframes_ , "VELODYNE", "local"  , msg->utime, velodyne_to_local);
-  Isometry3dTime velodyne_to_local_T = Isometry3dTime(msg->utime, velodyne_to_local);
-  pc_vis_->pose_to_lcm_from_list(70000, velodyne_to_local_T);
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
-  pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
-  pc_vis_->ptcld_to_lcm_from_list(70001, *cloud_xyzrgb, msg->utime, msg->utime);  
+    Eigen::Isometry3d velodyne_to_local;
+    get_trans_with_utime( botframes_ , "VELODYNE", "local"  , msg->utime, velodyne_to_local);
+    Isometry3dTime velodyne_to_local_T = Isometry3dTime(msg->utime, velodyne_to_local);
+    pc_vis_->pose_to_lcm_from_list(70000, velodyne_to_local_T);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB> ());
+    pcl::copyPointCloud(*cloud, *cloud_xyzrgb);
+    pc_vis_->ptcld_to_lcm_from_list(70002, *cloud_xyzrgb, msg->utime, msg->utime);
+
+
+    // 2. republish a downsampled version - for use in the gpf:
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_downsampled (new pcl::PointCloud<pcl::PointXYZRGB> ());
+    for (size_t i = 0; i < cloud_xyzrgb->points.size(); i=i+cl_cfg_.downsample_factor) {
+      //if (i > 200){
+      //  break;
+      //}
+      cloud_downsampled->points.push_back( cloud_xyzrgb->points[i]);
+    }
+    cloud_downsampled->width = cloud_xyzrgb->points.size();
+    cloud_downsampled->height = 1;
+
+    pronto::pointcloud_t cloud_downsampled_out = convertPointCloud(*cloud_downsampled, msg->utime, msg->seq, msg->frame_id);
+    lcm_pub_->publish("VELODYNE_SUBSAMPLED",&cloud_downsampled_out);
+    pc_vis_->ptcld_to_lcm_from_list(70001, *cloud_downsampled, msg->utime, msg->utime);
+
   }
 
   // 3. Find the horizontal lidar beam - could use the ring value but PCL filter doesnt handle it
@@ -111,7 +152,7 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
   //pcl::io::savePCDFileASCII ("mm_filtered.pcd", *cloud_filtered);
 
 
-  // 4. republish beam as new message
+  // 4. republish horizontal beam as new message
   pronto::pointcloud_t out;
   out.utime = msg->utime;
   out.seq = msg->seq;
@@ -120,10 +161,13 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
   for (size_t i = 0; i < cloud_filtered->points.size(); i++) {
     std::vector<float> point = { cloud_filtered->points[i].x, cloud_filtered->points[i].y, cloud_filtered->points[i].z};
     out.points.push_back(point);
+
+    std::vector<float> channels = { };
+    out.channels.push_back(channels);
   }
   out.n_points = out.points.size();
   out.n_channels = 0;
-//  lcm_pub_->publish("VELODYNE_HORIZONTAL",&out);
+  lcm_pub_->publish("VELODYNE_HORIZONTAL",&out);
 
 }
 
@@ -135,9 +179,11 @@ int main(int argc, char **argv){
   CommandLineConfig cl_cfg;
   cl_cfg.publish_every = 1;
   cl_cfg.reset = true;
+  cl_cfg.downsample_factor = 100; // if 1; dont downsample
   ConciseArgs parser(argc, argv, "fovision-odometry");
   parser.add(cl_cfg.publish_every, "p", "publish_every","Publish every X scans to collections");
   parser.add(cl_cfg.reset, "r", "reset","Reset the collections");
+  parser.add(cl_cfg.downsample_factor, "d", "downsample_factor","Factor to down sample the data");
   parser.parse();
 
   boost::shared_ptr<lcm::LCM> lcm_recv;
