@@ -204,7 +204,13 @@ public:
     if (front_end->isActive("laser_gpf")) {
       laser_gpf_handler = new LaserGPFHandler(front_end->lcm_pub->getUnderlyingLCM(), front_end->param,
           front_end->frames);
-      front_end->addSensor("laser_gpf", &MavStateEst::LaserGPFHandler::processMessage, laser_gpf_handler);
+
+      if( laser_gpf_handler->gpf->sensor_mode == LaserGPF::sensor_input_laser){
+        front_end->addSensor("laser_gpf", &MavStateEst::LaserGPFHandler::processMessage, laser_gpf_handler);
+      }else{
+        front_end->addSensor("laser_gpf", &MavStateEst::LaserGPFHandler::processMessagePointcloud, laser_gpf_handler);
+      }
+
     }
 
     if (front_end->isActive("laser_gpf_out_of_process")) {

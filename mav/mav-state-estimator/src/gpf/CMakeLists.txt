@@ -23,6 +23,7 @@ set(REQUIRED_LIBS mav-state-est
 	lcmtypes_microstrain_comm
     path-util
     lcmtypes_vicon
+    lcmtypes_pronto-lcmtypes
     lcmtypes_mav_estimator
     )
 pods_use_pkg_config_packages(gpf-laser-lib ${REQUIRED_LIBS})

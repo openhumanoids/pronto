@@ -9,9 +9,20 @@ RBISLaserGPFMeasurement::RBISLaserGPFMeasurement(LaserGPF *gpf_, bot_core::plana
 {
 
 }
+
+RBISLaserGPFMeasurement::RBISLaserGPFMeasurement(LaserGPF *gpf_, pronto::pointcloud_t * pointcloud_msg_, int64_t utime,
+    lcm_t * lcm_, const std::string & pub_channel_) :
+    RBISUpdateInterface(laser, utime), gpf(gpf_), pointcloud_msg(pointcloud_msg_), lcm_pub(lcm_), pub_channel(pub_channel_)
+{
+
+}
 RBISLaserGPFMeasurement::~RBISLaserGPFMeasurement()
 {
-  delete laser_msg;
+  if (gpf->sensor_mode == LaserGPF::sensor_input_laser){
+    delete laser_msg;
+  }else{
+    delete pointcloud_msg;
+  }
 }
 
 void RBISLaserGPFMeasurement::updateFilter(const RBIS & prior_state, const RBIM & prior_cov, double prior_loglikelihood)
@@ -25,7 +36,13 @@ void RBISLaserGPFMeasurement::updateFilter(const RBIS & prior_state, const RBIM 
 
   double current_likelihood = 0;
 
-  bool valid = gpf->getMeasurement(prior_state, prior_cov, laser_msg, z_effective, R_effective);
+  bool valid = false;
+  if (gpf->sensor_mode == LaserGPF::sensor_input_laser){
+    valid = gpf->getMeasurement(prior_state, prior_cov, laser_msg, z_effective, R_effective);
+  }else{
+    valid = gpf->getMeasurement(prior_state, prior_cov, pointcloud_msg, z_effective, R_effective);
+  }
+
   if (valid) {
 
     //publish the gpf result for logging
@@ -75,6 +92,12 @@ LaserGPFHandler::LaserGPFHandler(lcm_t * lcm, BotParam * param, BotFrames * fram
 RBISUpdateInterface * LaserGPFHandler::processMessage(const bot_core::planar_lidar_t * msg)
 {
   bot_core::planar_lidar_t * msg_cpy = new bot_core::planar_lidar_t(*msg);
+  return new RBISLaserGPFMeasurement(gpf, msg_cpy, msg->utime, lcm_pub, pub_channel);
+}
+
+RBISUpdateInterface * LaserGPFHandler::processMessagePointcloud(const pronto::pointcloud_t * msg)
+{
+  pronto::pointcloud_t * msg_cpy = new pronto::pointcloud_t(*msg);
   return new RBISLaserGPFMeasurement(gpf, msg_cpy, msg->utime, lcm_pub, pub_channel);
 }
 
