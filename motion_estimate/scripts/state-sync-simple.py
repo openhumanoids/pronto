@@ -24,6 +24,13 @@ sys.path.append(home_dir + "/drc/software/build/lib/python2.7/dist-packages")
 from bot_core.pose_t import pose_t
 from pronto.robot_state_t import robot_state_t
 from pronto.atlas_state_t import atlas_state_t
+from pronto.vector_3d_t import vector_3d_t
+from pronto.position_3d_t import position_3d_t
+from pronto.twist_t import twist_t
+from pronto.quaternion_t import quaternion_t
+from pronto.twist_t import twist_t
+from pronto.force_torque_t import force_torque_t
+
 ########################################################################################
 def timestamp_now (): return int (time.time () * 1000000)
 
@@ -31,8 +38,14 @@ global atlas_state
 
 atlas_state = atlas_state_t()
 
-# thor mang:
-joint_name_list = [u'head_pan', u'head_tilt', u'l_ankle_pitch', u'l_ankle_roll', u'l_elbow', u'l_hip_pitch', u'l_hip_roll', u'l_hip_yaw', u'l_knee', u'l_shoulder_pitch', u'l_shoulder_roll', u'l_shoulder_yaw', u'l_wrist_roll', u'l_wrist_yaw1', u'l_wrist_yaw2', u'r_ankle_pitch', u'r_ankle_roll', u'r_elbow', u'r_hip_pitch', u'r_hip_roll', u'r_hip_yaw', u'r_knee', u'r_shoulder_pitch', u'r_shoulder_roll', u'r_shoulder_yaw', u'r_wrist_roll', u'r_wrist_yaw1', u'r_wrist_yaw2', u'waist_lidar', u'waist_pan', u'waist_tilt']
+# atlas :
+joint_name_list = ["back_bkz", "back_bky", "back_bkx", 
+        "neck_ay", "l_leg_hpz", "l_leg_hpx", "l_leg_hpy", 
+        "l_leg_kny", "l_leg_aky", "l_leg_akx", "r_leg_hpz", 
+        "r_leg_hpx", "r_leg_hpy", "r_leg_kny", "r_leg_aky", 
+        "r_leg_akx", "l_arm_usy", "l_arm_shx", "l_arm_ely", 
+        "l_arm_elx", "l_arm_uwy", "l_arm_mwx", "r_arm_usy", 
+        "r_arm_shx", "r_arm_ely", "r_arm_elx", "r_arm_uwy", "r_arm_mwx"]
 
 
 def on_atlas_state(channel, data):
@@ -55,6 +68,21 @@ def on_pose_body(channel, data):
   o.joint_velocity = atlas_state.joint_velocity
   o.joint_effort = atlas_state.joint_effort
 
+
+  nrot = quaternion_t()
+  nvec = vector_3d_t()
+  p = position_3d_t()
+  p.rotation = nrot
+  p.translation = nvec
+  o.pose = p
+ 
+  t = twist_t()
+  t.linear_velocity = nvec
+  t.angular_velocity = nvec
+  o.twist = t
+
+  ft = force_torque_t()
+  o.force_torque = ft
 
   o.pose.translation.x =m.pos[0];
   o.pose.translation.y =m.pos[1];
