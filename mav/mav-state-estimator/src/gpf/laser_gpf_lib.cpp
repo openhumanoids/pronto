@@ -27,7 +27,7 @@ void LaserGPF::LaserGPFBaseConstructor(int num_samples, bool gpf_vis, LaserLikel
   this->frames = frames;
   this->param = param;
 
-  this->verbose = false;
+  this->verbose = true;
 
   char* motion_project_str = bot_param_get_str_or_fail(param, "state_estimator.laser_gpf.projection_mode");
   if (strcmp(motion_project_str, "motion_project") == 0) {
@@ -41,6 +41,14 @@ void LaserGPF::LaserGPFBaseConstructor(int num_samples, bool gpf_vis, LaserLikel
     std::cout << "LaserGpf will not not project motion onto lidar returns." << std::endl;
   }
   
+  char* sensor_mode_str = bot_param_get_str_or_fail(param, "state_estimator.laser_gpf.sensor_mode");
+  if (strcmp(sensor_mode_str, "laser") == 0) {
+    this->sensor_mode = LaserGPF::sensor_input_laser;
+    fprintf(stderr,"LaserGpf will process planar lidar\n");
+  } else {
+    this->sensor_mode = LaserGPF::sensor_input_pointcloud;
+    fprintf(stderr,"LaserGpf will process pointcloud/velodyne\n");
+  }
   
   
   this->num_samples = num_samples;
@@ -220,55 +228,86 @@ double LaserGPF::likelihoodFunction(const RBIS & state)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const pronto::pointcloud_t * laser_msg,
+    Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective)
+{
+  if (getDisabledMeasurement(state, cov, z_effective, R_effective)){
+    return true;
+  }
+  if (!projectLaser(state, cov, laser_msg)){
+    return false;
+  }
+  return getMeasurement(state, cov, z_effective, R_effective);
+}
 
 
 bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const bot_core::planar_lidar_t * laser_msg,
     Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective)
 {
-  // Periodically re-confirm enable/disable mode:
-  print_tic++;
-  if (!laser_enabled){
-    if (print_tic % 160 ==0)
-      fprintf(stderr, "d");
-
-    // Enforce a mild position measurement using the current xyz,yaw (8,9,10,11)
-    // hard coded assumption of the order of the indices
-    int m = 4;
-
-    Eigen::VectorXi z_indices;
-    z_indices.resize(m);
-    z_indices.tail(3) = RBIS::positionInds();
-    z_indices(0) = RBIS::chi_ind + 2;
-
-    z_effective.resize(m);
-    R_effective.resize(m, m);
-    R_effective << MatrixXd::Identity (m,m);
-
-    R_effective(0,0) = pow(5.0*M_PI/180.0,2); // this is taken from viewer UI
-    R_effective(1,1) = 0.15;
-    R_effective(2,2) = 0.15;
-    R_effective(3,3) = 0.15;
-
-    for (int k = 0; k < m; k++) {
-      z_effective(k) = state.vec(z_indices(k));
-    }
+  if (getDisabledMeasurement(state, cov, z_effective, R_effective)){
     return true;
-    // state & cov: full input state
-    // z_effective and R_effective
-    // 0  1  2  3
-    // 4  5  6  7
-    // 8  9  10 11
-    // 12 13 14 15
-    //std::cout << z_indices.rows() <<  " idx\n";
-    //std::cout << m << " m\n";
-    //std::cout << z_effective.transpose() << " z_eff\n";
-    //std::cout << R_effective << " R_eff\n";
-
-    // return false;
   }
-  if (print_tic % 160 ==0)
-    fprintf(stderr, "e");
-  
+  if (!projectLaser(state, cov, laser_msg)){
+    return false;
+  }
+  return getMeasurement(state, cov, z_effective, R_effective);
+}
+
+
+bool LaserGPF::projectLaser(const RBIS & state, const RBIM & cov, const pronto::pointcloud_t * laser_msg){
+
+  this->projected_laser_scan = laser_create_projected_scan_from_pointcloud(this->laser_projector,
+      laser_msg, "body");
+
+  if (this->projected_laser_scan->numValidPoints < MIN_VALID_BEAMS) {
+    if (this->verbose) {
+      fprintf(stderr, "Not enough valid beams (%d), discarding scan!\n", this->projected_laser_scan->numValidPoints);
+    }
+    laser_destroy_projected_scan(this->projected_laser_scan);
+    return false;
+  }
+
+  return true;
+}
+
+
+laser_projected_scan* LaserGPF::laser_create_projected_scan_from_pointcloud(Laser_projector * projector,
+    const pronto::pointcloud_t *msg, const char * dest_frame)
+{
+  laser_projected_scan * proj_scan = (laser_projected_scan *) calloc(1, sizeof(laser_projected_scan));
+  proj_scan->npoints = msg->n_points;
+  proj_scan->numValidPoints = 0;
+  proj_scan->utime = msg->utime;
+  proj_scan->projector = this->laser_projector;
+  //proj_scan->rawScan = bot_core_planar_lidar_t_copy(msg);
+
+  proj_scan->points = (point3d_t*) calloc(proj_scan->npoints, sizeof(point3d_t));
+  g_assert(proj_scan->points);
+  proj_scan->point_status = (uint8_t *) calloc(proj_scan->npoints, sizeof(uint8_t));
+  g_assert(proj_scan->point_status);
+
+  if (!bot_frames_have_trans(this->laser_projector->bot_frames, this->laser_projector->coord_frame, dest_frame)) {
+    laser_destroy_projected_scan(proj_scan);
+    return NULL;
+  }
+  else {
+    BotTrans origin_start;
+    bot_frames_get_trans_with_utime( this->laser_projector->bot_frames, this->laser_projector->coord_frame,  dest_frame, msg->utime, &origin_start);
+    for (int i = 0; i < proj_scan->npoints; i++) {
+      double sensor_xyz[3];
+      sensor_xyz[0] = msg->points[i][0];
+      sensor_xyz[1] = msg->points[i][1];
+      sensor_xyz[2] = msg->points[i][2];
+      bot_trans_apply_vec(&origin_start, sensor_xyz, point3d_as_array(&proj_scan->points[i]));
+      proj_scan->point_status[i] = 3; // valid
+      proj_scan->numValidPoints++;
+    }
+  }
+  return proj_scan;
+}
+
+
+bool LaserGPF::projectLaser(const RBIS & state, const RBIM & cov, const bot_core::planar_lidar_t * laser_msg){
 
   bot_core_planar_lidar_t * laser_msg_c = new bot_core_planar_lidar_t;
   laser_msg_c->intensities = new float[laser_msg->nintensities];
@@ -302,20 +341,23 @@ bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const bot_co
 
   if (this->projected_laser_scan->numValidPoints < MIN_VALID_BEAMS) {
     if (this->verbose) {
-      fprintf(stderr, "Not enough valid beams (%d), discarding scan!\n", this->projected_laser_scan->numValidPoints);
-      laser_destroy_projected_scan(this->projected_laser_scan);
       return false;
     }
+    fprintf(stderr, "Not enough valid beams (%d), discarding scan!\n", this->projected_laser_scan->numValidPoints);
+    laser_destroy_projected_scan(this->projected_laser_scan);
   }
 
   laser_decimate_projected_scan(this->projected_laser_scan, this->beam_skip, this->spatial_decimation_min,
       this->spatial_decimation_max);
 
+  return true;
+}
+
+
+bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective){
+
   gpfMeasurement(this, state, cov, this->laser_gpf_measurement_indices, z_effective, R_effective, this->num_samples,
       this->max_weight_proportion, this->lcmgl_particles);
-//
-//    gpfMeasurementRzx(this, state, cov, this->laser_gpf_measurement_indices, z_effective, R_effective, this->num_samples,
-//        NULL);
 
   laser_destroy_projected_scan(this->projected_laser_scan);
 
@@ -339,5 +381,46 @@ bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const bot_co
 
   return ret;
 }
+
+
+bool LaserGPF::getDisabledMeasurement(const RBIS & state, const RBIM & cov, Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective){
+  // Periodically re-confirm enable/disable mode:
+
+  print_tic++;
+  if (!laser_enabled){
+    if (print_tic % 160 ==0)
+      fprintf(stderr, "d");
+
+    // Enforce a mild position measurement using the current xyz,yaw (8,9,10,11)
+    // hard coded assumption of the order of the indices
+    int m = 4;
+
+    Eigen::VectorXi z_indices;
+    z_indices.resize(m);
+    z_indices.tail(3) = RBIS::positionInds();
+    z_indices(0) = RBIS::chi_ind + 2;
+
+    z_effective.resize(m);
+    R_effective.resize(m, m);
+    R_effective << MatrixXd::Identity (m,m);
+
+    R_effective(0,0) = pow(5.0*M_PI/180.0,2); // this is taken from viewer UI
+    R_effective(1,1) = 0.15;
+    R_effective(2,2) = 0.15;
+    R_effective(3,3) = 0.15;
+
+    for (int k = 0; k < m; k++) {
+      z_effective(k) = state.vec(z_indices(k));
+    }
+
+    return true;
+  }else{
+    if (print_tic % 160 ==0)
+      fprintf(stderr, "e");
+
+    return false;
+  }
+}
+
 
 }

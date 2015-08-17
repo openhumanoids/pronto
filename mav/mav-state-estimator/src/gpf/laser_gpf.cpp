@@ -54,6 +54,7 @@ public:
     bot_gauss_rand_init(time(NULL)); //randomize for particles
 
     laser_queue = new deque<bot_core::planar_lidar_t *>();
+    pointcloud_queue = new deque<pronto::pointcloud_t *>();
     filter_state_queue = new deque<mav::filter_state_t *>();
 
     gpf = laser_handler->gpf;
@@ -64,8 +65,13 @@ public:
     processor_thread = g_thread_create(processing_func, (void *) this, false, NULL);
 
     //----------------------------------------------------------------------------
-
-    lcm_front->lcm_recv->subscribe(laser_handler->laser_channel.c_str(), &app_t::laser_message_handler, this);
+    if (gpf->sensor_mode == LaserGPF::sensor_input_laser){
+      std::cout << "LaserGPF out of process expects planar lidar on " << laser_handler->laser_channel.c_str() << std::endl;
+      lcm_front->lcm_recv->subscribe(laser_handler->laser_channel.c_str(), &app_t::laser_message_handler, this);
+    }else{
+      std::cout << "LaserGPF out of process expects pointcloud/velodyne on " << laser_handler->laser_channel.c_str() << std::endl;
+      lcm_front->lcm_recv->subscribe(laser_handler->laser_channel.c_str(), &app_t::pointcloud_message_handler, this);
+    }
     lcm_front->lcm_recv->subscribe(lcm_front->filter_state_channel.c_str(), &app_t::filter_state_handler, this);
 
     // drc integration:
@@ -90,6 +96,7 @@ public:
   GMutex * lcm_data_mutex; //should be held when reading/writing message queues
   GCond * lcm_data_cond; //signals new lcm data
   deque<bot_core::planar_lidar_t *> * laser_queue;
+  deque<pronto::pointcloud_t *> * pointcloud_queue;
   deque<mav::filter_state_t *> * filter_state_queue;
   int noDrop;
   //------------------------------------------------------
@@ -242,22 +249,58 @@ public:
     g_cond_broadcast(lcm_data_cond);
   }
 
+  void pointcloud_message_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
+      const pronto::pointcloud_t * msg)
+  {
+    if (counter++ % downsample_factor != 0)
+      return;
+
+    pronto::pointcloud_t * msg_copy = new pronto::pointcloud_t(*msg);
+    g_mutex_lock(lcm_data_mutex);
+    if (!noDrop) {
+      //clear the old messages
+      while (!pointcloud_queue->empty()) {
+        pronto::pointcloud_t * msg_queued = pointcloud_queue->front();
+        delete msg_queued;
+        pointcloud_queue->pop_front();
+      }
+    }
+    pointcloud_queue->push_back(msg_copy);
+    g_mutex_unlock(lcm_data_mutex);
+    g_cond_broadcast(lcm_data_cond);
+  }
+
   static void * processing_func(void * user)
   {
     app_t * app = (app_t *) user;
 
     g_mutex_lock(app->lcm_data_mutex);
     while (1) {
-      if (app->laser_queue->empty() || app->filter_state_queue->empty()) {
-        g_cond_wait(app->lcm_data_cond, app->lcm_data_mutex);
-        continue;
+
+      bot_core::planar_lidar_t * laser_msg;
+      pronto::pointcloud_t * pointcloud_msg;
+      int64_t msg_utime;
+      if (app->gpf->sensor_mode == LaserGPF::sensor_input_laser){
+        if (app->laser_queue->empty() || app->filter_state_queue->empty()) {
+          g_cond_wait(app->lcm_data_cond, app->lcm_data_mutex);
+          continue;
+        }
+        laser_msg = app->laser_queue->front();
+        msg_utime = laser_msg->utime;
+        app->laser_queue->pop_front();
+      }else{
+        if (app->pointcloud_queue->empty() || app->filter_state_queue->empty()) {
+          g_cond_wait(app->lcm_data_cond, app->lcm_data_mutex);
+          continue;
+        }
+        pointcloud_msg = app->pointcloud_queue->front();
+        msg_utime = pointcloud_msg->utime;
+        app->pointcloud_queue->pop_front();
       }
 
-      bot_core::planar_lidar_t * laser_msg = app->laser_queue->front();
-      app->laser_queue->pop_front();
       mav::filter_state_t * fs_msg = NULL;
       //keep going until the queue is empty, or the front is actually after the
-      while (!app->filter_state_queue->empty() && app->filter_state_queue->front()->utime <= laser_msg->utime) {
+      while (!app->filter_state_queue->empty() && app->filter_state_queue->front()->utime <= msg_utime) {
         if (fs_msg != NULL) {
           delete fs_msg;
         }
@@ -280,7 +323,14 @@ public:
       botDoubleToQuaternion(quat, fs_msg->quat);
       RBIS state(state_vec_map, quat);
 
-      bool valid = app->gpf->getMeasurement(state, cov, laser_msg, z_effective, R_effective);
+      bool valid = false;
+      if (app->gpf->sensor_mode == LaserGPF::sensor_input_laser){
+        valid = app->gpf->getMeasurement(state, cov, laser_msg, z_effective, R_effective);
+      }else{
+        valid = app->gpf->getMeasurement(state, cov, pointcloud_msg, z_effective, R_effective);
+      }
+
+
       if (valid) {
 //      eigen_dump(state);
 //      eigen_dump(cov);
@@ -289,7 +339,7 @@ public:
 
         mav::indexed_measurement_t * gpf_msg = gpfCreateLCMmsgCPP(app->gpf->laser_gpf_measurement_indices, z_effective,
             R_effective);
-        gpf_msg->utime = laser_msg->utime;
+        gpf_msg->utime = msg_utime;
         gpf_msg->state_utime = fs_msg->utime;
 
         app->lcm_front->lcm_pub->publish(app->laser_handler->pub_channel.c_str(), gpf_msg);
@@ -298,7 +348,11 @@ public:
       }
 
       //destroy the local copies of the data
-      delete laser_msg;
+      if (app->gpf->sensor_mode == LaserGPF::sensor_input_laser){
+        delete laser_msg;
+      }else{
+        delete pointcloud_msg;
+      }
       delete fs_msg;
 
       //go back around loop, must hold lcm_data lock
