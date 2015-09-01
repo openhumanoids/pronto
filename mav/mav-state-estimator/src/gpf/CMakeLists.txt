@@ -20,7 +20,7 @@ set(REQUIRED_LIBS mav-state-est
 	laser-util
 	laser-sim3d
 	octomap-util
-	lcmtypes_microstrain_comm
+	lcmtypes_microstrain
     path-util
     lcmtypes_vicon
     lcmtypes_mav_estimator

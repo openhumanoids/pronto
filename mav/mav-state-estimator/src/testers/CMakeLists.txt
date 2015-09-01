@@ -4,7 +4,7 @@ pods_use_pkg_config_packages(test_laser_project_with_motion
 	bot2-param-client
 	bot2-frames
 	eigen-utils
-	lcmtypes_microstrain_comm
+	lcmtypes_microstrain
     path-util
     laser-util
     lcmtypes_vicon
