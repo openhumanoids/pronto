@@ -16,7 +16,7 @@ set(REQUIRED_LIBS bot2-core
 	laser-util
 	laser-sim3d
 	octomap-util
-	lcmtypes_microstrain_comm
+	lcmtypes_microstrain
     path-util
     lcmtypes_vicon
     lcmtypes_${POD_NAME}
