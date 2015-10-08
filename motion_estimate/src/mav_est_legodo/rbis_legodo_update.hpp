@@ -18,7 +18,8 @@
 #include <pronto_utils/pronto_joint_tools.hpp>
 #include <estimate_tools/torque_adjustment.hpp>
 
-#include <lcmtypes/pronto/atlas_state_t.hpp>
+//#include <lcmtypes/pronto/atlas_state_t.hpp>
+#include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/pronto/controller_foot_contact_t.hpp>
 
 namespace MavStateEst {
@@ -38,7 +39,8 @@ public:
 
   LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
-  RBISUpdateInterface * processMessage(const pronto::atlas_state_t *msg);
+  //RBISUpdateInterface * processMessage(const pronto::atlas_state_t *msg);
+  RBISUpdateInterface * processMessage(const pronto::joint_state_t *msg);
 
 
   // Classes:
@@ -53,6 +55,7 @@ public:
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
   void controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg);
+  void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::force_torque_t* msg);
 
   void sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel);
   
@@ -84,10 +87,13 @@ public:
 
   PoseT bdi_to_body_full_;  // POSE_BDI
   bool bdi_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
-  
+
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
   bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
-  
+
+  pronto::force_torque_t force_torque_; // More recent force torque messurement
+  bool force_torque_init_; // Have we received a force torque message?
+ 
   // Contact points of the feet deemed to be in contact:
   int n_control_contacts_left_;
   int n_control_contacts_right_;
