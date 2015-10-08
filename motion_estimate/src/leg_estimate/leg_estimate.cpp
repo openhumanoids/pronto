@@ -37,10 +37,10 @@ leg_estimate::leg_estimate( boost::shared_ptr<lcm::LCM> &lcm_publish_,
   leg_odometry_mode_ = bot_param_get_str_or_fail(botparam_, "state_estimator.legodo.integration_mode");
   std::cout << "Leg Odometry Accumulation Mode: " << leg_odometry_mode_ << " \n";
 
-  string standing_link= bot_param_get_str_or_fail(botparam_, "state_estimator.legodo.standing_link");
-  std::cout << "Leg Odometry Standing Link: " << standing_link << " \n";
-  l_standing_link_ = "l_" + standing_link;
-  r_standing_link_ = "r_" + standing_link;
+  l_standing_link_ = bot_param_get_str_or_fail(botparam_, "state_estimator.legodo.left_standing_link");
+  r_standing_link_ = bot_param_get_str_or_fail(botparam_, "state_estimator.legodo.right_standing_link");
+  std::cout << "Leg Odometry Standing Links: " << l_standing_link_ << " "<< r_standing_link_ << " \n";
+
 
   char* filter_joint_positions_str = bot_param_get_str_or_fail(botparam_, "state_estimator.legodo.filter_joint_positions");
   std::cout << "Leg Odometry Filter Joints: " << filter_joint_positions_str << " \n";
