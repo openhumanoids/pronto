@@ -59,6 +59,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   
   lcm_recv->subscribe("POSE_BDI",&LegOdoHandler::poseBDIHandler,this);
   lcm_recv->subscribe("POSE_BODY",&LegOdoHandler::poseBodyHandler,this);
+  lcm_recv->subscribe("FORCE_TORQUE",&LegOdoHandler::forceTorqueHandler,this);
   
   // Arbitrary Subscriptions:
   if (lcm_pub != lcm_recv && republish_cameras) {
@@ -81,6 +82,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   
   bdi_init_ = false;
   body_init_ = false;
+  force_torque_init_ = false;
   
   JointUtils* joint_utils = new JointUtils();
   joint_names_ = joint_utils->atlas_joint_names;
@@ -188,6 +190,11 @@ Eigen::Isometry3d getPoseAsIsometry3d(PoseT pose){
 }
 
 /// LCM Handlers ////////////////////////////////////
+void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg){
+  n_control_contacts_left_ = msg->num_left_foot_contacts;
+  n_control_contacts_right_ = msg->num_right_foot_contacts;
+}
+
 void LegOdoHandler::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
   bdi_to_body_full_ = getBotPoseAsPoseFull(msg);
   bdi_init_ = true;
@@ -200,12 +207,14 @@ void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::s
 }
 
 
-void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg){
-  n_control_contacts_left_ = msg->num_left_foot_contacts;
-  n_control_contacts_right_ = msg->num_right_foot_contacts;
+void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::force_torque_t* msg){
+  force_torque_ = *msg;
+  force_torque_init_ = true; 
 }
 
-RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t *msg){
+// TODO: Create Legacy ATLAS_STATE handler
+
+RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::joint_state_t *msg){
   
   if (!bdi_init_){
     std::cout << "POSE_BDI not received yet, not integrating leg odometry =========================\n";
@@ -215,7 +224,12 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t 
     std::cout << "POSE_BODY not received yet, not integrating leg odometry =========================\n";
     return NULL;    
   }
-  
+  if (!force_torque_init_){
+    std::cout << "FORCE_TORQUE not received yet, not integrating leg odometry =========================\n";
+    return NULL;    
+  }  
+
+
   // Disabling below will turn off all input of POSE_BDI to leg odom:
   // which is unused if using the "basic_mode"
   if (1==1){
@@ -230,8 +244,8 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t 
   
   
   // 1. Do the Leg Odometry Integration
-  leg_est_->setFootSensing(  FootSensing( msg->force_torque.l_foot_force_z, msg->force_torque.l_foot_torque_x,  msg->force_torque.l_foot_torque_y),
-                             FootSensing( msg->force_torque.r_foot_force_z, msg->force_torque.r_foot_torque_x,  msg->force_torque.r_foot_torque_y));
+  leg_est_->setFootSensing(  FootSensing( force_torque_.l_foot_force_z, force_torque_.l_foot_torque_x,  force_torque_.l_foot_torque_y),
+                             FootSensing( force_torque_.r_foot_force_z, force_torque_.r_foot_torque_x,  force_torque_.r_foot_torque_y));
   leg_est_->setControlContacts(n_control_contacts_left_, n_control_contacts_right_);
 
   // 1.1 Apply the joint torque-to-angle adjustment
@@ -243,7 +257,7 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::atlas_state_t 
     torque_adjustment_->processSample(mod_position, mod_effort );
   }
 
-  float odo_delta_status = leg_est_->updateOdometry(joint_names_, mod_position, // msg->joint_position,
+  float odo_delta_status = leg_est_->updateOdometry(msg->joint_name, mod_position,
                                                     msg->joint_velocity, msg->utime);
   if (odo_delta_status<0){
     if (verbose_ >= 3) std::cout << "Leg Odometry is not valid not integrating =========================\n";
