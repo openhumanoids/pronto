@@ -1,6 +1,7 @@
 #include "rbis_legodo_update.hpp"
 #include <path_util/path_util.h>
 #include <string>
+#include <math.h>
 
 
 using namespace std;
@@ -244,8 +245,8 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::joint_state_t 
   
   
   // 1. Do the Leg Odometry Integration
-  leg_est_->setFootSensing(  FootSensing( force_torque_.l_foot_force_z, force_torque_.l_foot_torque_x,  force_torque_.l_foot_torque_y),
-                             FootSensing( force_torque_.r_foot_force_z, force_torque_.r_foot_torque_x,  force_torque_.r_foot_torque_y));
+  leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.l_foot_force_z), force_torque_.l_foot_torque_x,  force_torque_.l_foot_torque_y),
+                             FootSensing( fabs(force_torque_.r_foot_force_z), force_torque_.r_foot_torque_x,  force_torque_.r_foot_torque_y));
   leg_est_->setControlContacts(n_control_contacts_left_, n_control_contacts_right_);
 
   // 1.1 Apply the joint torque-to-angle adjustment
