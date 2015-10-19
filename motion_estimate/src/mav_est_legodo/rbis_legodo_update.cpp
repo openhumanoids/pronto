@@ -1,6 +1,7 @@
 #include "rbis_legodo_update.hpp"
 #include <path_util/path_util.h>
 #include <string>
+#include <math.h>
 
 
 using namespace std;
@@ -207,7 +208,7 @@ void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::s
 }
 
 
-void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::force_torque_t* msg){
+void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg){
   force_torque_ = *msg;
   force_torque_init_ = true; 
 }
@@ -244,8 +245,8 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::joint_state_t 
   
   
   // 1. Do the Leg Odometry Integration
-  leg_est_->setFootSensing(  FootSensing( force_torque_.l_foot_force_z, force_torque_.l_foot_torque_x,  force_torque_.l_foot_torque_y),
-                             FootSensing( force_torque_.r_foot_force_z, force_torque_.r_foot_torque_x,  force_torque_.r_foot_torque_y));
+  leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
+                             FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
   leg_est_->setControlContacts(n_control_contacts_left_, n_control_contacts_right_);
 
   // 1.1 Apply the joint torque-to-angle adjustment
