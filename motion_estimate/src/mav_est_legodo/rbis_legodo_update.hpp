@@ -21,6 +21,9 @@
 //#include <lcmtypes/pronto/atlas_state_t.hpp>
 #include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/pronto/controller_foot_contact_t.hpp>
+#include <lcmtypes/pronto/six_axis_force_torque_t.hpp>
+#include <lcmtypes/pronto/six_axis_force_torque_array_t.hpp>
+
 
 namespace MavStateEst {
   
@@ -55,7 +58,7 @@ public:
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
   void controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg);
-  void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::force_torque_t* msg);
+  void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg);
 
   void sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel);
   
@@ -91,7 +94,7 @@ public:
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
   bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
 
-  pronto::force_torque_t force_torque_; // More recent force torque messurement
+  pronto::six_axis_force_torque_array_t force_torque_; // More recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
  
   // Contact points of the feet deemed to be in contact:
