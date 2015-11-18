@@ -3,25 +3,22 @@ close all
 global bot_
 bot_ = bot;
 
+main_dir = [getenv('HOME')  '/logs/valkyrie/lcm_logs/results/']
+run_dir = 'Valkyrie_100QuickSteps_NoArms-raw-2015-11-18-14-27'
+folder_path = [main_dir run_dir '/'];
 
 % longstepping 180, typicalstep 455, manipmode 259, blocks 222
 % dyn1 129, dyn2 95, dyn3 50, dyn4 98, dyn5 80, dyn6 144
 %normals 86
-
-main_dir = '/home/mfallon/logs/atlas/2014-04-21-vicon-walking/results/'
-run_dir = '2014-08-25-16-39-torque-adjustment-toe-off-mode'
 
 %main_dir = '/media/passport4/atlas/2014-01-21-vicon-walking/results/'
 %run_dir = '2014-03-13-17-09-imu-leg-odo-lidar-alt-transition'
 %run_dir = '2014-03-13-14-25-imu-leg-odo-alt-transition'
 %run_dir = '2014-03-13-14-12-imu-leg-odo-older-transition'
 
-folder_path = [main_dir run_dir '/'];
-
 % 2014-05-06-13-04-imu-leg-odo
 % 2014-05-06-16-54-imu-leg-odo-lidar
 % 2014-05-06-19-10-imu-leg-odo-kalman-joint-filters
-
 
 % paper:
 % 2014-06-06-11-28-imu-leg-odo-blocks3-for-paper
@@ -35,7 +32,6 @@ folder_path = [main_dir run_dir '/'];
 % '2014-08-25-16-39-without-torque-adjustment'
 
 logs = dir( [folder_path '*mat'])
-
 
 settings.parse_async =0;
 settings.plot_async = 0;
@@ -155,9 +151,17 @@ end
 
 
 function [a,s] = do_pre_process(settings)
-a=[], b=[]
+a=[]; b=[];
 load([settings.folder_path settings.log_filename]);
-raw = [ 0*ones(size(POSE_VICON,1),1) , POSE_VICON ];
+
+if exist('POSE_VICON')
+  % when comparing to VICON (typical)
+  raw = [ 0*ones(size(POSE_VICON,1),1) , POSE_VICON ]; 
+else
+  % Hack because there is no vicon in the log
+  raw = [ 0*ones(size(POSE_BDI,1),1) , POSE_BDI ]; 
+  disp('no POSE_VICON in this log, plotting using POSE_BDI as basis')
+end
 raw = [raw; 1*ones(size(POSE_BDI,1),1) , POSE_BDI];
 raw = [raw; 2*ones(size(POSE_BODY,1),1) , POSE_BODY]; % usedto used POSE_BODY_ALT
 res = sortrows(raw, 2);

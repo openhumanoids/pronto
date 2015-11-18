@@ -41,6 +41,7 @@ add_subdirectory(src/quick_lock)
 
 pods_install_python_script(se-bdi-imu-individually scripts/republish_bdi_imu_individually.py)
 file(COPY scripts/se-batch-process.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+file(COPY scripts/se-batch-process-valkyrie.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 pods_install_python_script(se-footstep-spoof scripts/footstep_spoof.py)
 
 
