@@ -1,4 +1,15 @@
 function se_analysis()
+% Steps to state estimation analysis
+% 1. Run script to run sefusion lcmlogs or/and to convert output lcmlog to a matlab .mat
+% se-batch-process-valkyrie.sh
+%
+% 2. Move the log into the results directory
+% cd ~/Desktop/results ~/logs/valkyrie/lcm_logs/results/Valkyrie_100QuickSteps_NoArms-raw-2015-11-18-14-46-<short-summary>
+%
+% 3. Run matlab plotting to compare POSE_BDI/BODY and VICON
+% se-analysis.m
+
+
 close all
 global bot_
 bot_ = bot;

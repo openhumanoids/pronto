@@ -42,7 +42,7 @@ process_log(){
   fi
 
   # Run estimation and then convert to matlab file (.mat)
-  #se-fusion       -U model_LN_RN.urdf -P val_cfg_FIXMI/robot.cfg -L $log_in -pr 0    -l $log_out_fusion
+  #se-fusion       -U model_LN_RN.urdf -P val_cfg_FIXME/robot.cfg -L $log_in -pr 0    -l $log_out_fusion
   #bot-log2mat  $log_out_fusion  -c "POSE_BDI|POSE_VICON|POSE_BODY_ALT|POSE_BODY|POSE_MIT" -o $log_out_fusion_mat
 
   # Only convert the log:
