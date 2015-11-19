@@ -1,4 +1,3 @@
-#main
 cmake_minimum_required(VERSION 2.6.0)
 
 file(GLOB hpp_files include/visualization/*.hpp)
@@ -42,7 +41,4 @@ add_subdirectory(src/collections_renderer)
 add_subdirectory(src/collections_viewer)
 
 
-# others - not built for DRC
-#add_subdirectory(src/other_renderers)
-# mr-viewer2
-#add_subdirectory(src/viewer)
+
