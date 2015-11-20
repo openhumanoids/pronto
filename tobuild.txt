@@ -12,6 +12,3 @@ mav
 motion_estimate
 
 lidar_odometry
-
-#drc_utils
-#state_sync
