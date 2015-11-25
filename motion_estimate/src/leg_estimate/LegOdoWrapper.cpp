@@ -49,8 +49,9 @@ void LegOdoWrapper::setupLegOdo() {
   if (cl_cfg_.urdf_file == ""){
     model_ = boost::shared_ptr<ModelClient>(new ModelClient(lcm_subscribe_->getUnderlyingLCM(), 0));
   }else{
-    //std::string urdf_file = "model_LH_RH.urdf";
-    std::string urdf_file_full = std::string(getModelsPath()) +"/mit_gazebo_models/mit_robot/" + std::string(cl_cfg_.urdf_file);
+    // was:
+    //std::string urdf_file_full = std::string(getModelsPath()) +"/mit_gazebo_models/mit_robot/" + std::string(cl_cfg_.urdf_file);
+    std::string urdf_file_full = std::string(getModelsPath()) +"/mit_robot/" + std::string(cl_cfg_.urdf_file);
     model_ = boost::shared_ptr<ModelClient>(new ModelClient( urdf_file_full  ));
   }
 

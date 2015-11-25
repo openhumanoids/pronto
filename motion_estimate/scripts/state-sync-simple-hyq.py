@@ -68,7 +68,7 @@ lc = lcm.LCM()
 print "started"
 
 
-sub1 = lc.subscribe("HYQ_STATE", on_joint_state)
+sub1 = lc.subscribe("CORE_ROBOT_STATE", on_joint_state)
 sub2 = lc.subscribe("POSE_BODY", on_pose_body)
 
 while True:
