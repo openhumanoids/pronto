@@ -88,30 +88,6 @@ void LidarOdom::draw(frsmPoint * points, unsigned numPoints, const ScanTransform
 }
 
 
-
-void sm_roll_pitch_yaw_to_quat (const double rpy[3], double q[4])
-{
-    double roll = rpy[0], pitch = rpy[1], yaw = rpy[2];
-
-    double halfroll = roll / 2;
-    double halfpitch = pitch / 2;
-    double halfyaw = yaw / 2;
-
-    double sin_r2 = sin (halfroll);
-    double sin_p2 = sin (halfpitch);
-    double sin_y2 = sin (halfyaw);
-
-    double cos_r2 = cos (halfroll);
-    double cos_p2 = cos (halfpitch);
-    double cos_y2 = cos (halfyaw);
-
-    q[0] = cos_r2 * cos_p2 * cos_y2 + sin_r2 * sin_p2 * sin_y2;
-    q[1] = sin_r2 * cos_p2 * cos_y2 - cos_r2 * sin_p2 * sin_y2;
-    q[2] = cos_r2 * sin_p2 * cos_y2 + sin_r2 * cos_p2 * sin_y2;
-    q[3] = cos_r2 * cos_p2 * sin_y2 - sin_r2 * sin_p2 * cos_y2;
-}
-
-
 Eigen::Isometry3d getScanTransformAsIsometry3d(ScanTransform tf){
   Eigen::Isometry3d tf_out;
   tf_out.setIdentity();
@@ -119,7 +95,7 @@ Eigen::Isometry3d getScanTransformAsIsometry3d(ScanTransform tf){
 
   double rpy[3] = { 0, 0, tf.theta };
   double quat[4];
-  sm_roll_pitch_yaw_to_quat(rpy, quat);
+  bot_roll_pitch_yaw_to_quat(rpy, quat);
   Eigen::Quaterniond q(quat[0], quat[1],quat[2],quat[3]);
   tf_out.rotate(q);
 

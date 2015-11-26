@@ -9,6 +9,7 @@
 #include <boost/function.hpp>
 
 #include <lcm/lcm-cpp.hpp>
+#include <bot_core/bot_core.h>
 #include <bot_lcmgl_client/lcmgl.h>
 // #include <lcmtypes/scanmatch.hpp>
 // #include <scanmatch/ScanMatcher.hpp>
