@@ -7,8 +7,6 @@ motion estimation.
 Typically it is used as part of a distribution with its dependencies.
 Please checkout the full distro here:
 
-::
-
-    https://github.com/mitdrc/pronto-distro
+* [https://github.com/ipab-slmc/pronto-distro](https://github.com/ipab-slmc/pronto-distro)
 
 Where you will find documentation and examples.
