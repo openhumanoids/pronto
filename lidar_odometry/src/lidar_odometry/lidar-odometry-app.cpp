@@ -28,8 +28,8 @@ class App{
     }
 
   private:
-    const CommandLineConfig cl_cfg_;    
     boost::shared_ptr<lcm::LCM> lcm_;
+    const CommandLineConfig cl_cfg_;
 
     BotParam* botparam_;
     BotFrames* botframes_;
@@ -159,7 +159,7 @@ void App::pointCloudHandler(const lcm::ReceiveBuffer* rbuf,
   // 1. Update LIDAR Odometry
   std::vector<float> x;
   std::vector<float> y;
-  for (size_t i=0;i<msg->n_points; i++){
+  for (int i=0;i<msg->n_points; i++){
     x.push_back( msg->points[i][0] );
     y.push_back( msg->points[i][1] );
   }
