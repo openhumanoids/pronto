@@ -23,7 +23,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  string config_file = "drc_robot.cfg";
+  string config_file = "atlas/robot.cfg";
   bool use_param_server = false;
 
   ConciseArgs parser(argc, argv);

@@ -1,13 +1,13 @@
 #include "lidar-odometry.hpp"
 
 LidarOdomConfig::LidarOdomConfig(){
-  //parameters for a hokuyo with the helicopters mirror's attached
   laserType = FRSM_HOKUYO_UTM;
   beamSkip = 3;
   spatialDecimationThresh = .2;
   maxRange = 29.7;
-  validBeamAngles[0]= -2.1;
-  validBeamAngles[1] = 2.1;
+  // Full 270 range for a UTM-30LX
+  validBeamAngles[0]= -2.356194;
+  validBeamAngles[1] = 2.356194;
 
   metersPerPixel = .02;
   thetaResolution = .01;
