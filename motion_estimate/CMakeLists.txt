@@ -55,3 +55,5 @@ pods_install_python_script(se-filter-atlas-state scripts/filterAtlasState.py)
 
 pods_install_python_script(se-state-sync-simple-hyq scripts/state-sync-simple-hyq.py)
 
+pods_install_python_script(se-bigman-signal-mods scripts/bigman-signal-mods.py)
+
