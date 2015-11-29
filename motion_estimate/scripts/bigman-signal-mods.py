@@ -49,8 +49,8 @@ def on_ft(channel, data):
 def on_ms(channel, data):
   m = ins_t.decode(data)
   o = m
-  o.accel = [0,0,-9.81]
-  o.gyro = [0,0,0]
+  #o.accel = [0,0,-9.81]
+  o.gyro = [m.gyro[0]/100.0, m.gyro[1]/100.0, m.gyro[2]/100.0]
   lc.publish("MICROSTRAIN_INS", o.encode()) 
 
 
