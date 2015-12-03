@@ -53,6 +53,14 @@ class LidarOdomConfig
 
     int useThreads;
     bool doDrawing;
+
+    float startPoseInputX;   // initialization of input cloud
+    float startPoseInputY;
+    float startPoseInputTheta;
+    bool do_two_scans_matching; // Flag to be enabled only when we just want to match two scans
+                                // initializing the input scan with a transformation (initTransf) which moves it
+                                // "close enough to help convergence" to the reference scan.
+                                // This flag is false by default.
   private:
 };
 
@@ -85,6 +93,8 @@ private:
     double lastDrawTime_;
     Eigen::Isometry3d prevOdom_, currOdom_;
     int64_t prevUtime_, currUtime_;
+
+    int scan_number;            // scans counter
 };
 
 #endif
