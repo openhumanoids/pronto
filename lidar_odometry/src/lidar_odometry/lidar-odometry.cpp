@@ -28,11 +28,6 @@ LidarOdomConfig::LidarOdomConfig(){
 
   useThreads = 1;
   doDrawing = TRUE;
-
-  startPoseInputX = 0;       // initialization of input cloud
-  startPoseInputY = 0;
-  startPoseInputTheta = 0;
-  do_two_scans_matching = false; // This flag is false by default.
 }
 
 LidarOdom::LidarOdom(boost::shared_ptr<lcm::LCM> &lcm_):
@@ -48,20 +43,16 @@ LidarOdom::LidarOdom(boost::shared_ptr<lcm::LCM> &lcm_, LidarOdomConfig &cfg_):
 void LidarOdom::init(){
   lastDrawTime_ =0;
 
-  scan_number = 0;
-
-  //std::cout << cfg_.thetaResolution << " tR\n";
-
   //create the actual scan matcher object
   sm_ = new ScanMatcher(cfg_.metersPerPixel, cfg_.thetaResolution, cfg_.useMultires,
             cfg_.useThreads,true);
 
-  /*
+  
   if (sm_->isUsingIPP())
       fprintf(stderr, "Using IPP\n");
   else
       fprintf(stderr, "NOT using IPP\n");
-  */
+  
 
   currOdom_.setIdentity();
   prevOdom_.setIdentity();
@@ -228,8 +219,6 @@ int projectPointsAndDecimate(int beamskip, float spatialDecimationThresh, std::v
 
 
 void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime){
-    scan_number++;
-
     double maxRange = 39.0;
     int beamSkip = 3;
 
@@ -244,38 +233,16 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
         return;
     }
 
-    //Actually do the matching
-//====================== Modified by Simona Nobili on 02 Dec 2015 ===================
     ScanTransform r;
-    if (scan_number > 1 && cfg_.do_two_scans_matching)
-    {
-      ScanTransform init;
-      memset(&init, 0, sizeof(init));
-      init.x = cfg_.startPoseInputX;
-      init.y = cfg_.startPoseInputY;
-      init.theta = (cfg_.startPoseInputTheta * M_PI)/180;
 
-      r = sm_->matchSuccessive(points, numValidPoints,
-              cfg_.laserType, utime, false, &init);
-    }
-    else
-    {
-      r = sm_->matchSuccessive(points, numValidPoints,
-              cfg_.laserType, utime, NULL); //don't have a better estimate than prev, so just set prior to NULL
+    r = sm_->matchSuccessive(points, numValidPoints,
+            cfg_.laserType, utime, NULL); //don't have a better estimate than prev, so just set prior to NULL
                                       //utime is ONLY used to tag the scans that get added to the map, doesn't actually matter
-    }
-//=================================================================================
 
     Eigen::Isometry3d r_Iso = getScanTransformAsIsometry3d(r);
 
     prevOdom_ = currOdom_;
-    //cout << "PREVIOUS" << endl;
-    //cout << "Translation: " << endl << prevOdom_.translation() << endl;
-    //cout << "Orientation: " << endl << prevOdom_.rotation() << endl;
     currOdom_ = r_Iso;
-    //cout << "CURRENT" << endl;
-    //cout << "Translation: " << endl << currOdom_.translation() << endl;
-    //cout << "Orientation: " << endl << currOdom_.rotation() << endl;
     prevUtime_ = currUtime_;
     currUtime_ = utime;
 
@@ -283,13 +250,61 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
     static double lastPrintTime = 0;
     if (frsm_get_time() - lastPrintTime > 2.0) {
         lastPrintTime = frsm_get_time();
-        /*fprintf(stderr,
+        fprintf(stderr,
                 "x=%+7.3f y=%+7.3f t=%+7.3f\t score=%f hits=%.2f sx=%.2f sxy=%.2f sy=%.2f st=%.2f, numValid=%d\n",
                 r.x, r.y, r.theta, r.score, (double) r.hits / (double) numValidPoints, r.sigma[0], r.sigma[1],
-                r.sigma[4], r.sigma[8], numValidPoints);*/
+                r.sigma[4], r.sigma[8], numValidPoints);
+    }
+
+    //Do drawing periodically
+    // This was disabled when moving to the frsm library. it would be easily re-added on a fork
+    //Do drawing periodically!
+    if (cfg_.doDrawing && frsm_get_time() - lastDrawTime_ > .2) {
+        lastDrawTime_ = frsm_get_time();
+        //frsm_tictoc("drawing");
+        draw(points, numValidPoints, &r);
+        //frsm_tictoc("drawing");
+    }
+
+    //cleanup
+    free(points);
+}
+
+void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform& initInput){
+    double maxRange = 39.0;
+    int beamSkip = 3;
+
+    //Project ranges into points, and decimate points so we don't have too many
+    frsmPoint * points = (frsmPoint *) calloc(npoints, sizeof(frsmPoint));
+    int numValidPoints = projectPointsAndDecimate(beamSkip,
+            cfg_.spatialDecimationThresh, x, y, npoints, points, maxRange);
+    if (numValidPoints < 30) {
+        fprintf(stderr, "WARNING! NOT ENOUGH VALID POINTS! numValid=%d\n",
+                numValidPoints);
+        free(points);
+        return;
+    }
+
+    ScanTransform r;
+
+    r = sm_->matchSuccessive(points, numValidPoints,
+              cfg_.laserType, utime, false, &initInput);
+
+    Eigen::Isometry3d r_Iso = getScanTransformAsIsometry3d(r);
+
+    prevOdom_ = currOdom_;
+    currOdom_ = r_Iso;
+    prevUtime_ = currUtime_;
+    currUtime_ = utime;
+
+    //Print current position periodically
+    static double lastPrintTime = 0;
+    if (frsm_get_time() - lastPrintTime > 2.0) {
+        lastPrintTime = frsm_get_time();
         fprintf(stderr,
-                "x=%+7.3f y=%+7.3f t=%+7.3f\n",
-                r.x, r.y, r.theta);
+                "x=%+7.3f y=%+7.3f t=%+7.3f\t score=%f hits=%.2f sx=%.2f sxy=%.2f sy=%.2f st=%.2f, numValid=%d\n",
+                r.x, r.y, r.theta, r.score, (double) r.hits / (double) numValidPoints, r.sigma[0], r.sigma[1],
+                r.sigma[4], r.sigma[8], numValidPoints);
     }
 
     //Do drawing periodically

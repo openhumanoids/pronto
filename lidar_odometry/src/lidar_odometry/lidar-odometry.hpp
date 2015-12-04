@@ -53,14 +53,6 @@ class LidarOdomConfig
 
     int useThreads;
     bool doDrawing;
-
-    float startPoseInputX;   // initialization of input cloud
-    float startPoseInputY;
-    float startPoseInputTheta;
-    bool do_two_scans_matching; // Flag to be enabled only when we just want to match two scans
-                                // initializing the input scan with a transformation (initTransf) which moves it
-                                // "close enough to help convergence" to the reference scan.
-                                // This flag is false by default.
   private:
 };
 
@@ -75,6 +67,7 @@ public:
 
     void doOdometry(float* ranges, int nranges, float rad0, float radstep, int64_t utime);
     void doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime);
+    void doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform& initInput);
 
     Eigen::Isometry3d getCurrentPose(){  return currOdom_;  }
 
