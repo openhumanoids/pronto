@@ -87,7 +87,6 @@ private:
     Eigen::Isometry3d prevOdom_, currOdom_;
     int64_t prevUtime_, currUtime_;
 
-    int scan_number;            // scans counter
 };
 
 #endif

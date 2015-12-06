@@ -47,19 +47,17 @@ void LidarOdom::init(){
   sm_ = new ScanMatcher(cfg_.metersPerPixel, cfg_.thetaResolution, cfg_.useMultires,
             cfg_.useThreads,true);
 
-  
   if (sm_->isUsingIPP())
       fprintf(stderr, "Using IPP\n");
   else
       fprintf(stderr, "NOT using IPP\n");
   
-
   currOdom_.setIdentity();
   prevOdom_.setIdentity();
 
   ScanTransform startPose;
   memset(&startPose, 0, sizeof(startPose));
-  startPose.theta = (0 * M_PI)/180; //set the scan matcher to start at 0 heading... cuz pi/2 would be rediculous
+  startPose.theta = 0; //set the scan matcher to start at 0 heading... cuz pi/2 would be rediculous
   
   sm_->initSuccessiveMatchingParams(cfg_.maxNumScans, cfg_.initialSearchRangeXY,
             cfg_.maxSearchRangeXY, cfg_.initialSearchRangeTheta, cfg_.maxSearchRangeTheta,
@@ -237,14 +235,11 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
         return;
     }
 
-    ScanTransform r;
-
-    r = sm_->matchSuccessive(points, numValidPoints,
+    //Actually do the matching
+    ScanTransform r = sm_->matchSuccessive(points, numValidPoints,
             cfg_.laserType, utime, false, prior);
                                       //utime is ONLY used to tag the scans that get added to the map, doesn't actually matter
-
     Eigen::Isometry3d r_Iso = getScanTransformAsIsometry3d(r);
-
     prevOdom_ = currOdom_;
     currOdom_ = r_Iso;
     prevUtime_ = currUtime_;
