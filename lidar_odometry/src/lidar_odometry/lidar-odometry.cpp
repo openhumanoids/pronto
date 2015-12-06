@@ -219,6 +219,10 @@ int projectPointsAndDecimate(int beamskip, float spatialDecimationThresh, std::v
 
 
 void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime){
+  doOdometry(x, y, npoints, utime, NULL);
+}
+
+void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform* prior){
     double maxRange = 39.0;
     int beamSkip = 3;
 
@@ -236,7 +240,7 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
     ScanTransform r;
 
     r = sm_->matchSuccessive(points, numValidPoints,
-            cfg_.laserType, utime, NULL); //don't have a better estimate than prev, so just set prior to NULL
+            cfg_.laserType, utime, false, prior);
                                       //utime is ONLY used to tag the scans that get added to the map, doesn't actually matter
 
     Eigen::Isometry3d r_Iso = getScanTransformAsIsometry3d(r);
@@ -270,53 +274,5 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
     free(points);
 }
 
-void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform& initInput){
-    double maxRange = 39.0;
-    int beamSkip = 3;
 
-    //Project ranges into points, and decimate points so we don't have too many
-    frsmPoint * points = (frsmPoint *) calloc(npoints, sizeof(frsmPoint));
-    int numValidPoints = projectPointsAndDecimate(beamSkip,
-            cfg_.spatialDecimationThresh, x, y, npoints, points, maxRange);
-    if (numValidPoints < 30) {
-        fprintf(stderr, "WARNING! NOT ENOUGH VALID POINTS! numValid=%d\n",
-                numValidPoints);
-        free(points);
-        return;
-    }
 
-    ScanTransform r;
-
-    r = sm_->matchSuccessive(points, numValidPoints,
-              cfg_.laserType, utime, false, &initInput);
-
-    Eigen::Isometry3d r_Iso = getScanTransformAsIsometry3d(r);
-
-    prevOdom_ = currOdom_;
-    currOdom_ = r_Iso;
-    prevUtime_ = currUtime_;
-    currUtime_ = utime;
-
-    //Print current position periodically
-    static double lastPrintTime = 0;
-    if (frsm_get_time() - lastPrintTime > 2.0) {
-        lastPrintTime = frsm_get_time();
-        fprintf(stderr,
-                "x=%+7.3f y=%+7.3f t=%+7.3f\t score=%f hits=%.2f sx=%.2f sxy=%.2f sy=%.2f st=%.2f, numValid=%d\n",
-                r.x, r.y, r.theta, r.score, (double) r.hits / (double) numValidPoints, r.sigma[0], r.sigma[1],
-                r.sigma[4], r.sigma[8], numValidPoints);
-    }
-
-    //Do drawing periodically
-    // This was disabled when moving to the frsm library. it would be easily re-added on a fork
-    //Do drawing periodically!
-    if (cfg_.doDrawing && frsm_get_time() - lastDrawTime_ > .2) {
-        lastDrawTime_ = frsm_get_time();
-        //frsm_tictoc("drawing");
-        draw(points, numValidPoints, &r);
-        //frsm_tictoc("drawing");
-    }
-
-    //cleanup
-    free(points);
-}
