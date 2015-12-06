@@ -86,7 +86,6 @@ private:
     double lastDrawTime_;
     Eigen::Isometry3d prevOdom_, currOdom_;
     int64_t prevUtime_, currUtime_;
-
 };
 
 #endif

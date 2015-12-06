@@ -106,7 +106,7 @@ Eigen::Isometry3d getScanTransformAsIsometry3d(ScanTransform tf){
 
 
 void LidarOdom::doOdometry(float* ranges, int nranges, float rad0, float radstep, int64_t utime){
-    
+
     //Project ranges into points, and decimate points so we don't have too many
     frsmPoint * points = (frsmPoint *) calloc(nranges, sizeof(frsmPoint));
     int numValidPoints = frsm_projectRangesAndDecimate(cfg_.beamSkip,
@@ -217,6 +217,7 @@ int projectPointsAndDecimate(int beamskip, float spatialDecimationThresh, std::v
 
 
 void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime){
+  // don't have a better estimate than prev, so just set prior to NULL
   doOdometry(x, y, npoints, utime, NULL);
 }
 
@@ -268,6 +269,3 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
     //cleanup
     free(points);
 }
-
-
-
