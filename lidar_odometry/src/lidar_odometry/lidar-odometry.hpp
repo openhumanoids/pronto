@@ -67,6 +67,7 @@ public:
 
     void doOdometry(float* ranges, int nranges, float rad0, float radstep, int64_t utime);
     void doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime);
+    void doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform* prior);
 
     Eigen::Isometry3d getCurrentPose(){  return currOdom_;  }
 

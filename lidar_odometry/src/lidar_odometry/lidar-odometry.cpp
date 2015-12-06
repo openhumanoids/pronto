@@ -43,8 +43,6 @@ LidarOdom::LidarOdom(boost::shared_ptr<lcm::LCM> &lcm_, LidarOdomConfig &cfg_):
 void LidarOdom::init(){
   lastDrawTime_ =0;
 
-  std::cout << cfg_.thetaResolution << " tR\n";
-
   //create the actual scan matcher object
   sm_ = new ScanMatcher(cfg_.metersPerPixel, cfg_.thetaResolution, cfg_.useMultires,
             cfg_.useThreads,true);
@@ -53,10 +51,14 @@ void LidarOdom::init(){
       fprintf(stderr, "Using IPP\n");
   else
       fprintf(stderr, "NOT using IPP\n");
+  
+  currOdom_.setIdentity();
+  prevOdom_.setIdentity();
 
   ScanTransform startPose;
   memset(&startPose, 0, sizeof(startPose));
   startPose.theta = 0; //set the scan matcher to start at 0 heading... cuz pi/2 would be rediculous
+  
   sm_->initSuccessiveMatchingParams(cfg_.maxNumScans, cfg_.initialSearchRangeXY,
             cfg_.maxSearchRangeXY, cfg_.initialSearchRangeTheta, cfg_.maxSearchRangeTheta,
             cfg_.matchingMode, cfg_.addScanHitThresh,
@@ -215,7 +217,11 @@ int projectPointsAndDecimate(int beamskip, float spatialDecimationThresh, std::v
 
 
 void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime){
+  // don't have a better estimate than prev, so just set prior to NULL
+  doOdometry(x, y, npoints, utime, NULL);
+}
 
+void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform* prior){
     double maxRange = 39.0;
     int beamSkip = 3;
 
@@ -232,7 +238,7 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
 
     //Actually do the matching
     ScanTransform r = sm_->matchSuccessive(points, numValidPoints,
-            cfg_.laserType, utime, NULL); //don't have a better estimate than prev, so just set prior to NULL
+            cfg_.laserType, utime, false, prior);
                                       //utime is ONLY used to tag the scans that get added to the map, doesn't actually matter
     Eigen::Isometry3d r_Iso = getScanTransformAsIsometry3d(r);
     prevOdom_ = currOdom_;
