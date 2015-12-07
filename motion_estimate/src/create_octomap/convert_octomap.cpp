@@ -105,7 +105,12 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pronto::PointCloud* &cloud){
 
   // Additional work:
   unsigned int numThresholded, numOther;
-  tree->calcNumThresholdedNodes(numThresholded, numOther);
+  for (OcTree::tree_iterator it = tree->begin_tree(), end = tree->end_tree(); it != end; ++it) {
+    if (tree->isNodeAtThreshold(*it))
+      ++numThresholded;
+    else
+      ++numOther;
+  }
 
   std::cout << "Full tree\n" << "===========================\n";
   cout << "Tree size: " << tree->size() <<" nodes (" <<numThresholded <<" thresholded, "<< numOther << " other)\n";
@@ -120,7 +125,12 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pronto::PointCloud* &cloud){
 
   std::cout << "Pruned tree (lossless compression)\n" << "===========================\n";
   tree->prune();
-  tree->calcNumThresholdedNodes(numThresholded, numOther);
+  for (OcTree::tree_iterator it = tree->begin_tree(), end = tree->end_tree(); it != end; ++it) {
+    if (tree->isNodeAtThreshold(*it))
+      ++numThresholded;
+    else
+      ++numOther;
+  }
   memUsage = tree->memoryUsage();
 
   cout << "Tree size: " << tree->size() <<" nodes (" <<numThresholded<<" thresholded, "<< numOther << " other)\n";
@@ -132,7 +142,12 @@ OcTree* ConvertOctomap::convertPointCloudToOctree(pronto::PointCloud* &cloud){
   std::cout << "Pruned max-likelihood tree (lossy compression)\n" << "===========================\n";
   tree->toMaxLikelihood();
   tree->prune();
-  tree->calcNumThresholdedNodes(numThresholded, numOther);
+  for (OcTree::tree_iterator it = tree->begin_tree(), end = tree->end_tree(); it != end; ++it) {
+    if (tree->isNodeAtThreshold(*it))
+      ++numThresholded;
+    else
+      ++numOther;
+  }
   memUsage = tree->memoryUsage();
   cout << "Tree size: " << tree->size() <<" nodes (" <<numThresholded<<" thresholded, "<< numOther << " other)\n";
   cout << "Memory: " << memUsage << " byte (" << memUsage/(1024.*1024.) << " MB)" << endl;
