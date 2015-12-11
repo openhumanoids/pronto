@@ -3,4 +3,4 @@
 
 #cmakedefine USE_PRONTO_VIS_PCL
 
-#endif // PRONT_VIS_CONFIG
+#endif // PRONTO_VIS_CONFIG
