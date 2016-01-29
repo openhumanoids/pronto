@@ -18,7 +18,7 @@
 #include <lcmtypes/mav/indexed_measurement_t.hpp>
 
 #include <lcmtypes/pronto/utime_t.hpp>
-#include <lcmtypes/pronto/atlas_status_t.hpp>
+#include <lcmtypes/pronto/behavior_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
 
 #include <Eigen/Dense>
@@ -81,7 +81,7 @@ public:
     lcm_front->lcm_recv->subscribe("ATLAS_STATUS", &app_t::atlas_status_handler, this); // from BDI
     lcm_front->lcm_recv->subscribe("CONTROLLER_STATUS", &app_t::controller_status_handler, this); // from MIT controller
     lcm_front->lcm_recv->subscribe("STATE_EST_USE_NEW_MAP", &app_t::use_new_map_handler, this);
-    behavior_prev = pronto::atlas_status_t::BEHAVIOR_NONE;
+    behavior_prev = pronto::behavior_t::BEHAVIOR_NONE;
     utime_standing_trans = 0;
 
   }
@@ -139,30 +139,30 @@ public:
   }
 
   void atlas_status_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::atlas_status_t * msg){
+      const pronto::behavior_t * msg){
 
-    if (msg->behavior == pronto::atlas_status_t::BEHAVIOR_USER){
+    if (msg->behavior == pronto::behavior_t::BEHAVIOR_USER){
       // Don't change the behavior variable in user mode
       //fprintf(stderr, "\nIn BDI user-mode\n");
       behavior_prev = msg->behavior;
       return;
     }
 
-    if ( (msg->behavior != pronto::atlas_status_t::BEHAVIOR_STAND) &&  (msg->behavior != pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+    if ( (msg->behavior != pronto::behavior_t::BEHAVIOR_STAND) &&  (msg->behavior != pronto::behavior_t::BEHAVIOR_MANIPULATE) ){
       if ( !gpf->laser_enabled ){
         fprintf(stderr, "\nNot Standing or Manipulating - enabling  laser\n");
       }
       gpf->laser_enabled = true;
     }
 
-    if ( (behavior_prev != pronto::atlas_status_t::BEHAVIOR_STAND) &&  (behavior_prev != pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
-      if ( (msg->behavior == pronto::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+    if ( (behavior_prev != pronto::behavior_t::BEHAVIOR_STAND) &&  (behavior_prev != pronto::behavior_t::BEHAVIOR_MANIPULATE) ){
+      if ( (msg->behavior == pronto::behavior_t::BEHAVIOR_STAND) ||  (msg->behavior == pronto::behavior_t::BEHAVIOR_MANIPULATE) ){
         fprintf(stderr, "\nEntering stand\n");
         utime_standing_trans = msg->utime;
       }
     }
 
-    if ( (msg->behavior == pronto::atlas_status_t::BEHAVIOR_STAND) ||  (msg->behavior == pronto::atlas_status_t::BEHAVIOR_MANIPULATE) ){
+    if ( (msg->behavior == pronto::behavior_t::BEHAVIOR_STAND) ||  (msg->behavior == pronto::behavior_t::BEHAVIOR_MANIPULATE) ){
       if ( msg->utime - utime_standing_trans > 2E6){
         if (gpf->laser_enabled){
           fprintf(stderr, "\nBeen standing for some time %f - disabling laser\n", ( (double) (msg->utime - utime_standing_trans)*1E-6) );
@@ -177,7 +177,7 @@ public:
   void controller_status_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
       const pronto::controller_status_t * msg){
 
-    if (behavior_prev != pronto::atlas_status_t::BEHAVIOR_USER){
+    if (behavior_prev != pronto::behavior_t::BEHAVIOR_USER){
       // Don't change the behavior variable when not in user mode
       //fprintf(stderr, "\nIn BDI user-mode\n");
       return;
