@@ -2,12 +2,12 @@ package pronto;
 
 // Current BDI behavior
 
-struct atlas_behavior_t
+struct behavior_t
 {
   int64_t utime;
   int32_t behavior;
 
-  // Behavior - to remain synced with drc_atlas_status_t:
+  // Behavior - to remain synced with atlas_status_t:
   const int32_t BEHAVIOR_NONE=0;        //!< Robot currently not in any behavior; software freeze, controls disabled.
   const int32_t BEHAVIOR_FREEZE=1;      //!< All joints frozen in current position.
   const int32_t BEHAVIOR_STAND_PREP=2;  //!< Robot assumes a balanced posture, preparing for Stand.
