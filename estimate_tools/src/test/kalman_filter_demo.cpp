@@ -13,7 +13,7 @@
 
 #include <ConciseArgs>
 
-#include <lcmtypes/pronto/atlas_state_t.hpp>
+#include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/pronto/robot_state_t.hpp>
 
 #include <estimate_tools/kalman_filter.hpp> // Eigen::VectorXf KF
@@ -51,7 +51,7 @@ class App{
     JointUtils joint_utils_;
 
     void atlasStateHandler(const lcm::ReceiveBuffer* rbuf, 
-                           const std::string& channel, const  pronto::atlas_state_t* msg); 
+                           const std::string& channel, const  pronto::joint_state_t* msg); 
 //    void ersHandler(const lcm::ReceiveBuffer* rbuf, 
 //                           const std::string& channel, const  pronto::robot_state_t* msg); 
     void doFilter(double t, Eigen::VectorXf x, Eigen::VectorXf x_dot);
@@ -158,7 +158,7 @@ void App::doFilter(double t, Eigen::VectorXf x, Eigen::VectorXf x_dot){
 
 
 //void App::ersHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::robot_state_t* msg){
-void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::atlas_state_t* msg){  
+void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){  
   int64_t tic = _timestamp_now();
   
   

@@ -7,9 +7,9 @@ IMUStream::IMUStream(){
   counter_= 0 ;
 }
 
-pronto::atlas_raw_imu_t IMUStream::convertToLCMPacket(IMUPacket packet){
+pronto::kvh_raw_imu_t IMUStream::convertToLCMPacket(IMUPacket packet){
 
-  pronto::atlas_raw_imu_t m;
+  pronto::kvh_raw_imu_t m;
   m.utime = packet.utime;
   m.packet_count = packet.packet_count;
   m.delta_rotation[0] = packet.delta_rotation[0];
@@ -22,7 +22,7 @@ pronto::atlas_raw_imu_t IMUStream::convertToLCMPacket(IMUPacket packet){
   return m;
 }
 
-IMUPacket IMUStream::convertFromLCMPacket(pronto::atlas_raw_imu_t msg, int64_t last_packet_utime, int64_t batch_utime){
+IMUPacket IMUStream::convertFromLCMPacket(pronto::kvh_raw_imu_t msg, int64_t last_packet_utime, int64_t batch_utime){
       IMUPacket raw;
       raw.utime_raw = msg.utime;
       raw.utime_batch = batch_utime; // the main incoming utime
@@ -35,9 +35,9 @@ IMUPacket IMUStream::convertFromLCMPacket(pronto::atlas_raw_imu_t msg, int64_t l
   return raw;
 }
 
-pronto::atlas_raw_imu_batch_t IMUStream::convertToLCMBatch(IMUBatch batch){
+pronto::kvh_raw_imu_batch_t IMUStream::convertToLCMBatch(IMUBatch batch){
 
-  pronto::atlas_raw_imu_batch_t m;
+  pronto::kvh_raw_imu_batch_t m;
   m.utime = batch.utime;
 
   // Ouput the packets in the original order:
@@ -59,7 +59,7 @@ pronto::atlas_raw_imu_batch_t IMUStream::convertToLCMBatch(IMUBatch batch){
   return m;
 }
 
-IMUBatch IMUStream::convertFromLCMBatch(pronto::atlas_raw_imu_batch_t* msg){
+IMUBatch IMUStream::convertFromLCMBatch(pronto::kvh_raw_imu_batch_t* msg){
   if (msg->raw_imu[0].packet_count < last_packet_){
     std::cout << "Detected time skip, resetting IMUStream\n";
     last_packet_ = -1;

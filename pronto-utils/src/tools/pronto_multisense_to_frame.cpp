@@ -7,9 +7,8 @@
 #include <lcm/lcm-cpp.hpp>
 #include <ConciseArgs>
 
-#include <lcmtypes/pronto/atlas_state_t.hpp>
 #include <lcmtypes/pronto/robot_state_t.hpp>
-#include <lcmtypes/pronto/multisense_state_t.hpp>
+#include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/bot_core/rigid_transform_t.hpp>
 
 using namespace std;
@@ -20,7 +19,7 @@ class App{
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
     double offset_;
-    void multisenseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::multisense_state_t* msg);
+    void multisenseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg);
 
 };
 
@@ -31,7 +30,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, double offset_):lcm_(lcm_), offset_(
 
 
 void App::multisenseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, 
-                              const  pronto::multisense_state_t* msg){
+                              const  pronto::joint_state_t* msg){
   vector<string>::iterator it;
   vector<string> vec;
   vec = msg->joint_name;

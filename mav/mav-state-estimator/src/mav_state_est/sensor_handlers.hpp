@@ -15,7 +15,7 @@
 #include <lcmtypes/bot_core/pose_t.hpp>
 
 // Particular to Atlas:
-#include <lcmtypes/pronto/atlas_raw_imu_batch_t.hpp>
+#include <lcmtypes/pronto/kvh_raw_imu_batch_t.hpp>
 #include <estimate_tools/imu_stream.hpp>
 #include <estimate_tools/iir_notch.hpp>
 
@@ -36,8 +36,8 @@ protected:
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
 
   // Compariable Atlas Functions:
-  RBISUpdateInterface * processMessageAtlas(const pronto::atlas_raw_imu_batch_t * msg);
-  bool processMessageInitAtlas(const pronto::atlas_raw_imu_batch_t * msg, const std::map<std::string, bool> & sensors_initialized
+  RBISUpdateInterface * processMessageAtlas(const pronto::kvh_raw_imu_batch_t * msg);
+  bool processMessageInitAtlas(const pronto::kvh_raw_imu_batch_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
   //////////// Members Particular to Atlas:
   double prev_utime_atlas; // cached previous time

@@ -98,7 +98,7 @@ void InsHandler::doFilter(IMUPacket &raw){
 }
 
 
-RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_imu_batch_t * msg)
+RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::kvh_raw_imu_batch_t * msg)
 {
 
   double linear_acceleration[3];
@@ -108,7 +108,7 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_im
 
   if (atlas_filter){
     // Decode the data and split out the new packets:
-    pronto::atlas_raw_imu_batch_t msg_copy = pronto::atlas_raw_imu_batch_t(*msg);
+    pronto::kvh_raw_imu_batch_t msg_copy = pronto::kvh_raw_imu_batch_t(*msg);
     IMUBatch batch = imu_data_.convertFromLCMBatch(&msg_copy);
     // Only filter new packets:
     for (int i=0 ; i < batch.packets.size() ; i++ ){
@@ -187,7 +187,7 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::atlas_raw_im
   return new RBISIMUProcessStep(gyro, accelerometer, cov_gyro, cov_accel, cov_gyro_bias, cov_accel_bias, integration_dt, utime);
 }
 
-bool InsHandler::processMessageInitAtlas(const pronto::atlas_raw_imu_batch_t * msg,
+bool InsHandler::processMessageInitAtlas(const pronto::kvh_raw_imu_batch_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     , const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)
