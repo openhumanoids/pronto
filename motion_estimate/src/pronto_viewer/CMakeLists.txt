@@ -20,6 +20,7 @@ pods_use_pkg_config_packages(pronto-viewer bot2-vis
   collections_renderer
   mav-state-est-renderers
   renderer_rs
+  lcmtypes_occ-map
   path-util)
 
 pods_install_executables(pronto-viewer)

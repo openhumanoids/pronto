@@ -11,6 +11,7 @@ add_library(map-measurement-func SHARED map_measurement_function.cpp)
 set(REQUIRED_LIBS  
     mav-state-est 
     gpf-laser-lib
+    lcmtypes_occ-map
     )
 pods_use_pkg_config_packages(map-measurement-func ${REQUIRED_LIBS})
 pods_install_libraries(map-measurement-func)

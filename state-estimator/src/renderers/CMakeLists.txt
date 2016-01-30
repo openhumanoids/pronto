@@ -7,6 +7,7 @@ set(REQUIRED_LIBS
 	mav-state-est
 	bot2-vis 
 	eigen-utils
+        lcmtypes_occ-map
 	map-measurement-func)
 
 pods_use_pkg_config_packages(mav-state-est-renderers ${REQUIRED_LIBS})
