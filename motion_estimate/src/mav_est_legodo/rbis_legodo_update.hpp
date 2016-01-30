@@ -94,7 +94,7 @@ public:
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
   bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
 
-  pronto::six_axis_force_torque_array_t force_torque_; // More recent force torque messurement
+  pronto::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
  
   // Contact points of the feet deemed to be in contact:

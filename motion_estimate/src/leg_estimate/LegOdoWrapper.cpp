@@ -5,7 +5,8 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_subscribe_,  boost::shared_ptr<lcm::LC
 
   setupLegOdo();
 
-  lcm_subscribe_->subscribe("ATLAS_STATE",&App::atlasStateHandler,this);
+  lcm_subscribe_->subscribe("FORCE_TORQUE",&App::forceTorqueHandler,this);
+  lcm_subscribe_->subscribe("ATLAS_STATE",&App::jointStateHandler,this);
   lcm_subscribe_->subscribe("POSE_BDI",&App::poseBDIHandler,this);
   if ( cl_cfg_.republish_incoming){
     lcm_subscribe_->subscribe("VICON_BODY|VICON_FRONTPLATE",&App::viconHandler,this);
@@ -14,6 +15,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_subscribe_,  boost::shared_ptr<lcm::LC
   JointUtils* joint_utils = new JointUtils();
   joint_names_ = joint_utils->atlas_joint_names;
   std::cout << joint_names_.size() << " joint angles assumed\n";
+  force_torque_init_ = false;
 }
 
 App::~App() {
@@ -81,8 +83,12 @@ void App::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& chan
   body_bdi_init_ = true;
 }
 
+void App::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg){
+  force_torque_ = *msg;
+  force_torque_init_ = true;
+}
 
-void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::atlas_state_t* msg){
+void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
   if ( cl_cfg_.begin_timestamp > -1){
     if (msg->utime <  cl_cfg_.begin_timestamp ){
       double seek_seconds = (cl_cfg_.begin_timestamp - msg->utime)*1E-6;
@@ -99,6 +105,11 @@ void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& c
     }
   }
 
+  if (!force_torque_init_){
+    std::cout << "FORCE_TORQUE not received yet, not integrating leg odometry =========================\n";
+    return;
+  }
+
   //if (cl_cfg_.republish_incoming){
   //  // Don't publish then working live:
   //  bot_core::pose_t bdipose = getRobotStatePoseAsBotPose(msg);
@@ -106,8 +117,8 @@ void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& c
   //}
 
   leg_est_->setPoseBDI( world_to_body_bdi_ );
-  leg_est_->setFootSensing(  FootSensing( msg->force_torque.l_foot_force_z, msg->force_torque.l_foot_torque_x,  msg->force_torque.l_foot_torque_y),
-                             FootSensing( msg->force_torque.r_foot_force_z, msg->force_torque.r_foot_torque_x,  msg->force_torque.r_foot_torque_y));
+  leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
+                             FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
   leg_est_->updateOdometry(joint_names_, msg->joint_position, msg->joint_velocity, msg->utime);
 
   Eigen::Isometry3d world_to_body = leg_est_->getRunningEstimate();
