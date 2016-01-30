@@ -169,12 +169,12 @@ void MapMeasurementFunction::generateFromOctomap(const char * base_map_name, dou
             rigid_body_pose_t_publish(lcm, "STATE_ESTIMATOR_POSE", &pose);
             bot_core_planar_lidar_t_publish(lcm, "LASER", laser_msg);
 
-            mav_indexed_measurement_t * gpf_msg = gpfCreateLCMmsg(laser_gpf.laser_gpf_measurement_indices,
+            pronto_indexed_measurement_t * gpf_msg = gpfCreateLCMmsg(laser_gpf.laser_gpf_measurement_indices,
                 z_effective, R_effective);
             gpf_msg->utime = 0;
             gpf_msg->state_utime = 0;
-            mav_indexed_measurement_t_publish(lcm, "GPF_MEASUREMENT", gpf_msg);
-            mav_indexed_measurement_t_destroy(gpf_msg);
+            pronto_indexed_measurement_t_publish(lcm, "GPF_MEASUREMENT", gpf_msg);
+            pronto_indexed_measurement_t_destroy(gpf_msg);
 
             usleep(vis_pause * 1e6);
           }
@@ -201,15 +201,15 @@ void MapMeasurementFunction::publishInformationMaps(lcm_t * lcm)
 
 void MapMeasurementFunction::publishMapMeasurementFunction(lcm_t * lcm)
 {
-  mav_map_measurement_function_t_publish(lcm, "FIXIE_MAP_MEAS", get_map_measurement_function_t(0));
+  pronto_map_measurement_function_t_publish(lcm, "FIXIE_MAP_MEAS", get_map_measurement_function_t(0));
 }
 
 void MapMeasurementFunction::saveToFile(const char * name)
 {
-  const mav_map_measurement_function_t * msg = get_map_measurement_function_t(0);
-  int sz = mav_map_measurement_function_t_encoded_size(msg);
+  const pronto_map_measurement_function_t * msg = get_map_measurement_function_t(0);
+  int sz = pronto_map_measurement_function_t_encoded_size(msg);
   char * buf = (char *) malloc(sz * sizeof(char));
-  mav_map_measurement_function_t_encode(buf, 0, sz, msg);
+  pronto_map_measurement_function_t_encode(buf, 0, sz, msg);
   std::ofstream ofs(name, std::ios::binary);
   ofs << sz;
   ofs.write(buf, sz);
@@ -217,7 +217,7 @@ void MapMeasurementFunction::saveToFile(const char * name)
   free(buf);
 }
 
-mav_map_measurement_function_t * MapMeasurementFunction::load_map_measurement_function_t_from_file(
+pronto_map_measurement_function_t * MapMeasurementFunction::load_map_measurement_function_t_from_file(
     const char * name)
 {
   std::ifstream ifs(name, std::ios::binary);
@@ -226,25 +226,25 @@ mav_map_measurement_function_t * MapMeasurementFunction::load_map_measurement_fu
   char * tmpdata = (char *) malloc(sz * sizeof(char));
   ifs.read(tmpdata, sz * sizeof(char));
   ifs.close();
-  mav_map_measurement_function_t * ret_msg = (mav_map_measurement_function_t *) calloc(1,
-      sizeof(mav_map_measurement_function_t));
-  mav_map_measurement_function_t_decode(tmpdata, 0, sz, ret_msg);
+  pronto_map_measurement_function_t * ret_msg = (pronto_map_measurement_function_t *) calloc(1,
+      sizeof(pronto_map_measurement_function_t));
+  pronto_map_measurement_function_t_decode(tmpdata, 0, sz, ret_msg);
   free(tmpdata);
   return ret_msg;
 }
 
 void MapMeasurementFunction::loadFromFile(const char * name)
 {
-  mav_map_measurement_function_t * tmpmsg = load_map_measurement_function_t_from_file(name);
+  pronto_map_measurement_function_t * tmpmsg = load_map_measurement_function_t_from_file(name);
   set_from_map_measurement_function_t(tmpmsg);
-  mav_map_measurement_function_t_destroy(tmpmsg);
+  pronto_map_measurement_function_t_destroy(tmpmsg);
 }
 
-const mav_map_measurement_function_t * MapMeasurementFunction::get_map_measurement_function_t(int64_t utime_)
+const pronto_map_measurement_function_t * MapMeasurementFunction::get_map_measurement_function_t(int64_t utime_)
 {
   if (this->msg == NULL
   )
-    msg = (mav_map_measurement_function_t *) calloc(1, sizeof(mav_map_measurement_function_t));
+    msg = (pronto_map_measurement_function_t *) calloc(1, sizeof(pronto_map_measurement_function_t));
 
   msg->utime = utime_;
   msg->theta = this->theta;
@@ -271,7 +271,7 @@ const mav_map_measurement_function_t * MapMeasurementFunction::get_map_measureme
   return msg;
 }
 
-void MapMeasurementFunction::set_from_map_measurement_function_t(const mav_map_measurement_function_t * msg)
+void MapMeasurementFunction::set_from_map_measurement_function_t(const pronto_map_measurement_function_t * msg)
 {
   if (this->phi_psi_xy_cov_map != NULL
   )

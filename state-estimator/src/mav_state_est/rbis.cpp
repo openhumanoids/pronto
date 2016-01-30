@@ -265,9 +265,9 @@ void ekfSmoothingStep(const RBIS & next_state_pred, const RBIM & next_cov_pred, 
   cur_state.addState(smooth_innov);
 }
 
-mav_filter_state_t * rbisCreateFilterStateMessage(const RBIS & state, const RBIM & cov)
+pronto_filter_state_t * rbisCreateFilterStateMessage(const RBIS & state, const RBIM & cov)
 {
-  mav_filter_state_t * msg = (mav_filter_state_t *) malloc(sizeof(mav_filter_state_t));
+  pronto_filter_state_t * msg = (pronto_filter_state_t *) malloc(sizeof(pronto_filter_state_t));
 
   msg->utime = state.utime;
 
@@ -284,9 +284,9 @@ mav_filter_state_t * rbisCreateFilterStateMessage(const RBIS & state, const RBIM
   return msg;
 }
 
-mav::filter_state_t rbisCreateFilterStateMessageCPP(const RBIS & state, const RBIM & cov)
+pronto::filter_state_t rbisCreateFilterStateMessageCPP(const RBIS & state, const RBIM & cov)
 {
-  mav::filter_state_t msg;
+  pronto::filter_state_t msg;
   msg.utime = state.utime;
 
   msg.num_states = RBIS::rbis_num_states;

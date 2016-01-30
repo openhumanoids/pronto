@@ -4,10 +4,10 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <eigen_utils/eigen_utils.hpp>
-#include <lcmtypes/mav_ins_t.h>
-#include <lcmtypes/mav_indexed_measurement_t.h>
-#include <lcmtypes/mav_filter_state_t.h>
-#include <lcmtypes/mav/filter_state_t.hpp>
+#include <lcmtypes/pronto_ins_t.h>
+#include <lcmtypes/pronto_indexed_measurement_t.h>
+#include <lcmtypes/pronto_filter_state_t.h>
+#include <lcmtypes/pronto/filter_state_t.hpp>
 #include <bot_lcmgl_client/lcmgl.h>
 
 
@@ -55,7 +55,7 @@ public:
     assert(vec.rows() == rbis_num_states);
   }
 
-  RBIS(const mav_filter_state_t * msg) :
+  RBIS(const pronto_filter_state_t * msg) :
       RigidBodyState(Eigen::Map<const Eigen::VectorXd>(msg->state, msg->num_states))
   {
     if (msg->num_states != rbis_num_states) {
@@ -66,7 +66,7 @@ public:
     this->utime = msg->utime;
   }
 
-  RBIS(const mav::filter_state_t & msg) :
+  RBIS(const pronto::filter_state_t & msg) :
       RigidBodyState(Eigen::Map<const Eigen::VectorXd>(&msg.state[0], msg.num_states))
   {
     if (msg.num_states != rbis_num_states) {
@@ -148,9 +148,9 @@ void rbisApplyDelta(const RBIS & prior_state, const RBIM & prior_cov, const RBIS
 void ekfSmoothingStep(const RBIS & next_state_pred, const RBIM & next_cov_pred, const RBIS & next_state,
     const RBIM & next_state_cov, double dt, RBIS & cur_state, RBIM & cur_cov);
 
-mav_filter_state_t * rbisCreateFilterStateMessage(const RBIS & state, const RBIM & cov);
+pronto_filter_state_t * rbisCreateFilterStateMessage(const RBIS & state, const RBIM & cov);
 
-mav::filter_state_t rbisCreateFilterStateMessageCPP(const RBIS & state, const RBIM & cov);
+pronto::filter_state_t rbisCreateFilterStateMessageCPP(const RBIS & state, const RBIM & cov);
 
 }
 #endif

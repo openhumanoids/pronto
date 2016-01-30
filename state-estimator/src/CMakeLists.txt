@@ -19,7 +19,7 @@ pods_use_pkg_config_packages(fixie-vicon-simple-state-estimator
 	lcmtypes_microstrain
     path-util
     lcmtypes_vicon
-    lcmtypes_mav-lcmtypes
+    lcmtypes_pronto
 )
 pods_install_executables(fixie-vicon-simple-state-estimator)
 

@@ -6,10 +6,10 @@ using namespace std;
 
 namespace MavStateEst {
 
-mav_indexed_measurement_t * gpfCreateLCMmsg(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
+pronto_indexed_measurement_t * gpfCreateLCMmsg(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
     const Eigen::MatrixXd & R_effective)
 {
-  mav_indexed_measurement_t * msg = (mav_indexed_measurement_t *) calloc(1, sizeof(mav_indexed_measurement_t));
+  pronto_indexed_measurement_t * msg = (pronto_indexed_measurement_t *) calloc(1, sizeof(pronto_indexed_measurement_t));
 
   int n = z_indices.rows();
   msg->measured_dim = n;
@@ -28,10 +28,10 @@ mav_indexed_measurement_t * gpfCreateLCMmsg(const Eigen::VectorXi & z_indices, c
   return msg;
 }
 
-mav::indexed_measurement_t * gpfCreateLCMmsgCPP(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
+pronto::indexed_measurement_t * gpfCreateLCMmsgCPP(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
     const Eigen::MatrixXd & R_effective)
 {
-  mav::indexed_measurement_t * msg = new mav::indexed_measurement_t();
+  pronto::indexed_measurement_t * msg = new pronto::indexed_measurement_t();
 
   int n = z_indices.rows();
   msg->measured_dim = n;

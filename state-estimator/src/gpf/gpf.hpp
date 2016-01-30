@@ -4,8 +4,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <eigen_utils/eigen_utils.hpp>
-#include <lcmtypes/mav_indexed_measurement_t.h>
-#include <lcmtypes/mav/indexed_measurement_t.hpp>
+#include <lcmtypes/pronto_indexed_measurement_t.h>
+#include <lcmtypes/pronto/indexed_measurement_t.hpp>
 #include <bot_lcmgl_client/lcmgl.h>
 
 #include <mav_state_est/rbis.hpp>
@@ -35,10 +35,10 @@ void gpfMeasurement(GPFLikelihoodInterface<LikelihoodInterface> * likelihood_int
     double max_weight_proportion,
     bot_lcmgl_t * lcmgl = NULL);
 
-mav_indexed_measurement_t * gpfCreateLCMmsg(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
+pronto_indexed_measurement_t * gpfCreateLCMmsg(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
     const Eigen::MatrixXd & R_effective);
 
-mav::indexed_measurement_t * gpfCreateLCMmsgCPP(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
+pronto::indexed_measurement_t * gpfCreateLCMmsgCPP(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
     const Eigen::MatrixXd & R_effective);
 
 template<class LikelihoodInterface>

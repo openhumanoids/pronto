@@ -15,8 +15,8 @@
 #include <Eigen/Dense>
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/pronto/double_array_t.hpp>
-#include <lcmtypes/mav/indexed_measurement_t.hpp>
-#include <lcmtypes/mav/filter_state_t.hpp>
+#include <lcmtypes/pronto/indexed_measurement_t.hpp>
+#include <lcmtypes/pronto/filter_state_t.hpp>
 
 #include <pronto_utils/pronto_math.hpp>
 

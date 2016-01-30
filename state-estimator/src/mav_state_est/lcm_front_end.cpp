@@ -151,7 +151,7 @@ void LCMFrontEnd::publishState(const RBIS & state, const RBIM & cov)
 
   //publish filter state
   if (publish_filter_state) {
-    mav::filter_state_t fs_msg = rbisCreateFilterStateMessageCPP(state, cov);
+    pronto::filter_state_t fs_msg = rbisCreateFilterStateMessageCPP(state, cov);
     lcm_pub->publish(filter_state_channel, &fs_msg);
   }
 }

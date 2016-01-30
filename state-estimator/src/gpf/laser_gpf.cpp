@@ -13,10 +13,9 @@
 #include <lcm/lcm.h>
 #include <bot_lcmgl_client/lcmgl.h>
 
-#include <lcmtypes/mav/filter_state_t.hpp>
 #include <lcmtypes/bot_core/planar_lidar_t.hpp>
-#include <lcmtypes/mav/indexed_measurement_t.hpp>
-
+#include <lcmtypes/pronto/filter_state_t.hpp>
+#include <lcmtypes/pronto/indexed_measurement_t.hpp>
 #include <lcmtypes/pronto/utime_t.hpp>
 #include <lcmtypes/pronto/behavior_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
@@ -55,7 +54,7 @@ public:
 
     laser_queue = new deque<bot_core::planar_lidar_t *>();
     pointcloud_queue = new deque<pronto::pointcloud_t *>();
-    filter_state_queue = new deque<mav::filter_state_t *>();
+    filter_state_queue = new deque<pronto::filter_state_t *>();
 
     gpf = laser_handler->gpf;
 
@@ -97,7 +96,7 @@ public:
   GCond * lcm_data_cond; //signals new lcm data
   deque<bot_core::planar_lidar_t *> * laser_queue;
   deque<pronto::pointcloud_t *> * pointcloud_queue;
-  deque<mav::filter_state_t *> * filter_state_queue;
+  deque<pronto::filter_state_t *> * filter_state_queue;
   int noDrop;
   //------------------------------------------------------
 
@@ -219,9 +218,9 @@ public:
   ////////////
 
   void filter_state_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const mav::filter_state_t * msg)
+      const pronto::filter_state_t * msg)
   {
-    mav::filter_state_t * msg_copy = new mav::filter_state_t(*msg);
+    pronto::filter_state_t * msg_copy = new pronto::filter_state_t(*msg);
     g_mutex_lock(lcm_data_mutex);
     filter_state_queue->push_back(msg_copy);
     g_mutex_unlock(lcm_data_mutex);
@@ -298,7 +297,7 @@ public:
         app->pointcloud_queue->pop_front();
       }
 
-      mav::filter_state_t * fs_msg = NULL;
+      pronto::filter_state_t * fs_msg = NULL;
       //keep going until the queue is empty, or the front is actually after the
       while (!app->filter_state_queue->empty() && app->filter_state_queue->front()->utime <= msg_utime) {
         if (fs_msg != NULL) {
@@ -337,7 +336,7 @@ public:
 //      eigen_dump(z_effective.transpose());
 //      eigen_dump(R_effective);
 
-        mav::indexed_measurement_t * gpf_msg = gpfCreateLCMmsgCPP(app->gpf->laser_gpf_measurement_indices, z_effective,
+        pronto::indexed_measurement_t * gpf_msg = gpfCreateLCMmsgCPP(app->gpf->laser_gpf_measurement_indices, z_effective,
             R_effective);
         gpf_msg->utime = msg_utime;
         gpf_msg->state_utime = fs_msg->utime;

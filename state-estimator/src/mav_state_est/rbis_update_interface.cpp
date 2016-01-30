@@ -139,7 +139,7 @@ Eigen::Matrix<double, RBISOpticalFlowMeasurement::m, 1> RBISOpticalFlowMeasureme
 
 void RBISOpticalFlowMeasurement::publish(const Eigen::VectorXd & z)
 {
-  mav_optical_flow_t flow;
+  pronto_optical_flow_t flow;
   flow.dt = 0;
   flow.ux = z(0);
   flow.uy = z(1);
@@ -153,7 +153,7 @@ void RBISOpticalFlowMeasurement::publish(const Eigen::VectorXd & z)
   flow.gamma = gamma;
 
   lcm_t * lcm = lcm_create(NULL);
-  mav_optical_flow_t_publish(lcm, "OPTICAL_FLOW_PSEUDO", &flow);
+  pronto_optical_flow_t_publish(lcm, "OPTICAL_FLOW_PSEUDO", &flow);
   lcm_destroy(lcm);
 }
 

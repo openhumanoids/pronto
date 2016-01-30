@@ -37,11 +37,11 @@ private:
 
 class InitMessageHandler {
 public:
-  bool processMessageInit(const mav::filter_state_t * msg,
+  bool processMessageInit(const pronto::filter_state_t * msg,
       const std::map<std::string, bool> & sensors_initialized, const RBIS & default_state,
       const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
 
-  RBISUpdateInterface * processMessage(const mav::filter_state_t * msg);
+  RBISUpdateInterface * processMessage(const pronto::filter_state_t * msg);
 };
 
 class RBISInitializer {

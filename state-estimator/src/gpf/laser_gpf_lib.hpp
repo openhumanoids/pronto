@@ -14,8 +14,6 @@
 
 #include <octomap_utils/octomap_util.hpp>
 
-#include <lcmtypes/mav_pose_t.h>
-
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <eigen_utils/eigen_utils.hpp>
@@ -24,7 +22,9 @@
 #include <mav_state_est/gpf/gpf.hpp>
 
 #include "LaserLikelihoodInterface.hpp"
+
 #include <lcmtypes/bot_core/planar_lidar_t.hpp>
+#include <lcmtypes/pronto_pose_t.h>
 #include <lcmtypes/pronto/pointcloud_t.hpp>
 
 namespace MavStateEst {

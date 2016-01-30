@@ -18,7 +18,7 @@
 #include <Eigen/Dense>
 #include <laser_utils/laser_util.h>
 #include <bot_param/param_util.h>
-#include <lcmtypes/mav/indexed_measurement_t.hpp>
+#include <lcmtypes/pronto/indexed_measurement_t.hpp>
 #include <lcmtypes/pronto/utime_t.hpp>
 
 #define RENDERER_NAME "Mav State Estimator"
@@ -92,7 +92,7 @@ struct _RendererMavStateEst {
 };
 
 static void gpf_measurement_message_handler(const lcm_recv_buf_t *rbuf, const char * channel,
-    const mav_indexed_measurement_t * msg, void * user)
+    const pronto_indexed_measurement_t * msg, void * user)
 {
   _RendererMavStateEst *self = (_RendererMavStateEst *) user;
 
@@ -109,7 +109,7 @@ static void gpf_measurement_message_handler(const lcm_recv_buf_t *rbuf, const ch
 }
 
 static void filter_state_message_handler(const lcm_recv_buf_t *rbuf, const char * channel,
-    const mav_filter_state_t * msg, void * user)
+    const pronto_filter_state_t * msg, void * user)
 {
   _RendererMavStateEst *self = (_RendererMavStateEst *) user;
   Map<const RBIM> cov_map(msg->cov);
@@ -397,7 +397,7 @@ mouse_release(BotViewer *viewer, BotEventHandler *ehandler, const double ray_sta
   Eigen::Vector3d click_xyz_cov_diagonal =
       Eigen::Array3d(click_xy_sigma, click_xy_sigma, click_xy_sigma).square();
 
-  mav::indexed_measurement_t meas_msg;
+  pronto::indexed_measurement_t meas_msg;
   meas_msg.state_utime = meas_msg.utime = bot_timestamp_now();
   meas_msg.measured_dim = 4;
   meas_msg.measured_cov_dim = bot_sq(meas_msg.measured_dim);
@@ -440,7 +440,7 @@ init_humanoid(RendererMavStateEst *self)
   Vector3d init_xyz;
   init_xyz << 0,0, 0.85; //TODO: 0?
 
-  mav::indexed_measurement_t meas_msg;
+  pronto::indexed_measurement_t meas_msg;
   meas_msg.state_utime = meas_msg.utime = bot_timestamp_now();
   meas_msg.measured_dim = 4;
   meas_msg.measured_cov_dim = bot_sq(meas_msg.measured_dim);
@@ -611,9 +611,9 @@ BotRenderer *renderer_mav_state_est_new(BotViewer *viewer, int render_priority, 
   self->pose_render_frame = bot_param_get_str_or_fail(param, "state_estimator.pose_render_frame");
 
   //subscribe to filter, gpf
-  mav_filter_state_t_subscribe(lcm, bot_param_get_str_or_fail(param, "state_estimator.filter_state_channel"),
+  pronto_filter_state_t_subscribe(lcm, bot_param_get_str_or_fail(param, "state_estimator.filter_state_channel"),
       filter_state_message_handler, self);
-  mav_indexed_measurement_t_subscribe(lcm, "GPF_MEASUREMENT", gpf_measurement_message_handler, self);
+  pronto_indexed_measurement_t_subscribe(lcm, "GPF_MEASUREMENT", gpf_measurement_message_handler, self);
 
   return &self->renderer;
 }

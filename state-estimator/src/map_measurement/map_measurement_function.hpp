@@ -4,7 +4,7 @@
 #include <mav_state_est/gpf/laser_gpf_lib.hpp>
 #include <occ_map/PixelMap.hpp>
 #include <laser_utils/LaserSim3D.hpp>
-#include <lcmtypes/mav_map_measurement_function_t.h>
+#include <lcmtypes/pronto_map_measurement_function_t.h>
 #include <lcmtypes/occ_map_pixel_map_t.h>
 
 namespace MavStateEst {
@@ -29,7 +29,7 @@ public:
   double z_height; //height at which measurements are simulated in map
   double theta; //pitch angle at which measurements are simulated
 
-  mav_map_measurement_function_t * msg;
+  pronto_map_measurement_function_t * msg;
 
   MapMeasurementFunction();
 
@@ -46,13 +46,13 @@ public:
 
   void saveToFile(const char * name);
 
-  static mav_map_measurement_function_t * load_map_measurement_function_t_from_file(const char * name);
+  static pronto_map_measurement_function_t * load_map_measurement_function_t_from_file(const char * name);
 
   void loadFromFile(const char * name);
 
-  const mav_map_measurement_function_t * get_map_measurement_function_t(int64_t utime_);
+  const pronto_map_measurement_function_t * get_map_measurement_function_t(int64_t utime_);
 
-  void set_from_map_measurement_function_t(const mav_map_measurement_function_t * msg);
+  void set_from_map_measurement_function_t(const pronto_map_measurement_function_t * msg);
 
   /**
    * get the measurement covariance at state

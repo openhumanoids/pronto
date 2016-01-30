@@ -46,11 +46,11 @@ void RBISLaserGPFMeasurement::updateFilter(const RBIS & prior_state, const RBIM 
   if (valid) {
 
     //publish the gpf result for logging
-    mav_indexed_measurement_t * gpf_msg = gpfCreateLCMmsg(gpf->laser_gpf_measurement_indices, z_effective, R_effective);
+    pronto_indexed_measurement_t * gpf_msg = gpfCreateLCMmsg(gpf->laser_gpf_measurement_indices, z_effective, R_effective);
     gpf_msg->utime = utime;
     gpf_msg->state_utime = prior_state.utime;
-    mav_indexed_measurement_t_publish(lcm_pub, pub_channel.c_str(), gpf_msg);
-    mav_indexed_measurement_t_destroy(gpf_msg);
+    pronto_indexed_measurement_t_publish(lcm_pub, pub_channel.c_str(), gpf_msg);
+    pronto_indexed_measurement_t_destroy(gpf_msg);
 
 // apply the gpf update
     RBIS dstate;

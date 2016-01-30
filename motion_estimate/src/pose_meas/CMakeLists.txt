@@ -14,7 +14,7 @@ set(REQUIRED_LIBS bot2-core
 	bot2-frames
 	eigen-utils
     path-util
-    lcmtypes_mav-lcmtypes
+    lcmtypes_pronto
     )
 pods_use_pkg_config_packages(mav-est-pose-init ${REQUIRED_LIBS})
 pods_install_libraries(mav-est-pose-init)

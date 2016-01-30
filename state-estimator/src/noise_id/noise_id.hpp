@@ -11,7 +11,7 @@
 #include <list>
 
 #include <Eigen/Dense>
-#include <lcmtypes/mav/filter_state_t.hpp>
+#include <lcmtypes/pronto/filter_state_t.hpp>
 #include <lcm_utils/lcm_utils.hpp>
 #include <string>
 
@@ -66,7 +66,7 @@ void loadFilterHistory(const std::string & logFileName, const std::string & filt
 //  fprintf(stderr, "active indices for noise likelihood:\n");
 //  eigen_dump(active_inds);
 //
-//  vector<mav::filter_state_t> filter_state_messages = lcm_utils::loadMsgsFromLog<mav::filter_state_t>(logfileName,
+//  vector<pronto::filter_state_t> filter_state_messages = lcm_utils::loadMsgsFromLog<pronto::filter_state_t>(logfileName,
 //      filterStateChannel);
 //
 //  list<RBIS> state_list = list<RBIS>();

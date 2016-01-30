@@ -49,7 +49,7 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames)
 }
 
 ////////// Typical Micro Strain INS /////////////////
-RBISUpdateInterface * InsHandler::processMessage(const mav::ins_t * msg)
+RBISUpdateInterface * InsHandler::processMessage(const pronto::ins_t * msg)
 {
   //    get everything into the right frame
   double body_accel[3];
@@ -66,7 +66,7 @@ RBISUpdateInterface * InsHandler::processMessage(const mav::ins_t * msg)
   return new RBISIMUProcessStep(gyro, accelerometer, cov_gyro, cov_accel, cov_gyro_bias, cov_accel_bias, dt, msg->utime);
 }
 
-bool InsHandler::processMessageInit(const mav::ins_t * msg,
+bool InsHandler::processMessageInit(const pronto::ins_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     , const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)
@@ -293,7 +293,7 @@ GpsHandler::GpsHandler(BotParam * _param)
   cov_xyz = R_gps_diagonal.asDiagonal();
 }
 
-RBISUpdateInterface * GpsHandler::processMessage(const mav::gps_data_t * msg)
+RBISUpdateInterface * GpsHandler::processMessage(const pronto::gps_data_t * msg)
 {
   if (msg->gps_lock < 3)
     return NULL;
@@ -302,7 +302,7 @@ RBISUpdateInterface * GpsHandler::processMessage(const mav::gps_data_t * msg)
       Eigen::Map<const Eigen::Vector3d>(msg->xyz_pos), cov_xyz, RBISUpdateInterface::gps, msg->utime);
 }
 
-bool GpsHandler::processMessageInit(const mav::gps_data_t * msg,
+bool GpsHandler::processMessageInit(const pronto::gps_data_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     ,const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)
@@ -454,7 +454,7 @@ bool ViconHandler::processMessageInit(const bot_core::rigid_transform_t * msg,
   return true;
 }
 
-RBISUpdateInterface * IndexedMeasurementHandler::processMessage(const mav::indexed_measurement_t * msg)
+RBISUpdateInterface * IndexedMeasurementHandler::processMessage(const pronto::indexed_measurement_t * msg)
 {
   return new RBISIndexedMeasurement(Eigen::Map<const Eigen::VectorXi>(&msg->z_indices[0], msg->measured_dim),
       Eigen::Map<const Eigen::VectorXd>(&msg->z_effective[0], msg->measured_dim),
@@ -462,7 +462,7 @@ RBISUpdateInterface * IndexedMeasurementHandler::processMessage(const mav::index
       indexed_sensor, msg->utime);
 }
 
-bool IndexedMeasurementHandler::processMessageInit(const mav::indexed_measurement_t * msg,
+bool IndexedMeasurementHandler::processMessageInit(const pronto::indexed_measurement_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     , const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)
@@ -623,7 +623,7 @@ OpticalFlowHandler::OpticalFlowHandler(BotParam * param, BotFrames * frames)
   cov_xyrs = R_optical_flow_xyrs.asDiagonal();
 }
 
-RBISUpdateInterface * OpticalFlowHandler::processMessage(const mav::optical_flow_t * msg)
+RBISUpdateInterface * OpticalFlowHandler::processMessage(const pronto::optical_flow_t * msg)
 {
 // Camera frame to body frame transform.
   z_xyrs(0) = msg->ux;

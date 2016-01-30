@@ -1,6 +1,6 @@
 #include <mav_state_est/noise_id.hpp>
 #include <lcm_utils/lcm_utils.hpp>
-#include <lcmtypes/mav/filter_state_t.hpp>
+#include <lcmtypes/pronto/filter_state_t.hpp>
 #include <lcmtypes/rigid_body/pose_t.hpp>
 #include <ConciseArgs>
 
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
   while (state_it != state_list.end()) {
     rigid_body::pose_t gt_pose = state_it->getPose();
     rigid_body::pose_t rolled_pose = rolled_state_it->getPose();
-    mav::filter_state_t rolled_filter_state = rbisCreateFilterStateMessageCPP(*rolled_state_it, *rolled_cov_it);
+    pronto::filter_state_t rolled_filter_state = rbisCreateFilterStateMessageCPP(*rolled_state_it, *rolled_cov_it);
 
     lcm_utils::logEventData event_data;
 

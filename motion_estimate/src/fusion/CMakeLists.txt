@@ -7,7 +7,7 @@ pods_use_pkg_config_packages(se-fusion
     gpf-laser-lib
     mav-est-legodo
     mav-est-legodo-external
-    lcmtypes_pronto-lcmtypes
+    lcmtypes_pronto
     model-client 
     pronto_vis
     mav-est-pose-init)

@@ -154,12 +154,12 @@ void RBISInitializer::initialize(RBIS & state, RBIM & cov)
   state = init_state;
   cov = init_cov;
 
-  mav::filter_state_t fs_msg = rbisCreateFilterStateMessageCPP(state, cov);
+  pronto::filter_state_t fs_msg = rbisCreateFilterStateMessageCPP(state, cov);
   lcm_front->lcm_pub->publish(init_message_channel, &fs_msg);
 
 }
 
-bool InitMessageHandler::processMessageInit(const mav::filter_state_t * msg,
+bool InitMessageHandler::processMessageInit(const pronto::filter_state_t * msg,
       const std::map<std::string, bool> & sensors_initialized, const RBIS & default_state,
       const RBIM & default_cov, RBIS & init_state, RBIM & init_cov)
 {
@@ -174,7 +174,7 @@ bool InitMessageHandler::processMessageInit(const mav::filter_state_t * msg,
  * When subscribed as a normal sensor, the reset message will reset the state estimator
  * on the fly.
  */
-RBISUpdateInterface * InitMessageHandler::processMessage(const mav::filter_state_t * msg)
+RBISUpdateInterface * InitMessageHandler::processMessage(const pronto::filter_state_t * msg)
 {
   Eigen::Map<const MatrixXd> cov_map(&msg->cov[0], msg->num_states, msg->num_states);
   RBIM init_cov = cov_map;

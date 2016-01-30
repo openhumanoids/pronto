@@ -46,7 +46,7 @@ struct _RendererMapMeas {
 };
 
 static void map_measurement_function_handler(const lcm_recv_buf_t *rbuf, const char * channel,
-    const mav_map_measurement_function_t * msg, void * user)
+    const pronto_map_measurement_function_t * msg, void * user)
 {
   RendererMapMeas *self = (RendererMapMeas *) user;
 
@@ -348,7 +348,7 @@ BotRenderer *renderer_MapMeas_new(BotViewer *viewer, int render_priority,
 //  self->map_meas->loadFromFile("/home/abry/Fixie/build/data/lr3tt_rrbt/octomap.bt_meas_map5"); //hack since it's too big for lcm
 //  bot_gtk_param_widget_set_double(self->pw, PARAM_DRAW_HEIGHT, self->map_meas->z_height);
 
-  mav_map_measurement_function_t_subscribe(lcm, "FIXIE_MAP_MEAS", map_measurement_function_handler, self);
+  pronto_map_measurement_function_t_subscribe(lcm, "FIXIE_MAP_MEAS", map_measurement_function_handler, self);
   bot_core_raw_t_subscribe(lcm, "OCTOMAP", on_octomap, self);
   return &self->renderer;
 }

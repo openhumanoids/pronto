@@ -71,7 +71,7 @@ void loadFilterHistory(const string & logFileName, const string & filterStateCha
   state_list.clear();
   cov_list.clear();
 
-  vector<mav::filter_state_t> filter_state_messages = lcm_utils::loadMsgsFromLog<mav::filter_state_t>(logFileName,
+  vector<pronto::filter_state_t> filter_state_messages = lcm_utils::loadMsgsFromLog<pronto::filter_state_t>(logFileName,
       filterStateChannel);
 
   for (int ii = 0; ii < filter_state_messages.size(); ii++) {
@@ -124,7 +124,7 @@ void loadFilterHistory(const string & logFileName, const string & filterStateCha
 //  fprintf(stderr, "active indices for noise likelihood:\n");
 //  eigen_dump(active_inds);
 //
-//  vector<mav::filter_state_t> filter_state_messages = lcm_utils::loadMsgsFromLog<mav::filter_state_t>(logfileName,
+//  vector<pronto::filter_state_t> filter_state_messages = lcm_utils::loadMsgsFromLog<pronto::filter_state_t>(logfileName,
 //      filterStateChannel);
 //
 //  list<RBIS> state_list = list<RBIS>();

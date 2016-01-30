@@ -16,8 +16,8 @@
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
 #include <lcmtypes/pronto/double_array_t.hpp>
-#include <lcmtypes/mav/indexed_measurement_t.hpp>
-#include <lcmtypes/mav/filter_state_t.hpp>
+#include <lcmtypes/pronto/indexed_measurement_t.hpp>
+#include <lcmtypes/pronto/filter_state_t.hpp>
 
 #include <pronto_utils/pronto_math.hpp>
 
@@ -46,7 +46,7 @@ class App{
 
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
-    void filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  mav::filter_state_t* msg);
+    void filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::filter_state_t* msg);
     void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
 
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
@@ -97,7 +97,7 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
 }
 
 
-void App::filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  mav::filter_state_t* msg){
+void App::filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::filter_state_t* msg){
   if (last_controller_state_ == -1){
     std::cout << "cannot init - no controller state\n";
     return;
@@ -119,7 +119,7 @@ void App::filterStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& 
   //8: yaw?
   //9,10,11: xyz
 
-  mav::indexed_measurement_t out;
+  pronto::indexed_measurement_t out;
   out.utime = msg->utime;
   out.state_utime = msg->utime;
 
