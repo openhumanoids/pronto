@@ -7,7 +7,7 @@ pronto-lcmtypes
 pronto-utils
 estimate_tools
 
-mav
+state-estimator
 motion_estimate
 
 lidar_odometry
