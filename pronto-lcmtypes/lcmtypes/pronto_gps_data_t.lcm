@@ -1,4 +1,4 @@
-package mav;
+package pronto;
 
 struct gps_data_t
 {

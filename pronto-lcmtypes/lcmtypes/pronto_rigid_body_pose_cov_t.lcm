@@ -1,4 +1,4 @@
-package mav;
+package pronto;
 
 struct rigid_body_pose_cov_t
 {

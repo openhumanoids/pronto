@@ -1,6 +1,6 @@
-package mav;
+package pronto;
 
-//note that in contrast to bot_pose_t, all values ARE IN BODY COORDINATES!
+//note that in contrast to bot_pose_t, all velocity and accel values ARE IN BODY COORDINATES!
 struct pose_t
 {
     int64_t utime;              // utime that the actual measurement took place
