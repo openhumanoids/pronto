@@ -33,7 +33,7 @@
 #include <bot_vis/bot_vis.h>
 #include <bot_core/bot_core.h>
 
-#include "visualization/collections.hpp"
+#include "lcmtypes/visualization.h"
 
 #define EXTRA_CONTROLS 1
 

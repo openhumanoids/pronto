@@ -21,7 +21,7 @@
 
 #include "visualization/collections_math.hpp"
 
-#include "visualization/collections.hpp"
+#include "lcmtypes/visualization.h"
 #include "visualization/pointcloud.hpp"
 
 class ObjectCollection;
