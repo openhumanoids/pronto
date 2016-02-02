@@ -1,7 +1,7 @@
 #include <iostream>
 #include <lcm/lcm.h>
 
-#include <isam/isam.h>
+#include <collections_math/collections_math.h>
 #include "visualization/viewer.hpp"
 #include "visualization/pointcloud.hpp"
 
@@ -25,10 +25,10 @@ int main(int argc, char** argv)
 
   // Send a reset
   // Send an object collection
-  obj.add(100, isam::Pose3d(0,0,0,0,0,0));
-  obj.add(101, isam::Pose3d(10,0,0,0,0,0));
-  obj.add(102, isam::Pose3d(10,10,0,0,0,0));
-  obj.add(103, isam::Pose3d(0,10,0,0,0,0));
+  obj.add(100, coll::Pose3d(0,0,0,0,0,0));
+  obj.add(101, coll::Pose3d(10,0,0,0,0,0));
+  obj.add(102, coll::Pose3d(10,10,0,0,0,0));
+  obj.add(103, coll::Pose3d(0,10,0,0,0,0));
   viewer.sendCollection(obj, true);
 
   // Send a link collection

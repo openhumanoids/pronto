@@ -1,6 +1,6 @@
-/** @class collections_math::Rot3d
+/** @class coll::Rot3d
  *
- * For conventions, see collections_math::Pose3d.h
+ * For conventions, see coll::Pose3d.h
  */
 
 #define USE_QUATERNIONS
@@ -12,9 +12,9 @@
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 
-#include <collections_math/util.h>
+#include <coll/util.h>
 
-namespace collections_math {
+namespace coll {
 
 class Rot3d {
   friend std::ostream& operator<<(std::ostream& out, const Rot3d& p) {

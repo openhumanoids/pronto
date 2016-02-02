@@ -6,7 +6,7 @@
 #include <string>
 #include <Eigen/Dense>
 
-namespace collections_math {
+namespace coll {
 
 // some math constants
 #ifndef PI

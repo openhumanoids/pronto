@@ -4,7 +4,7 @@
 
 //#include "Point2d.h"
 
-namespace collections_math {
+namespace coll {
 
 class Point3d {
   friend std::ostream& operator<<(std::ostream& out, const Point3d& p) {
