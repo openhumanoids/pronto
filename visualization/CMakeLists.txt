@@ -15,6 +15,8 @@ lcmtypes_build()
 find_package(Boost COMPONENTS thread system REQUIRED)
 message(STATUS ${Boost_LIBRARIES})
 
+install(DIRECTORY src/collections_math DESTINATION include)
+
 include_directories(include)
 include_directories(${LCMTYPES_INCLUDE_DIRS})
 link_libraries(${LCMTYPES_LIBS} vs_vis)

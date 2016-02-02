@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coll/Point3d.h>
-#include <coll/Pose3d.h>
-#include <coll/util.h>
+#include <visualization/Point3d.hpp>
+#include <visualization/Pose3d.hpp>
+#include <visualization/util.hpp>
 

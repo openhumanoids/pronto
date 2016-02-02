@@ -18,7 +18,8 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <lcm/lcm.h>
-#include <collections_math/collections_math.h>
+
+#include "visualization/collections_math.hpp"
 
 #include "visualization/collections.hpp"
 #include "visualization/pointcloud.hpp"

@@ -28,14 +28,14 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-#include "util.h"
-#include "Rot3d.h"
+#include "util.hpp"
+#include "Rot3d.hpp"
 //#include "Pose2d.h"
-#include "Point3d.h"
+#include "Point3d.hpp"
 //#include "Point3dh.h"
 //#include "Point2d.h"
 
-namespace isam {
+namespace coll {
 
 typedef Eigen::Matrix< double, 6, 1> Vector6d;
 

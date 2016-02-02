@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#include <collections_math/Point3d.h>
+#include <visualization/Point3d.hpp>
 
 struct RGB {
   RGB(float r, float g, float b) : r(r), g(g), b(b) {}

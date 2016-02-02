@@ -1,7 +1,7 @@
 #include <iostream>
 #include <lcm/lcm.h>
 
-#include <collections_math/collections_math.h>
+#include "visualization/collections_math.hpp"
 #include "visualization/viewer.hpp"
 #include "visualization/pointcloud.hpp"
 

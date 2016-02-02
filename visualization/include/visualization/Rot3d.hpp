@@ -12,7 +12,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 
-#include <coll/util.h>
+#include <visualization/util.hpp>
 
 namespace coll {
 

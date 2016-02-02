@@ -20,7 +20,7 @@ void Viewer::sendCollection(const ObjectCollection & collection, bool reset)
         objs.nobjs = n;
         vs_obj_t poses[n];
         for (size_t i = 0; i < n; i++) {
-            const isam::Pose3d & pose = collection(i).pose;
+            const coll::Pose3d & pose = collection(i).pose;
             poses[i].id = collection(i).utime;
             poses[i].x = pose.x();
             poses[i].y = pose.y();
