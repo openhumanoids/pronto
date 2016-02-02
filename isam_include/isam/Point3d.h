@@ -1,18 +1,8 @@
-/**
- * @file Point3d.h
- * @brief Simple 3D point class.
- * @author Michael Kaess
- * @version $Id: Point3d.h 6538 2012-04-23 04:05:21Z kaess $
- *
- * [insert iSAM license]
- *
- */
-
 #pragma once
 
 #include <Eigen/Dense>
 
-#include "Point2d.h"
+//#include "Point2d.h"
 
 namespace isam {
 
@@ -70,11 +60,11 @@ public:
     return *this;
   }
 
-  void of_point2d(const Point2d& p) {
-    _x = p.x();
-    _y = p.y();
-    _z = 0.;
-  }
+//  void of_point2d(const Point2d& p) {
+//    _x = p.x();
+//    _y = p.y();
+//    _z = 0.;
+//  }
   void write(std::ostream &out) const {
     out << "(" << _x << ", " << _y << ", " << _z << ")";
   }
