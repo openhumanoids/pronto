@@ -1,4 +1,4 @@
-/** @class isam::Pose3d
+/** @class coll::Pose3d
  *
  * Conventions:
  *
