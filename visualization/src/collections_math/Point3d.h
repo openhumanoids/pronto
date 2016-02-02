@@ -4,7 +4,7 @@
 
 //#include "Point2d.h"
 
-namespace isam {
+namespace collections_math {
 
 class Point3d {
   friend std::ostream& operator<<(std::ostream& out, const Point3d& p) {
