@@ -1,0 +1,13 @@
+package vs;
+
+struct object_t
+{
+  int64_t id; // unique ID, can be timestamp
+  double x;
+  double y;
+  double z;
+  double qw;
+  double qx;
+  double qy;
+  double qz;
+}
