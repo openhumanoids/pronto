@@ -1,7 +1,7 @@
 #include <iostream>
 #include <lcm/lcm.h>
 
-#include <isam/isam.h>
+#include "visualization/collections_math.hpp"
 #include "visualization/viewer.hpp"
 #include "visualization/pointcloud.hpp"
 
@@ -20,15 +20,15 @@ int main(int argc, char** argv)
 
   cout << "Collections example" << endl;
   Viewer viewer(lcm);
-  ObjectCollection obj(1, std::string("Objects"), VS_OBJ_COLLECTION_T_POSE3D);
+  ObjectCollection obj(1, std::string("Objects"), VS_OBJECT_COLLECTION_T_POSE3D);
   LinkCollection link(2, std::string("Links"));
 
   // Send a reset
   // Send an object collection
-  obj.add(100, isam::Pose3d(0,0,0,0,0,0));
-  obj.add(101, isam::Pose3d(10,0,0,0,0,0));
-  obj.add(102, isam::Pose3d(10,10,0,0,0,0));
-  obj.add(103, isam::Pose3d(0,10,0,0,0,0));
+  obj.add(100, coll::Pose3d(0,0,0,0,0,0));
+  obj.add(101, coll::Pose3d(10,0,0,0,0,0));
+  obj.add(102, coll::Pose3d(10,10,0,0,0,0));
+  obj.add(103, coll::Pose3d(0,10,0,0,0,0));
   viewer.sendCollection(obj, true);
 
   // Send a link collection

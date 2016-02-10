@@ -1,16 +1,6 @@
-/**
- * @file Rot3d.h
- * @brief 3D rotation class.
- * @author Michael Kaess
- * @version $Id: Rot3d.h 6538 2012-04-23 04:05:21Z kaess $
+/** @class coll::Rot3d
  *
- * [insert iSAM license]
- *
- */
-
-/** @class isam::Rot3d
- *
- * For conventions, see isam::Pose3d.h
+ * For conventions, see coll::Pose3d.h
  */
 
 #define USE_QUATERNIONS
@@ -22,9 +12,9 @@
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 
-#include <isam/util.h>
+#include <visualization/util.hpp>
 
-namespace isam {
+namespace coll {
 
 class Rot3d {
   friend std::ostream& operator<<(std::ostream& out, const Rot3d& p) {

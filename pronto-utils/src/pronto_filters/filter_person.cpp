@@ -25,26 +25,6 @@ bool FilterPerson::doFilterPerson(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &outclo
     kinectcoll_obj_element_id = pose_element_id;
   }
   
-// int floor_obj_collection= 30;
-//   int64_t floor_obj_element_id = bot_timestamp_now();
-//   vs_obj_collection_t objs;
-//   objs.id = floor_obj_collection; 
-//   objs.name = "Kinect Pose"; // "Trajectory";
-//   objs.type = 1; // a pose
-//   objs.reset = 0; // true will delete them from the viewer
-//   objs.nobjs = 1;
-//   vs_obj_t poses[objs.nobjs];
-//   poses[0].id = floor_obj_element_id;
-//   poses[0].x = 0;// state->bot_pos[0] ;
-//   poses[0].y = 0;// state->bot_pos[1] ;
-//   poses[0].z = 0; // state->bot_pos[2] ;
-//   poses[0].yaw = 0;// state->bot_rpy[2] ;
-//   poses[0].pitch = 0; //state->bot_rpy[1];
-//   poses[0].roll = 0; //state->bot_rpy[0];
-//   objs.objs = poses;
-//   vs_obj_collection_t_publish(state->publish_lcm, "OBJ_COLLECTION", &objs);
-
-
   Ptcoll_cfg ptcoll_cfg;
   ptcoll_cfg.reset=true;
   ptcoll_cfg.point_lists_id = kinectcoll_obj_element_id;

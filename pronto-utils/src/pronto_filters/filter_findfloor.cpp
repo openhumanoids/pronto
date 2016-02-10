@@ -159,53 +159,38 @@ bool FilterFindfloor::getHeightPitchRoll(double height_pitch_roll[]){
     floor_obj_collection= 4;
     floor_obj_element_id = pose_element_id;// bot_timestamp_now();
 
-    /*Ptcoll_cfg floorcoll_cfg;
-    floorcoll_cfg.id = 1;
-    floorcoll_cfg.name ="Floor RANSAC";  
-    floorcoll_cfg.reset=true;
-    floorcoll_cfg.type =1;
-    floorcoll_cfg.point_lists_id = pose_element_id ;
-    floorcoll_cfg.collection = floor_obj_collection;
-    floorcoll_cfg.element_id = floor_obj_element_id;
-    floorcoll_cfg.npoints = Nransac;
-  float colorm_temp0[] ={-1.0,-1.0,-1.0,-1.0};
-  floorcoll_cfg.rgba.assign(colorm_temp0,colorm_temp0+4*sizeof(float));
-//    floorcoll_cfg.rgba = {-1,-1,-1,-1};
-    pcdXYZRGB_to_lcm(publish_lcm,floorcoll_cfg, cloudfloorRGB);  
-*/
-
     if (verbose_lcm > 2){ // unimportant
       // 0 - position (fixed) at 000 with corrected pitch and roll
-      vs_obj_collection_t objs;
+      vs_object_collection_t objs;
       objs.id = floor_obj_collection; 
       objs.name = (char*) "Floor Pose"; // "Trajectory";
       objs.type = 1; // a pose
       objs.reset = 0; // true will delete them from the viewer
-      objs.nobjs = 1;
-      vs_obj_t poses[objs.nobjs];
+      objs.nobjects = 1;
+      vs_object_t poses[objs.nobjects];
       poses[0].id = floor_obj_element_id;
 
-      poses[0].x = 0;// state->bot_pos[0] ;
-      poses[0].y = 0;// state->bot_pos[1] ;
-      poses[0].z = height; // state->bot_pos[2] ;
-      poses[0].yaw = 0;// state->bot_rpy[2] ;
-      poses[0].pitch = -pitch; //state->bot_rpy[1];
-      poses[0].roll = -roll; //state->bot_rpy[0];
-      objs.objs = poses;
-      vs_obj_collection_t_publish(publish_lcm, "OBJ_COLLECTION", &objs);     
+      Eigen::Quaterniond quat =euler_to_quat(-roll,-pitch,0);
+
+      poses[0].x = 0;
+      poses[0].y = 0;
+      poses[0].z = height;
+      poses[0].qw = quat.w();
+      poses[0].qx = quat.x();
+      poses[0].qy = quat.y();
+      poses[0].qz = quat.z();
+      objs.objects = poses;
+      vs_object_collection_t_publish(publish_lcm, "OBJECT_COLLECTION", &objs);     
 
       bot_core_pose_t testdata;
       testdata.utime = pose_element_id;
       testdata.pos[0]=0;
       testdata.pos[1]=0;
       testdata.pos[2]=height;
-      Eigen::Quaterniond quat =euler_to_quat(roll,pitch,0); // rpy
       testdata.orientation[0] = quat.w();
       testdata.orientation[1] = quat.x();
       testdata.orientation[2] = quat.y();
       testdata.orientation[3] = quat.z();
-//      double temp_rpy[] ={ roll, pitch, 0}; // no yaw estimate
-//      bot_roll_pitch_yaw_to_quat(temp_rpy, testdata.orientation) ;
       testdata.vel[0] =0;
       testdata.vel[1] =0;
       testdata.vel[2] =0;

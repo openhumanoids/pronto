@@ -1,13 +1,3 @@
-/**
- * @file util.h
- * @brief Basic utility functions that are independent of iSAM.
- * @author Michael Kaess
- * @version $Id: util.h 6377 2012-03-30 20:06:44Z kaess $
- *
- * [insert iSAM license]
- *
- */
-
 #pragma once
 
 #include <stdlib.h>
@@ -16,7 +6,7 @@
 #include <string>
 #include <Eigen/Dense>
 
-namespace isam {
+namespace coll {
 
 // some math constants
 #ifndef PI

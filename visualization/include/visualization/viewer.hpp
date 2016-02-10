@@ -18,9 +18,10 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <lcm/lcm.h>
-#include <isam/isam.h>
 
-#include "visualization/collections.hpp"
+#include "visualization/collections_math.hpp"
+
+#include "lcmtypes/visualization.h"
 #include "visualization/pointcloud.hpp"
 
 class ObjectCollection;
@@ -72,9 +73,9 @@ private:
  */
 struct Pose3dTime
 {
-    Pose3dTime(int64_t utime, const isam::Pose3d & pose) : utime(utime), pose(pose) {}
+    Pose3dTime(int64_t utime, const coll::Pose3d & pose) : utime(utime), pose(pose) {}
     int64_t utime;
-    isam::Pose3d pose;
+    coll::Pose3d pose;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -118,14 +119,14 @@ class ObjectCollection : public Collection
 public:
     typedef std::vector<Pose3dTime, Eigen::aligned_allocator<Pose3dTime> > CollectionType;
 
-    ObjectCollection(int id, const std::string & name, int type=VS_OBJ_COLLECTION_T_AXIS3D) : Collection(id,name),m_first(true),m_type(type) {}
+    ObjectCollection(int id, const std::string & name, int type=VS_OBJECT_COLLECTION_T_AXIS3D) : Collection(id,name),m_first(true),m_type(type) {}
     virtual ~ObjectCollection() {}
     void add(const Pose3dTime & poseTime) { m_poses.push_back(poseTime); }
-    void add(int64_t utime, const isam::Pose3d & pose) {
+    void add(int64_t utime, const coll::Pose3d & pose) {
         add(Pose3dTime(utime, pose));
     }
     void add(int64_t utime, const Eigen::Isometry3d & pose) {
-        add(Pose3dTime(utime, isam::Pose3d(pose)));
+        add(Pose3dTime(utime, coll::Pose3d(pose)));
     }
     const CollectionType & poses() const {return m_poses;}
     CollectionType & poses() {return m_poses;}
