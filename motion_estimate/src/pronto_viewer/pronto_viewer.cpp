@@ -10,7 +10,7 @@
 #include <ConciseArgs>
 
 //renderers
-#include <bot_frames/bot_frames_renderers.h>
+#include <bot_frames_pronto/bot_frames_renderers.h>
 #include <laser_utils/renderer_laser.h>
 #include <bot_lcmgl_render/lcmgl_bot_renderer.h>
 #include <visualization/collections_renderer.hpp>
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
   bot_lcmgl_add_renderer_to_viewer(viewer,lcm, 1);
   laser_util_add_renderer_to_viewer(viewer, 1, lcm, bot_param, bot_frames);
   bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
-  bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
-  bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
+  //bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
+  //bot_frames_add_renderer_to_viewer(viewer, 1, bot_frames );
 
   add_octomap_renderer_to_viewer(viewer, 1, lcm);
   add_map_measurement_renderer_to_viewer(viewer, 1, lcm, bot_param, bot_frames);
