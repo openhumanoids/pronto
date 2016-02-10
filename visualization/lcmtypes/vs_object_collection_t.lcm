@@ -8,7 +8,7 @@ struct objects_collection_t
   boolean reset;  // start from scratch or keep previous data
 
   int32_t nobjects;
-  frame_t objects[nobjects];
+  object_t objects[nobjects];
 
   const int16_t POSE=1, TREE=2, SQUARE=3, POSE3D=4, AXIS3D=5, TAG=6, CAMERA=7, TRIANGLE=8, HEXAGON=9, SONARCONE=10;
 }
