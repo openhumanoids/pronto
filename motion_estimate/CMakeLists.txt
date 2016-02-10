@@ -32,6 +32,7 @@ add_subdirectory(src/create_octomap)
 
 # gui:
 add_subdirectory(src/renderer_rs)
+add_subdirectory(src/renderer_frames_pronto)
 add_subdirectory(src/pronto_viewer)
 
 
