@@ -122,24 +122,26 @@ void pronto_vis::pose_collection_to_lcm_from_list(int id, std::vector<Isometry3d
 
 void pronto_vis::pose_collection_to_lcm(obj_cfg ocfg, std::vector<Isometry3dTime> & posesT){
   // Send a pose
-  vs_obj_collection_t objs;
+  vs_object_collection_t objs;
   objs.id = ocfg.id;
   objs.name = (char*)  ocfg.name.c_str();
   objs.type = ocfg.type;
   objs.reset = ocfg.reset; // true will delete them from the viewer
-  objs.nobjs = posesT.size();
-  vs_obj_t poses[objs.nobjs];
-  for (int i=0;i< objs.nobjs;i++){
+  objs.nobjects = posesT.size();
+  vs_object_t poses[objs.nobjects];
+  for (int i=0;i< objs.nobjects;i++){
     poses[i].id = (int64_t) posesT[i].utime;// which specific pose
     poses[i].x = posesT[i].pose.translation().x();
     poses[i].y = posesT[i].pose.translation().y();
     poses[i].z = posesT[i].pose.translation().z();
     Eigen::Quaterniond r(posesT[i].pose.rotation());
-    quat_to_euler(r, poses[i].roll,
-      poses[i].pitch, poses[i].yaw);
+    poses[i].qw = r.w();
+    poses[i].qx = r.x();
+    poses[i].qy = r.y();
+    poses[i].qz = r.z();
   }
-  objs.objs = poses;
-  vs_obj_collection_t_publish(publish_lcm_, "OBJ_COLLECTION", &objs);
+  objs.objects = poses;
+  vs_object_collection_t_publish(publish_lcm_, "OBJECT_COLLECTION", &objs);
 }
 
 
@@ -155,33 +157,35 @@ void pronto_vis::pose_to_lcm_from_list(int id,Isometry3dTime& poseT){
 
 void pronto_vis::pose_to_lcm(obj_cfg ocfg, Isometry3dTime& poseT){
   // Send a pose
-  vs_obj_collection_t objs;
+  vs_object_collection_t objs;
   objs.id = ocfg.id;
   objs.name = (char*)  ocfg.name.c_str();
   objs.type = ocfg.type;
   objs.reset = ocfg.reset; // true will delete them from the viewer
-  objs.nobjs = 1;
-  vs_obj_t poses[objs.nobjs];
+  objs.nobjects = 1;
+  vs_object_t poses[objs.nobjects];
   poses[0].id = (int64_t) poseT.utime;// which specific pose
   poses[0].x = poseT.pose.translation().x();
   poses[0].y = poseT.pose.translation().y();
   poses[0].z = poseT.pose.translation().z();
   Eigen::Quaterniond r(poseT.pose.rotation());
-  quat_to_euler(r, poses[0].roll,
-      poses[0].pitch, poses[0].yaw);
-  objs.objs = poses;
-  vs_obj_collection_t_publish(publish_lcm_, "OBJ_COLLECTION", &objs);
+  poses[0].qw = r.w();
+  poses[0].qx = r.x();
+  poses[0].qy = r.y();
+  poses[0].qz = r.z();
+  objs.objects = poses;
+  vs_object_collection_t_publish(publish_lcm_, "OBJECT_COLLECTION", &objs);
 }
 
 
 void pronto_vis::pose_collection_reset(int id, std::string name){
-  vs_obj_collection_t objs;
+  vs_object_collection_t objs;
   objs.id = id;
   objs.name =(char*) name.c_str();
   objs.type =5;
   objs.reset = true;
-  objs.nobjs = 0;
-  vs_obj_collection_t_publish(publish_lcm_, "OBJ_COLLECTION", &objs);
+  objs.nobjects = 0;
+  vs_object_collection_t_publish(publish_lcm_, "OBJECT_COLLECTION", &objs);
 }
 
 
