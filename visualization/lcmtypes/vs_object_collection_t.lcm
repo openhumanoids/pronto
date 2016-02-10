@@ -1,6 +1,6 @@
 package vs;
 
-struct objects_collection_t
+struct object_collection_t
 {
   int32_t id;     // ID of collection, needed for example for links
   string name;    // name to display in viewer
