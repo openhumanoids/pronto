@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
   cout << "Collections example" << endl;
   Viewer viewer(lcm);
-  ObjectCollection obj(1, std::string("Objects"), VS_OBJ_COLLECTION_T_POSE3D);
+  ObjectCollection obj(1, std::string("Objects"), VS_OBJECT_COLLECTION_T_POSE3D);
   LinkCollection link(2, std::string("Links"));
 
   // Send a reset

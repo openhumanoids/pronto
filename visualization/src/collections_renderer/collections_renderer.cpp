@@ -628,8 +628,8 @@ static void draw_square(RendererCollections *self, double x, double y, double z,
 
 class ObjCollection : public Collection {
 public:
-  typedef vs_obj_collection_t my_vs_collection_t;
-  typedef vs_obj_t my_vs_t;
+  typedef vs_object_collection_t my_vs_collection_t;
+  typedef vs_object_t my_vs_t;
 
   // index can be time stamp (64 bit!)
   typedef map<int64_t, my_vs_t>  elements_t;
@@ -639,11 +639,11 @@ public:
   elements_t elements;
 
   static int get_size(const my_vs_collection_t *msg) {
-    return msg->nobjs;
+    return msg->nobjects;
   }
 
   static void copy(const my_vs_collection_t *msg, int i, elements_t& dst_map) {
-    dst_map[msg->objs[i].id] = msg->objs[i];
+    dst_map[msg->objects[i].id] = msg->objects[i];
   }
 
   ObjCollection(int id, string name, int type, bool show) : Collection(id, name, type, show) {}
@@ -657,7 +657,7 @@ public:
     glEnable(GL_DEPTH_TEST);
 
     switch(type) {
-    case VS_OBJ_COLLECTION_T_TREE:
+    case VS_OBJECT_COLLECTION_T_TREE:
       glEnable(GL_RESCALE_NORMAL);
       glShadeModel(GL_SMOOTH);
       glEnable(GL_LIGHTING);
@@ -666,7 +666,7 @@ public:
       break;
     }
     for (elements_t::iterator it = elements.begin(); it != elements.end(); it++) {
-      vs_obj_t& obj = it->second;
+      vs_object_t& obj = it->second;
       // only draw if within range
       if (obj.id>=range_start && obj.id<=range_end) {
 
@@ -692,39 +692,41 @@ public:
         double size = 0.1; // 0.1m is the size of the plotted poses
 	      size = size*self->param_pose_width;
 
+        Eigen::Vector3d obj_rpy = Eigen::Matrix3d(Eigen::Quaterniond(obj.qw, obj.qx, obj.qy, obj.qz)).eulerAngles(0,1,2);
+
         bool is_last = (maxid == obj.id);
         switch(type) {
-        case VS_OBJ_COLLECTION_T_SQUARE:
-          draw_square (self, obj.x, obj.y, z, obj.yaw, size);
+        case VS_OBJECT_COLLECTION_T_SQUARE:
+          draw_square (self, obj.x, obj.y, z, obj_rpy(2), size);
           break;
-        case VS_OBJ_COLLECTION_T_POSE:
-          draw_triangle (self, obj.x, obj.y, z, obj.yaw, size, is_last);
+        case VS_OBJECT_COLLECTION_T_POSE:
+          draw_triangle (self, obj.x, obj.y, z, obj_rpy(2), size, is_last);
           break;
-        case VS_OBJ_COLLECTION_T_POSE3D:
-          draw_tetra (self, obj.x, obj.y, z, obj.yaw, obj.pitch, obj.roll, size, is_last);
+        case VS_OBJECT_COLLECTION_T_POSE3D:
+          draw_tetra (self, obj.x, obj.y, z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
           break;
-        case VS_OBJ_COLLECTION_T_AXIS3D:
-          draw_axis (self, obj.x, obj.y, z, obj.yaw, obj.pitch, obj.roll, size, is_last);
+        case VS_OBJECT_COLLECTION_T_AXIS3D:
+          draw_axis (self, obj.x, obj.y, z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
           break;
-        case VS_OBJ_COLLECTION_T_TREE:
+        case VS_OBJECT_COLLECTION_T_TREE:
           draw_tree (self, obj.x, obj.y, z);
           break;
-        case VS_OBJ_COLLECTION_T_TAG:
-          draw_tag (self, obj.x, obj.y, z, obj.yaw, obj.pitch, obj.roll);
+        case VS_OBJECT_COLLECTION_T_TAG:
+          draw_tag (self, obj.x, obj.y, z, obj_rpy(2), obj_rpy(1), obj_rpy(0));
           break;
-        case VS_OBJ_COLLECTION_T_CAMERA:
-          draw_camera (self, obj.x, obj.y, z, obj.yaw, obj.pitch, obj.roll, size, is_last);
-          draw_axis(self, obj.x, obj.y, obj.z, obj.yaw, obj.pitch, obj.roll, size, is_last);
+        case VS_OBJECT_COLLECTION_T_CAMERA:
+          draw_camera (self, obj.x, obj.y, z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
+          draw_axis(self, obj.x, obj.y, obj.z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
           break;
-        case VS_OBJ_COLLECTION_T_TRIANGLE:
-          draw_equilateral_triangle (self, obj.x, obj.y, z, obj.yaw, size, is_last );
+        case VS_OBJECT_COLLECTION_T_TRIANGLE:
+          draw_equilateral_triangle (self, obj.x, obj.y, z, obj_rpy(2), size, is_last );
           break;
-        case VS_OBJ_COLLECTION_T_HEXAGON:
-          draw_hexagon (self, obj.x, obj.y, z, obj.yaw, size, is_last);
+        case VS_OBJECT_COLLECTION_T_HEXAGON:
+          draw_hexagon (self, obj.x, obj.y, z, obj_rpy(2), size, is_last);
           break;
-        case VS_OBJ_COLLECTION_T_SONARCONE:
-          draw_sonarcone(self, obj.x, obj.y, z, obj.yaw, obj.pitch, obj.roll, size, is_last);
-          draw_axis(self, obj.x, obj.y, obj.z, obj.yaw, obj.pitch, obj.roll, size, is_last);
+        case VS_OBJECT_COLLECTION_T_SONARCONE:
+          draw_sonarcone(self, obj.x, obj.y, z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
+          draw_axis(self, obj.x, obj.y, obj.z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
           break;
 	}
       }
@@ -787,8 +789,8 @@ public:
         ObjCollection::elements_t& objs2 = ((ObjCollection*)collection_it2->second)->elements;
         ObjCollection::elements_t::iterator it2 = objs2.find(link.id2);
         if (it1 != objs1.end() && it2 != objs2.end()) {
-          vs_obj_t& obj1 = it1->second;
-          vs_obj_t& obj2 = it2->second;
+          vs_object_t& obj1 = it1->second;
+          vs_object_t& obj2 = it2->second;
           // only draw if at least one end point is within the range
           if ((obj1.id>=range_start && obj1.id<=range_end)
               || (obj2.id>=range_start && obj2.id<=range_end)) {
@@ -861,7 +863,7 @@ public:
         ObjCollection::elements_t& objs = ((ObjCollection*)collection_it->second)->elements;
         ObjCollection::elements_t::iterator it = objs.find(cov.element_id);
         if (it != objs.end()) {
-          vs_obj_t& obj = it->second;
+          vs_object_t& obj = it->second;
           // only draw if at least one end point is within the range
           if (obj.id>=range_start && obj.id<=range_end) {
             float alpha = 0.4;
@@ -869,8 +871,8 @@ public:
             glColor4f(rgb[0],rgb[1],rgb[2],alpha);
 
             bool is3d = false;
-            if (((ObjCollection*)collection_it->second)->type & VS_OBJ_COLLECTION_T_AXIS3D
-                || ((ObjCollection*)collection_it->second)->type & VS_OBJ_COLLECTION_T_POSE3D)
+            if (((ObjCollection*)collection_it->second)->type & VS_OBJECT_COLLECTION_T_AXIS3D
+                || ((ObjCollection*)collection_it->second)->type & VS_OBJECT_COLLECTION_T_POSE3D)
               is3d = true;
             draw_ellipsoid(self, obj.x, obj.y, obj.z, cov.n, cov.entries, is3d);
           }
@@ -1031,7 +1033,7 @@ public:
         ObjCollection::elements_t& objs = objs_ptr->elements;
         ObjCollection::elements_t::iterator obj_it = objs.find(element.element_id);
         if (obj_it != objs.end()) {
-          vs_obj_t& obj = obj_it->second;
+          vs_object_t& obj = obj_it->second;
           if (obj.id>=range_start && obj.id<=range_end) {
             glPushMatrix();
             double z = time_elevation_collection(self, obj.id, obj.z, collection_it->first);
@@ -1051,6 +1053,8 @@ public:
 
             float alpha = self->param_alpha_points; 
 
+            Eigen::Vector3d obj_rpy = Eigen::Matrix3d(Eigen::Quaterniond(obj.qw, obj.qx, obj.qy, obj.qz)).eulerAngles(0,1,2);
+
             glVertexPointer(3, GL_FLOAT, 0, entries);
             if (colors) glColorPointer(4, GL_FLOAT, 0, colors);
             if (pass==0 && self->param_fill_scans) {
@@ -1059,9 +1063,10 @@ public:
                 glPushMatrix();
 
                 glTranslatef(obj.x, obj.y, 0.9*z);
-                glRotatef(bot_to_degrees(obj.yaw),0.0,0.0,1.0);
-                glRotatef(bot_to_degrees(obj.pitch),0.0,1.0,0.0);
-                glRotatef(bot_to_degrees(obj.roll),1.0,0.0,0.0);
+
+                glRotatef(bot_to_degrees(obj_rpy(2)),0.0,0.0,1.0);
+                glRotatef(bot_to_degrees(obj_rpy(1)),0.0,1.0,0.0);
+                glRotatef(bot_to_degrees(obj_rpy(0)),1.0,0.0,0.0);
 
 		glColor4f(255,255,155,1.0);
 		glLineWidth((GLfloat)self->param_point_width);
@@ -1096,9 +1101,9 @@ public:
             }
 
             glTranslatef(obj.x, obj.y, z);
-            glRotatef(bot_to_degrees(obj.yaw),0.0,0.0,1.0);
-            glRotatef(bot_to_degrees(obj.pitch),0.0,1.0,0.0);
-            glRotatef(bot_to_degrees(obj.roll),1.0,0.0,0.0);
+            glRotatef(bot_to_degrees(obj_rpy(2)),0.0,0.0,1.0);
+            glRotatef(bot_to_degrees(obj_rpy(1)),0.0,1.0,0.0);
+            glRotatef(bot_to_degrees(obj_rpy(0)),1.0,0.0,0.0);
 
             rgbmix[0] = rgb[0]*colmix+(1-colmix)*rgb4[0];
             rgbmix[1] = rgb[1]*colmix+(1-colmix)*rgb4[1];
@@ -1177,7 +1182,7 @@ public:
         ObjCollection::elements_t& objs = objs_ptr->elements;
         ObjCollection::elements_t::iterator obj_it = objs.find(element.object_id);
         if (obj_it != objs.end()) {
-          vs_obj_t& obj = obj_it->second;
+          vs_object_t& obj = obj_it->second;
           if (obj.id>=range_start && obj.id<=range_end) {
             glPushMatrix();
             double z = time_elevation_collection(self, obj.id, obj.z, collection_it->first);
@@ -1217,7 +1222,7 @@ void calculate_ranges(RendererCollections *self, int64_t& range_start, int64_t& 
         initialized = true;
       }
       for (ObjCollection::elements_t::iterator it = objs.begin(); it != objs.end(); it++) {
-        vs_obj_t& obj = it->second;
+        vs_object_t& obj = it->second;
         if (it==objs.begin()) {
           obj_col->maxid = obj.id;
         }
@@ -1407,7 +1412,7 @@ static void on_collection_data(const lcm_recv_buf_t *rbuf, const char *channel,
 }
 
 static void on_obj_collection_data(const lcm_recv_buf_t *rbuf, const char *channel, 
-                                   const vs_obj_collection_t *msg, void *user_data ) {
+                                   const vs_object_collection_t *msg, void *user_data ) {
   on_collection_data<ObjCollection>(rbuf, channel, msg, user_data);
 }
 
@@ -1556,7 +1561,7 @@ BotRenderer *renderer_collections_new (BotViewer *viewer, int render_priority, l
   self->lcm = lcm;
 
   /* subscribe to LCM streams */
-  vs_obj_collection_t_subscribe(self->lcm, "OBJ_COLLECTION", on_obj_collection_data, self);
+  vs_object_collection_t_subscribe(self->lcm, "OBJECT_COLLECTION", on_obj_collection_data, self);
   vs_link_collection_t_subscribe(self->lcm, "LINK_COLLECTION", on_link_collection_data, self);
   vs_cov_collection_t_subscribe(self->lcm, "COV_COLLECTION", on_cov_collection_data, self);
   vs_point3d_list_collection_t_subscribe(self->lcm, "POINTS_COLLECTION", on_points_collection_data, self);

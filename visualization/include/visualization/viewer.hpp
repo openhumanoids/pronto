@@ -119,7 +119,7 @@ class ObjectCollection : public Collection
 public:
     typedef std::vector<Pose3dTime, Eigen::aligned_allocator<Pose3dTime> > CollectionType;
 
-    ObjectCollection(int id, const std::string & name, int type=VS_OBJ_COLLECTION_T_AXIS3D) : Collection(id,name),m_first(true),m_type(type) {}
+    ObjectCollection(int id, const std::string & name, int type=VS_OBJECT_COLLECTION_T_AXIS3D) : Collection(id,name),m_first(true),m_type(type) {}
     virtual ~ObjectCollection() {}
     void add(const Pose3dTime & poseTime) { m_poses.push_back(poseTime); }
     void add(int64_t utime, const coll::Pose3d & pose) {

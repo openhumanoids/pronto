@@ -10,27 +10,28 @@ Viewer::~Viewer()
 }
 void Viewer::sendCollection(const ObjectCollection & collection, bool reset)
 {
-    vs_obj_collection_t objs;
+    vs_object_collection_t objs;
     size_t n = collection.size();
     if (n > 0) {
         objs.id = collection.id();
         objs.name = (char*) collection.name().c_str();
         objs.type = collection.type();
         objs.reset = reset;
-        objs.nobjs = n;
-        vs_obj_t poses[n];
+        objs.nobjects = n;
+        vs_object_t poses[n];
         for (size_t i = 0; i < n; i++) {
             const coll::Pose3d & pose = collection(i).pose;
             poses[i].id = collection(i).utime;
             poses[i].x = pose.x();
             poses[i].y = pose.y();
             poses[i].z = pose.z();
-            poses[i].yaw = pose.yaw();
-            poses[i].pitch = pose.pitch();
-            poses[i].roll = pose.roll();
+            poses[i].qw = pose.rot().quaternion().w();
+            poses[i].qx = pose.rot().quaternion().x();
+            poses[i].qy = pose.rot().quaternion().y();
+            poses[i].qz = pose.rot().quaternion().z();
         }
-        objs.objs = poses;
-        vs_obj_collection_t_publish(m_lcm, "OBJ_COLLECTION", &objs);
+        objs.objects = poses;
+        vs_object_collection_t_publish(m_lcm, "OBJECT_COLLECTION", &objs);
     }
 }
 
@@ -175,7 +176,7 @@ void Viewer::sendCollection(const TextCollection & collection, bool reset)
     if (n > 0) {
         texts.id = collection.id();
         texts.name = (char*) collection.name().c_str();
-        texts.type = VS_OBJ_COLLECTION_T_POSE;
+        texts.type = VS_OBJECT_COLLECTION_T_POSE;
         texts.reset = reset;
         texts.n = n;
         vs_text_t text[n];
