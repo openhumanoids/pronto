@@ -21,7 +21,7 @@ endif()
 
 ################################################################
 add_library(pronto_filters SHARED filter_planes.cpp grow_cloud.cpp 
-	filter_findfloor.cpp)
+	)
 
 pods_use_pkg_config_packages(pronto_filters   eigen3  
 	pcl_common-1.7   pcl_io-1.7      pcl_surface-1.7   pcl_segmentation-1.7 
@@ -35,7 +35,7 @@ pods_use_pkg_config_packages(pronto_filters lcm eigen3   glib-2.0 )
 set_target_properties(pronto_filters PROPERTIES SOVERSION 1)
 pods_install_libraries(pronto_filters)
 pods_install_headers(filter_planes.hpp grow_cloud.hpp  
-    filter_findfloor.hpp filter_colorize.hpp
+    filter_colorize.hpp
     DESTINATION pronto_utils)
 
 pods_install_pkg_config_file(pronto_filters
