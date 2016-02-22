@@ -14,7 +14,6 @@ pods_use_pkg_config_packages(leg_estimate estimate_tools  filter_tools foot_cont
   lcmtypes_bot2-core 
   pronto_vis 
   eigen3)
-# lcmtypes_fovis-bot2 
 set_target_properties(leg_estimate PROPERTIES SOVERSION 1)
 pods_install_libraries(leg_estimate)
 pods_install_headers( leg_estimate.hpp foot_contact_classify.hpp common_conversions.hpp
@@ -31,7 +30,6 @@ pods_use_pkg_config_packages(se-leg-odometry leg_estimate path-util
    bot2-param-client model-client  
    pronto_math bot2-frames
    )
-#bot2-frames_cpp
 target_link_libraries (se-leg-odometry lcm )
 pods_install_executables(se-leg-odometry )
 

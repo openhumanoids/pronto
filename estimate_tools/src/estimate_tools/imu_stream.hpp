@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 
-#include <lcmtypes/pronto/atlas_raw_imu_batch_t.hpp>
+#include <lcmtypes/pronto/kvh_raw_imu_batch_t.hpp>
 
 struct IMUPacket
 {
@@ -43,11 +43,11 @@ class IMUStream{
     ~IMUStream(){
     }    
     
-    pronto::atlas_raw_imu_batch_t convertToLCMBatch(IMUBatch batch);  
-    IMUBatch  convertFromLCMBatch(pronto::atlas_raw_imu_batch_t* msg);
+    pronto::kvh_raw_imu_batch_t convertToLCMBatch(IMUBatch batch);  
+    IMUBatch  convertFromLCMBatch(pronto::kvh_raw_imu_batch_t* msg);
     
-    pronto::atlas_raw_imu_t convertToLCMPacket(IMUPacket packet);
-    IMUPacket convertFromLCMPacket(pronto::atlas_raw_imu_t msg, int64_t last_packet_utime, int64_t batch_utime);
+    pronto::kvh_raw_imu_t convertToLCMPacket(IMUPacket packet);
+    IMUPacket convertFromLCMPacket(pronto::kvh_raw_imu_t msg, int64_t last_packet_utime, int64_t batch_utime);
     
     int getNumberBatchSinceReset(){ return counter_; };
   private:

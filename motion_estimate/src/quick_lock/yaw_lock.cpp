@@ -26,7 +26,7 @@
 #include <Eigen/Dense>
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
-#include <lcmtypes/pronto/atlas_state_t.hpp>
+#include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/pronto/system_status_t.hpp>
 #include <lcmtypes/pronto/utime_t.hpp>
 #include <pronto_utils/pronto_math.hpp>
@@ -73,7 +73,7 @@ class App{
     Eigen::Isometry3d l_foot_to_r_foot_original_;
     int64_t utime_disable_until_;
 
-    void atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::atlas_state_t* msg);
+    void atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg);
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
     void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
     const CommandLineConfig cl_cfg_;
@@ -128,7 +128,7 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
   last_controller_state_ = msg->state;
 }
 
-void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::atlas_state_t* msg){
+void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
   joint_angles_init_ = true;
   joint_positions_ = msg->joint_position;
 }
