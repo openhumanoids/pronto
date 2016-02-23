@@ -73,7 +73,7 @@ class App{
     Eigen::Isometry3d l_foot_to_r_foot_original_;
     int64_t utime_disable_until_;
 
-    void atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg);
+    void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg);
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
     void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
     const CommandLineConfig cl_cfg_;
@@ -101,7 +101,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   lock_init_ = false;
   utime_disable_until_ = 0; // don't disable at start (but will be uninitialized)
 
-  lcm_->subscribe( "ATLAS_STATE" ,&App::atlasStateHandler,this);
+  lcm_->subscribe( "CORE_ROBOT_STATE" ,&App::jointStateHandler,this);
   lcm_->subscribe( "POSE_BODY" ,&App::poseHandler,this);
   lcm_->subscribe( "CONTROLLER_STATUS" ,&App::controllerStatusHandler,this);
 
@@ -128,7 +128,7 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
   last_controller_state_ = msg->state;
 }
 
-void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
+void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
   joint_angles_init_ = true;
   joint_positions_ = msg->joint_position;
 }
