@@ -85,10 +85,6 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   body_init_ = false;
   force_torque_init_ = false;
   
-  JointUtils* joint_utils = new JointUtils();
-  joint_names_ = joint_utils->atlas_joint_names;
-
-
 }
 
 /// Extra-class Functions  /////////////////////////////

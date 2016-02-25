@@ -30,7 +30,6 @@
 #include <lcmtypes/pronto/system_status_t.hpp>
 #include <lcmtypes/pronto/utime_t.hpp>
 #include <pronto_utils/pronto_math.hpp>
-#include <pronto_utils/pronto_joint_tools.hpp>
 
 using namespace std;
 using namespace boost::assign; // bring 'operator+()' into scope
@@ -61,8 +60,8 @@ class App{
     boost::shared_ptr<lcm::LCM> lcm_;
     boost::shared_ptr<ModelClient> model_;
     boost::shared_ptr<KDL::TreeFkSolverPosFull_recursive> fksolver_;
-    std::vector<std::string> joint_names_;
-    std::vector<float>   joint_positions_;
+    std::vector<std::string> joint_name_;
+    std::vector<float>   joint_position_;
 
     // Poses of the l and r feet when robot first became standing or manipulating:
     Eigen::Isometry3d world_to_l_foot_original_, world_to_r_foot_original_;
@@ -95,8 +94,6 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   }
   fksolver_ = boost::shared_ptr<KDL::TreeFkSolverPosFull_recursive>(new KDL::TreeFkSolverPosFull_recursive(tree));
 
-  JointUtils* joint_utils = new JointUtils();
-  joint_names_ = joint_utils->atlas_joint_names;
   joint_angles_init_ = false;
   lock_init_ = false;
   utime_disable_until_ = 0; // don't disable at start (but will be uninitialized)
@@ -130,7 +127,8 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
 
 void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
   joint_angles_init_ = true;
-  joint_positions_ = msg->joint_position;
+  joint_position_ = msg->joint_position;
+  joint_name_ = msg->joint_name;
 }
 
 
@@ -165,8 +163,8 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
   // Solve FK for feet:
   map<string, double> jointpos_in;
   map<string, KDL::Frame > cartpos_out;
-  for (size_t i=0; i<  joint_names_.size(); i++) //cast to uint to suppress compiler warning
-    jointpos_in.insert(make_pair(joint_names_[i], joint_positions_[i]));
+  for (size_t i=0; i<  joint_name_.size(); i++) //cast to uint to suppress compiler warning
+    jointpos_in.insert(make_pair(joint_name_[i], joint_position_[i]));
   bool kinematics_status = fksolver_->JntToCart(jointpos_in,cartpos_out,true); // true = flatten tree to absolute transforms
   if(kinematics_status>=0){
     // cout << "Success!" <<endl;

@@ -14,11 +14,8 @@
 #include <mav_state_est/mav-est-legodo/rbis_legodo_common.hpp>
 
 #include <leg_estimate/leg_estimate.hpp>
-// #include <pronto_tools/pronto_lcm.hpp>
-#include <pronto_utils/pronto_joint_tools.hpp>
 #include <estimate_tools/torque_adjustment.hpp>
 
-//#include <lcmtypes/pronto/atlas_state_t.hpp>
 #include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/pronto/controller_foot_contact_t.hpp>
 #include <lcmtypes/pronto/six_axis_force_torque_t.hpp>
@@ -42,7 +39,6 @@ public:
 
   LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
-  //RBISUpdateInterface * processMessage(const pronto::atlas_state_t *msg);
   RBISUpdateInterface * processMessage(const pronto::joint_state_t *msg);
 
 
@@ -69,8 +65,6 @@ public:
   boost::shared_ptr<lcm::LCM> lcm_pub_boost;
   boost::shared_ptr<ModelClient> model_boost;
   BotFrames* frames;
-  // bot::frames* frames_cpp;
-  std::vector<std::string> joint_names_;
   
   // Settings 
   // Republish certain incoming messages, so as to produced output logs

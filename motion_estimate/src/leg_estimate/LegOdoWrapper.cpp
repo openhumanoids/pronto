@@ -12,9 +12,6 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_subscribe_,  boost::shared_ptr<lcm::LC
     lcm_subscribe_->subscribe("VICON_BODY|VICON_FRONTPLATE",&App::viconHandler,this);
   }
 
-  JointUtils* joint_utils = new JointUtils();
-  joint_names_ = joint_utils->atlas_joint_names;
-  std::cout << joint_names_.size() << " joint angles assumed\n";
   force_torque_init_ = false;
 }
 
@@ -119,7 +116,7 @@ void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& c
   leg_est_->setPoseBDI( world_to_body_bdi_ );
   leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
                              FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
-  leg_est_->updateOdometry(joint_names_, msg->joint_position, msg->joint_velocity, msg->utime);
+  leg_est_->updateOdometry(msg->joint_name, msg->joint_position, msg->joint_velocity, msg->utime);
 
   Eigen::Isometry3d world_to_body = leg_est_->getRunningEstimate();
   bot_core::pose_t pose_msg = getPoseAsBotPose(world_to_body, msg->utime);
