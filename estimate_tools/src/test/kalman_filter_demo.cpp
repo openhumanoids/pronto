@@ -23,8 +23,6 @@
 
 #include <Eigen/Core>
 
-#include <pronto_utils/pronto_joint_tools.hpp>
-
 using namespace std;
 using namespace boost::assign; // bring 'operator+()' into scope
 using namespace boost;
@@ -48,12 +46,9 @@ class App{
     
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
-    JointUtils joint_utils_;
 
-    void atlasStateHandler(const lcm::ReceiveBuffer* rbuf, 
-                           const std::string& channel, const  pronto::joint_state_t* msg); 
-//    void ersHandler(const lcm::ReceiveBuffer* rbuf, 
-//                           const std::string& channel, const  pronto::robot_state_t* msg); 
+    void jointStateHandler(const lcm::ReceiveBuffer* rbuf, 
+                           const std::string& channel, const  pronto::joint_state_t* msg);
     void doFilter(double t, Eigen::VectorXf x, Eigen::VectorXf x_dot);
     const CommandLineConfig cl_cfg_;  
     
@@ -73,7 +68,7 @@ class App{
 App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
     lcm_(lcm_), cl_cfg_(cl_cfg_){
       
-  lcm::Subscription* sub = lcm_->subscribe( "ATLAS_STATE" ,&App::atlasStateHandler,this);
+  lcm::Subscription* sub = lcm_->subscribe( "CORE_ROBOT_STATE" ,&App::jointStateHandler,this);
   sub->setQueueCapacity(1);
   
       
@@ -157,8 +152,7 @@ void App::doFilter(double t, Eigen::VectorXf x, Eigen::VectorXf x_dot){
 }
 
 
-//void App::ersHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::robot_state_t* msg){
-void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){  
+void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
   int64_t tic = _timestamp_now();
   
   
@@ -254,7 +248,7 @@ void App::atlasStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& c
     robot_state_msg.joint_velocity.push_back( jv_out[i]);
     robot_state_msg.joint_effort.push_back( msg->joint_effort[i] ); // not filtered
   }
-  robot_state_msg.joint_name = joint_utils_.atlas_joint_names;
+  robot_state_msg.joint_name = msg->joint_name;
   robot_state_msg.num_joints = robot_state_msg.joint_position.size();
 
   lcm_->publish(cl_cfg_.output_channel , &robot_state_msg);

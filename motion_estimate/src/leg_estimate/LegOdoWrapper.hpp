@@ -9,7 +9,6 @@
 #include <lcmtypes/pronto/joint_state_t.hpp>
 #include <lcmtypes/pronto/six_axis_force_torque_t.hpp>
 #include <lcmtypes/pronto/six_axis_force_torque_array_t.hpp>
-#include <pronto_utils/pronto_joint_tools.hpp>
 
 struct CommandLineConfig
 {
@@ -42,7 +41,6 @@ protected:
 
   BotFrames* frames_;
   // bot::frames* frames_cpp_;
-  std::vector<std::string> joint_names_;
 
   pronto::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
