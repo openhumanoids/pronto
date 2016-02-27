@@ -11,7 +11,7 @@
 
 #include <Eigen/Dense>
 
-#include <lcmtypes/pronto/utime_t.hpp>
+#include <lcmtypes/bot_core/utime_t.hpp>
 
 //TODO remove when front end is templated on FilterState and Update
 #include "rbis.hpp"
@@ -156,7 +156,7 @@ void SensorHandler<lcmType, SensorHandlerClass>::lcm_message_handler(const lcm::
 
   if (lcm_front->init_message_channel != "" && lcm_front->init_complete_channel != "" && channel == lcm_front->init_message_channel) {
       // send a message informing the world that we have just performed a reset
-      pronto::utime_t init_complete_msg;
+      bot_core::utime_t init_complete_msg;
 
       RBIS head_state;
       RBIM head_cov;

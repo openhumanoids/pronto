@@ -11,8 +11,8 @@
 #include "convert_octomap.hpp"
 #include "cloud_accumulate.hpp"
 
-#include <lcmtypes/pronto/utime_t.hpp>
-#include <lcmtypes/pronto/system_status_t.hpp>
+#include <lcmtypes/bot_core/utime_t.hpp>
+#include <lcmtypes/bot_core/system_status_t.hpp>
 
 #include <ConciseArgs>
 
@@ -45,13 +45,13 @@ class App{
     int64_t last_publish_utime_;
     
     void startMapHandler(const lcm::ReceiveBuffer* rbuf, 
-                      const std::string& channel, const  pronto::utime_t* msg);
+                      const std::string& channel, const  bot_core::utime_t* msg);
     
     void planarLidarHandler(const lcm::ReceiveBuffer* rbuf, 
                       const std::string& channel, const  bot_core::planar_lidar_t* msg);   
     
     void velodyneHandler(const lcm::ReceiveBuffer* rbuf, 
-                      const std::string& channel, const  pronto::pointcloud2_t* msg);   
+                      const std::string& channel, const  bot_core::pointcloud2_t* msg);   
 
     void sendSystemStatus(std::string message);
 
@@ -79,7 +79,7 @@ App::App(boost::shared_ptr< lcm::LCM >& lcm_, ConvertOctomapConfig co_cfg_,
 }
 
 
-void App::startMapHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::utime_t* msg){
+void App::startMapHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::utime_t* msg){
   std::cout << "Start map message received\n";
   do_accum_ = true;
   accu_->clearCloud();
@@ -88,10 +88,10 @@ void App::startMapHandler(const lcm::ReceiveBuffer* rbuf, const std::string& cha
 
 
 void App::sendSystemStatus(std::string message){
-  pronto::system_status_t status;
-  status.system = pronto::system_status_t::MOTION_ESTIMATION;
-  status.importance = pronto::system_status_t::VERY_IMPORTANT;
-  status.frequency = pronto::system_status_t::LOW_FREQUENCY;
+  bot_core::system_status_t status;
+  status.system = bot_core::system_status_t::MOTION_ESTIMATION;
+  status.importance = bot_core::system_status_t::VERY_IMPORTANT;
+  status.frequency = bot_core::system_status_t::LOW_FREQUENCY;
   status.value = message;
   lcm_->publish("SYSTEM_STATUS", &status);
 }
@@ -117,7 +117,7 @@ void App::planarLidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& 
 }
 
 
-void App::velodyneHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg){
+void App::velodyneHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pointcloud2_t* msg){
   if ( do_accum_ ){
     
      if ( accu_->getCounter() % 200 == 0){

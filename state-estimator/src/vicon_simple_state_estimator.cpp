@@ -9,8 +9,8 @@
 #include <eigen_utils/eigen_utils.hpp>
 #include <lcm/lcm.h>
 
-#include <lcmtypes/pronto_pose_t.h>
-#include <lcmtypes/pronto_ins_t.h>
+#include <lcmtypes/bot_core_pose_t.h>
+#include <lcmtypes/bot_core_ins_t.h>
 #include <lcmtypes/vicon_body_t.h>
 
 #include <Eigen/Dense>
@@ -51,7 +51,7 @@ typedef struct {
 
 } state_estimator_t;
 
-static void ins_message_handler(const lcm_recv_buf_t *rbuf, const char * channel, const pronto_ins_t * msg, void * user)
+static void ins_message_handler(const lcm_recv_buf_t *rbuf, const char * channel, const bot_core_ins_t * msg, void * user)
 {
   state_estimator_t * self = (state_estimator_t *) user;
 
@@ -81,7 +81,7 @@ static void vicon_message_handler(const lcm_recv_buf_t *rbuf, const char * chann
 //  bot_trans_apply_trans_to(&self->enu_to_ned, &body_flu_to_enu, &body_flu_to_ned);
 //  bot_trans_apply_trans_to(&body_flu_to_ned, &self->frd_to_flu, &body_to_enu);
 
-  pronto_pose_t pose;
+  bot_core_pose_t pose;
   memcpy(pose.accel, self->accelb.data(), 3 * sizeof(double));
   memcpy(pose.rotation_rate, self->omegab.data(), 3 * sizeof(double));
 
@@ -89,7 +89,7 @@ static void vicon_message_handler(const lcm_recv_buf_t *rbuf, const char * chann
   memcpy(pose.pos, body_flu_to_enu.trans_vec, 3 * sizeof(double));
   pose.utime = msg->utime;
 
-  pronto_pose_t_publish(self->lcm, self->pose_channel, &pose);
+  bot_core_pose_t_publish(self->lcm, self->pose_channel, &pose);
 }
 
 static void usage(const char *progname)
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 //  bot_frames_get_trans(self->frames, "body_flu", "body", &self->frd_to_flu); //get the inverse
 //  bot_trans_invert(&self->frd_to_flu);
 
-//  pronto_ins_t_subscribe(self->lcm, self->ins_channel, ins_message_handler, (void *) self);
+//  bot_core_ins_t_subscribe(self->lcm, self->ins_channel, ins_message_handler, (void *) self);
 
   printf("Subscribing to vicon channel: %s\n", self->vicon_channel);
   vicon_body_t_subscribe(self->lcm, self->vicon_channel, vicon_message_handler, (void *) self);

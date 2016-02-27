@@ -3,7 +3,7 @@
 
 #include <ConciseArgs>
 
-#include <lcmtypes/pronto/kvh_raw_imu_batch_t.hpp>
+#include <lcmtypes/bot_core/kvh_raw_imu_batch_t.hpp>
 
 #include <estimate_tools/Filter.hpp>
 #include <estimate_tools/HeavyLowPassFilter.hpp>
@@ -27,7 +27,7 @@ class App{
     boost::shared_ptr<lcm::LCM> lcm_;
     
     void batchHandler(const lcm::ReceiveBuffer* rbuf, 
-                           const std::string& channel, const  pronto::kvh_raw_imu_batch_t* msg); 
+                           const std::string& channel, const  bot_core::kvh_raw_imu_batch_t* msg); 
     void doFilter(IMUPacket &raw);
     const CommandLineConfig cl_cfg_;  
     
@@ -94,15 +94,15 @@ void App::doFilter(IMUPacket &raw){
 }
 
 
-void App::batchHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::kvh_raw_imu_batch_t* msg){
+void App::batchHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::kvh_raw_imu_batch_t* msg){
   // 1. Convert incoming message to an IMU batch
   //    this will split the old packets from the new ones
-  pronto::kvh_raw_imu_batch_t msg_copy = pronto::kvh_raw_imu_batch_t(*msg);
+  bot_core::kvh_raw_imu_batch_t msg_copy = bot_core::kvh_raw_imu_batch_t(*msg);
   IMUBatch batch = imu_data_.convertFromLCMBatch(&msg_copy);
 
   // 2. Republish (only) the new packets individually (so that signal scope can plot)
   for (int i=0 ; i < batch.packets.size() ; i++ ){ //oldest to newest
-    pronto::kvh_raw_imu_t raw_msg = imu_data_.convertToLCMPacket( batch.packets[i] );
+    bot_core::kvh_raw_imu_t raw_msg = imu_data_.convertToLCMPacket( batch.packets[i] );
     lcm_->publish("ATLAS_IMU_PACKET", &raw_msg); 
   }
 
@@ -113,13 +113,13 @@ void App::batchHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
 
   // 4. Output (only) the new packets (so that signal scope can plot)  
   for (int i=0 ; i < batch.packets.size() ; i++ ){ //oldest to newest
-    pronto::kvh_raw_imu_t imu_filtered_msg = imu_data_.convertToLCMPacket( batch.packets[i]);
+    bot_core::kvh_raw_imu_t imu_filtered_msg = imu_data_.convertToLCMPacket( batch.packets[i]);
     lcm_->publish("ATLAS_IMU_PACKET_FILTERED", &imu_filtered_msg);
   }
 
   // 5. If the filter hasn't been reset recently, republish:
   if (imu_data_.getNumberBatchSinceReset()  > 50){
-    pronto::kvh_raw_imu_batch_t batch_filtered_msg = imu_data_.convertToLCMBatch(batch);
+    bot_core::kvh_raw_imu_batch_t batch_filtered_msg = imu_data_.convertToLCMBatch(batch);
     lcm_->publish("ATLAS_IMU_BATCH_FILTERED", &batch_filtered_msg); 
   }
 }

@@ -49,7 +49,7 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames)
 }
 
 ////////// Typical Micro Strain INS /////////////////
-RBISUpdateInterface * InsHandler::processMessage(const pronto::ins_t * msg)
+RBISUpdateInterface * InsHandler::processMessage(const bot_core::ins_t * msg)
 {
   //    get everything into the right frame
   double body_accel[3];
@@ -66,7 +66,7 @@ RBISUpdateInterface * InsHandler::processMessage(const pronto::ins_t * msg)
   return new RBISIMUProcessStep(gyro, accelerometer, cov_gyro, cov_accel, cov_gyro_bias, cov_accel_bias, dt, msg->utime);
 }
 
-bool InsHandler::processMessageInit(const pronto::ins_t * msg,
+bool InsHandler::processMessageInit(const bot_core::ins_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     , const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)
@@ -98,7 +98,7 @@ void InsHandler::doFilter(IMUPacket &raw){
 }
 
 
-RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::kvh_raw_imu_batch_t * msg)
+RBISUpdateInterface * InsHandler::processMessageAtlas(const bot_core::kvh_raw_imu_batch_t * msg)
 {
 
   double linear_acceleration[3];
@@ -108,7 +108,7 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::kvh_raw_imu_
 
   if (atlas_filter){
     // Decode the data and split out the new packets:
-    pronto::kvh_raw_imu_batch_t msg_copy = pronto::kvh_raw_imu_batch_t(*msg);
+    bot_core::kvh_raw_imu_batch_t msg_copy = bot_core::kvh_raw_imu_batch_t(*msg);
     IMUBatch batch = imu_data_.convertFromLCMBatch(&msg_copy);
     // Only filter new packets:
     for (int i=0 ; i < batch.packets.size() ; i++ ){
@@ -187,7 +187,7 @@ RBISUpdateInterface * InsHandler::processMessageAtlas(const pronto::kvh_raw_imu_
   return new RBISIMUProcessStep(gyro, accelerometer, cov_gyro, cov_accel, cov_gyro_bias, cov_accel_bias, integration_dt, utime);
 }
 
-bool InsHandler::processMessageInitAtlas(const pronto::kvh_raw_imu_batch_t * msg,
+bool InsHandler::processMessageInitAtlas(const bot_core::kvh_raw_imu_batch_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     , const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)
@@ -293,7 +293,7 @@ GpsHandler::GpsHandler(BotParam * _param)
   cov_xyz = R_gps_diagonal.asDiagonal();
 }
 
-RBISUpdateInterface * GpsHandler::processMessage(const pronto::gps_data_t * msg)
+RBISUpdateInterface * GpsHandler::processMessage(const bot_core::gps_data_t * msg)
 {
   if (msg->gps_lock < 3)
     return NULL;
@@ -302,7 +302,7 @@ RBISUpdateInterface * GpsHandler::processMessage(const pronto::gps_data_t * msg)
       Eigen::Map<const Eigen::Vector3d>(msg->xyz_pos), cov_xyz, RBISUpdateInterface::gps, msg->utime);
 }
 
-bool GpsHandler::processMessageInit(const pronto::gps_data_t * msg,
+bool GpsHandler::processMessageInit(const bot_core::gps_data_t * msg,
     const std::map<std::string, bool> & sensors_initialized
     ,const RBIS & default_state, const RBIM & default_cov,
     RBIS & init_state, RBIM & init_cov)

@@ -26,9 +26,9 @@
 #include <Eigen/Dense>
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
-#include <lcmtypes/pronto/joint_state_t.hpp>
-#include <lcmtypes/pronto/system_status_t.hpp>
-#include <lcmtypes/pronto/utime_t.hpp>
+#include <lcmtypes/bot_core/joint_state_t.hpp>
+#include <lcmtypes/bot_core/system_status_t.hpp>
+#include <lcmtypes/bot_core/utime_t.hpp>
 #include <pronto_utils/pronto_math.hpp>
 
 using namespace std;
@@ -72,7 +72,7 @@ class App{
     Eigen::Isometry3d l_foot_to_r_foot_original_;
     int64_t utime_disable_until_;
 
-    void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg);
+    void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg);
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
     void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
     const CommandLineConfig cl_cfg_;
@@ -125,7 +125,7 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
   last_controller_state_ = msg->state;
 }
 
-void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
+void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg){
   joint_angles_init_ = true;
   joint_position_ = msg->joint_position;
   joint_name_ = msg->joint_name;
@@ -221,10 +221,10 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
       message << "yaw slippage of "<< (yaw_diff_change*180/M_PI) << " degrees detected. Resetting and disabling the yaw lock until " << utime_disable_until_;
       std::cout << message.str() << "\n";
 
-      pronto::utime_t warning_message;
+      bot_core::utime_t warning_message;
       warning_message.utime = msg->utime;
       lcm_->publish(("YAW_SLIP_DETECTED"), &warning_message);
-      pronto::system_status_t stat_msg;
+      bot_core::system_status_t stat_msg;
       stat_msg.utime = 0;
       stat_msg.system = stat_msg.MOTION_ESTIMATION;
       stat_msg.importance = stat_msg.VERY_IMPORTANT;

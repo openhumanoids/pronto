@@ -145,7 +145,7 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
 }
 
 
-void CloudAccumulate::processVelodyne(const  pronto::pointcloud2_t* msg){
+void CloudAccumulate::processVelodyne(const  bot_core::pointcloud2_t* msg){
 
   std::cout << "velodyne: " << msg->utime << "\n";
 

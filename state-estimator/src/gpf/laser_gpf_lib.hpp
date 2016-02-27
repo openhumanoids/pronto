@@ -24,8 +24,8 @@
 #include "LaserLikelihoodInterface.hpp"
 
 #include <lcmtypes/bot_core/planar_lidar_t.hpp>
-#include <lcmtypes/pronto_pose_t.h>
-#include <lcmtypes/pronto/pointcloud_t.hpp>
+#include <lcmtypes/bot_core_pose_t.h>
+#include <lcmtypes/bot_core/pointcloud_t.hpp>
 
 namespace MavStateEst {
 
@@ -77,12 +77,12 @@ public:
 
   double likelihoodFunction(const RBIS & state);
 
-  bool getMeasurement(const RBIS & state, const RBIM & cov, const pronto::pointcloud_t * laser_msg,
+  bool getMeasurement(const RBIS & state, const RBIM & cov, const bot_core::pointcloud_t * laser_msg,
       Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective);
   bool getMeasurement(const RBIS & state, const RBIM & cov, const bot_core::planar_lidar_t * laser_msg,
       Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective);
 
-  bool projectLaser(const RBIS & state, const RBIM & cov, const pronto::pointcloud_t * laser_msg);
+  bool projectLaser(const RBIS & state, const RBIM & cov, const bot_core::pointcloud_t * laser_msg);
   bool projectLaser(const RBIS & state, const RBIM & cov, const bot_core::planar_lidar_t * laser_msg);
 
   // If the GPF is disabled return a mild position measurement
@@ -91,7 +91,7 @@ public:
   bool getMeasurement(const RBIS & state, const RBIM & cov, Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective);
 
   laser_projected_scan* laser_create_projected_scan_from_pointcloud(Laser_projector * projector,
-    const pronto::pointcloud_t *msg, const char * dest_frame);
+    const bot_core::pointcloud_t *msg, const char * dest_frame);
 
   // Show the laser gpf be active? (added mfallon, disabled while standing)  
   bool laser_enabled;

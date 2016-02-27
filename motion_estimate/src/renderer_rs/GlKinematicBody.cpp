@@ -238,7 +238,7 @@ GlKinematicBody::~GlKinematicBody()
 
 
 // ========================================================================= 
-void GlKinematicBody::set_state(const pronto::robot_state_t &msg)
+void GlKinematicBody::set_state(const bot_core::robot_state_t &msg)
 {
 
   /*std::map<std::string, double> jointpos_in;

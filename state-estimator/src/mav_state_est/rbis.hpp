@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <eigen_utils/eigen_utils.hpp>
-#include <lcmtypes/pronto_ins_t.h>
+#include <lcmtypes/bot_core_ins_t.h>
 #include <lcmtypes/pronto_indexed_measurement_t.h>
 #include <lcmtypes/pronto_filter_state_t.h>
 #include <lcmtypes/pronto/filter_state_t.hpp>

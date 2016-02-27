@@ -10,7 +10,7 @@ RBISLaserGPFMeasurement::RBISLaserGPFMeasurement(LaserGPF *gpf_, bot_core::plana
 
 }
 
-RBISLaserGPFMeasurement::RBISLaserGPFMeasurement(LaserGPF *gpf_, pronto::pointcloud_t * pointcloud_msg_, int64_t utime,
+RBISLaserGPFMeasurement::RBISLaserGPFMeasurement(LaserGPF *gpf_, bot_core::pointcloud_t * pointcloud_msg_, int64_t utime,
     lcm_t * lcm_, const std::string & pub_channel_) :
     RBISUpdateInterface(laser, utime), gpf(gpf_), pointcloud_msg(pointcloud_msg_), lcm_pub(lcm_), pub_channel(pub_channel_)
 {
@@ -95,9 +95,9 @@ RBISUpdateInterface * LaserGPFHandler::processMessage(const bot_core::planar_lid
   return new RBISLaserGPFMeasurement(gpf, msg_cpy, msg->utime, lcm_pub, pub_channel);
 }
 
-RBISUpdateInterface * LaserGPFHandler::processMessagePointcloud(const pronto::pointcloud_t * msg)
+RBISUpdateInterface * LaserGPFHandler::processMessagePointcloud(const bot_core::pointcloud_t * msg)
 {
-  pronto::pointcloud_t * msg_cpy = new pronto::pointcloud_t(*msg);
+  bot_core::pointcloud_t * msg_cpy = new bot_core::pointcloud_t(*msg);
   return new RBISLaserGPFMeasurement(gpf, msg_cpy, msg->utime, lcm_pub, pub_channel);
 }
 

@@ -45,12 +45,12 @@ class InteractableGlKinematicBodyX: public GlKinematicBody
                               bool enable_selection, std::string unique_name);
   ~InteractableGlKinematicBodyX();
 
-   void set_state(const pronto::robot_state_t &msg); 
+   void set_state(const bot_core::robot_state_t &msg); 
    
 
    
    // overloaded from GLKinematicBody They call update functions for marker collision objects
-   void set_future_state(const pronto::robot_state_t &msg);
+   void set_future_state(const bot_core::robot_state_t &msg);
    void set_future_state(const KDL::Frame &T_world_body, std::map<std::string, double> &jointpos_in);
 
    // double c[3] = {0.3,0.3,0.3};

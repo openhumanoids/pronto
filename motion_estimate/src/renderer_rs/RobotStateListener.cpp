@@ -96,12 +96,9 @@ using namespace visualization_utils;
 //-------------------------------------------------------------------------------------      
 //=============message callbacks
 
-  //void RobotStateListenerX::handleJointAnglesMsg(const lcm::ReceiveBuffer* rbuf,
-  //						 const string& chan, 
-  //						 const pronto::joint_angles_t* msg)
   void RobotStateListenerX::handleRobotStateMsg(const lcm::ReceiveBuffer* rbuf,
 						 const string& chan, 
-						 const pronto::robot_state_t* msg)						 
+						 const bot_core::robot_state_t* msg)						 
   {
     
     //int64_t tic = bot_timestamp_now();
@@ -139,7 +136,7 @@ using namespace visualization_utils;
 
 //-------------------------------------------------------------------------------------        
   void RobotStateListenerX::handleRobotUrdfMsg(const lcm::ReceiveBuffer* rbuf, const string& channel, 
-					       const  pronto::robot_urdf_t* msg) 
+					       const  bot_core::robot_urdf_t* msg) 
   {
 
     if(_urdf_parsed ==false) 

@@ -1,37 +1,3 @@
-
-/*
- * Copyright (c) 2009, Willow Garage, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Willow Garage, Inc. nor the names of its
- *       contributors may be used to endorse or promote products derived from
- *       this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
-
-/*
- * Author: Stuart Glaser
- */
-
 #ifndef EIGEN_KDL_CONVERSIONS_HPP
 #define EIGEN_KDL_CONVERSIONS_HPP
 
@@ -39,8 +5,7 @@
 #include <Eigen/Geometry>
 
 #include <kdl/frames.hpp>
-#include "lcmtypes/pronto/joint_angles_t.hpp"
-#include "lcmtypes/pronto/robot_state_t.hpp"
+#include "lcmtypes/bot_core/robot_state_t.hpp"
 
 namespace visualization_utils {
 
@@ -102,7 +67,7 @@ static inline void transformKDLtwistToEigen(const KDL::Twist &k, Eigen::Matrix<d
 };
 
 /// Converts a LCM twist into an Eigen matrix
-static inline void transformLCMtwistToEigen(const pronto::twist_t &t, Eigen::Matrix<double, 6, 1> &e)
+static inline void transformLCMtwistToEigen(const bot_core::twist_t &t, Eigen::Matrix<double, 6, 1> &e)
 {
 
 KDL::Vector lin_vel(t.linear_velocity.x,t.linear_velocity.y,t.linear_velocity.z);
@@ -136,26 +101,21 @@ static inline void transformKDLToEigen(const KDL::Frame &k, Eigen::Affine3d &e)
 
 
 /// Converts a LCM position3D_t into an Eigen matrix
-static inline void transformLCMToEigen(const pronto::position_3d_t &t, Eigen::Affine3d &e)
+static inline void transformLCMToEigen(const bot_core::position_3d_t &t, Eigen::Affine3d &e)
 {
-   //TransformLCMToKDLFrame
     KDL::Frame k;
     k.p[0] =t.translation.x;
     k.p[1] =t.translation.y;
     k.p[2] =t.translation.z;
-    //  Eigen::Quaterniond q(t.rotation.w,t.rotation.x,t.rotation.y,t.rotation.z);
-    // q.normalize();
     KDL::Rotation M;
-    //M =  KDL::Rotation::Quaternion(q.x(),q.y(),q.z(),q.w());
     M =  KDL::Rotation::Quaternion(t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w);
     k.M = M;
     transformKDLToEigen(k, e);
 };
 
 
-static inline void transformLCMToKDL(const pronto::position_3d_t &t,  KDL::Frame &k)
+static inline void transformLCMToKDL(const bot_core::position_3d_t &t,  KDL::Frame &k)
 {
-   //TransformLCMToKDLFrame
     k.p[0] =t.translation.x;
     k.p[1] =t.translation.y;
     k.p[2] =t.translation.z;
@@ -163,19 +123,15 @@ static inline void transformLCMToKDL(const pronto::position_3d_t &t,  KDL::Frame
     q.normalize();
     KDL::Rotation M;
     M =  KDL::Rotation::Quaternion(q.x(),q.y(),q.z(),q.w());
-    //M =  KDL::Rotation::Quaternion(t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w);
     k.M = M;
 };
 
 
-static inline void transformKDLToLCM(const KDL::Frame &k,pronto::position_3d_t &t)
+static inline void transformKDLToLCM(const KDL::Frame &k,bot_core::position_3d_t &t)
 {
-   //TransformLCMToKDLFrame
     t.translation.x=k.p[0];
     t.translation.y=k.p[1];
     t.translation.z=k.p[2];
-    //  Eigen::Quaterniond q(t.rotation.w,t.rotation.x,t.rotation.y,t.rotation.z);
-    // q.normalize();
     double x,y,z,w;
     k.M.GetQuaternion(x,y,z,w);
     t.rotation.x=x;
@@ -206,7 +162,7 @@ static inline void transformEigenToKDL(const Eigen::Affine3d &e, KDL::Frame &k)
 };
 
 
-static inline void transformEigenToLCM(const Eigen::Affine3d &e, pronto::position_3d_t &m)
+static inline void transformEigenToLCM(const Eigen::Affine3d &e, bot_core::position_3d_t &m)
 {
   m.translation.x = e.translation()[0];
   m.translation.y = e.translation()[1];

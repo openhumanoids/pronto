@@ -80,12 +80,12 @@ void App::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& chan
   body_bdi_init_ = true;
 }
 
-void App::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg){
+void App::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg){
   force_torque_ = *msg;
   force_torque_init_ = true;
 }
 
-void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
+void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg){
   if ( cl_cfg_.begin_timestamp > -1){
     if (msg->utime <  cl_cfg_.begin_timestamp ){
       double seek_seconds = (cl_cfg_.begin_timestamp - msg->utime)*1E-6;

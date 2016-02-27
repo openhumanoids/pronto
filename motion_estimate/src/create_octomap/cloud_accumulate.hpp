@@ -5,7 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include <lcmtypes/pronto/pointcloud2_t.hpp>
+#include <lcmtypes/bot_core/pointcloud2_t.hpp>
 
 #include <laser_utils/laser_util.h>
 #include <path_util/path_util.h>
@@ -44,7 +44,7 @@ class CloudAccumulate{
     
     void publishCloud(pronto::PointCloud* &cloud);
     void processLidar(const  bot_core::planar_lidar_t* msg);
-    void processVelodyne(const  pronto::pointcloud2_t* msg);
+    void processVelodyne(const  bot_core::pointcloud2_t* msg);
 
   private:
     boost::shared_ptr<lcm::LCM> lcm_;
