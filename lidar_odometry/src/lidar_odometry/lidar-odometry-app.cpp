@@ -5,7 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include "lidar-odometry.hpp"
 #include <lcmtypes/bot_core.hpp>
-#include <lcmtypes/pronto/pointcloud_t.hpp>
+#include <lcmtypes/bot_core/pointcloud_t.hpp>
 #include <ConciseArgs>
 
 #include <bot_param/param_client.h>
@@ -35,7 +35,7 @@ class App{
     BotFrames* botframes_;
 
     void lidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::planar_lidar_t* msg);
-    void pointCloudHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud_t* msg);
+    void pointCloudHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pointcloud_t* msg);
     LidarOdom* lidarOdom_;
 
     Eigen::Isometry3d body_to_lidar_; // Fixed tf from the lidar to the robot's base link
@@ -150,7 +150,7 @@ void App::lidarHandler(const lcm::ReceiveBuffer* rbuf,
 
 
 void App::pointCloudHandler(const lcm::ReceiveBuffer* rbuf,
-     const std::string& channel, const  pronto::pointcloud_t* msg){
+     const std::string& channel, const  bot_core::pointcloud_t* msg){
   if (!pose_initialized_){
     std::cout << "Estimate not initialised, exiting pointCloudHandler\n";
     return;

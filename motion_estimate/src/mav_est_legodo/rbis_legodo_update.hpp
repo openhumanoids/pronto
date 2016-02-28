@@ -6,7 +6,6 @@
 #include <bot_core/bot_core.h>
 #include <bot_param/param_client.h>
 #include <bot_frames/bot_frames.h>
-// #include <bot_frames_cpp/bot_frames_cpp.hpp>
 #include <model-client/model-client.hpp>
 
 #include <string>
@@ -16,10 +15,10 @@
 #include <leg_estimate/leg_estimate.hpp>
 #include <estimate_tools/torque_adjustment.hpp>
 
-#include <lcmtypes/pronto/joint_state_t.hpp>
+#include <lcmtypes/bot_core/joint_state_t.hpp>
 #include <lcmtypes/pronto/controller_foot_contact_t.hpp>
-#include <lcmtypes/pronto/six_axis_force_torque_t.hpp>
-#include <lcmtypes/pronto/six_axis_force_torque_array_t.hpp>
+#include <lcmtypes/bot_core/six_axis_force_torque_t.hpp>
+#include <lcmtypes/bot_core/six_axis_force_torque_array_t.hpp>
 
 
 namespace MavStateEst {
@@ -39,7 +38,7 @@ public:
 
   LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
-  RBISUpdateInterface * processMessage(const pronto::joint_state_t *msg);
+  RBISUpdateInterface * processMessage(const bot_core::joint_state_t *msg);
 
 
   // Classes:
@@ -54,7 +53,7 @@ public:
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
   void controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_foot_contact_t* msg);
-  void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg);
+  void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg);
 
   void sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel);
   
@@ -88,7 +87,7 @@ public:
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
   bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
 
-  pronto::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
+  bot_core::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
  
   // Contact points of the feet deemed to be in contact:

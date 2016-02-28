@@ -6,9 +6,9 @@
 #include <pronto_utils/pronto_math.hpp>
 #include <bot_frames/bot_frames.h>
 
-#include <lcmtypes/pronto/joint_state_t.hpp>
-#include <lcmtypes/pronto/six_axis_force_torque_t.hpp>
-#include <lcmtypes/pronto/six_axis_force_torque_array_t.hpp>
+#include <lcmtypes/bot_core/joint_state_t.hpp>
+#include <lcmtypes/bot_core/six_axis_force_torque_t.hpp>
+#include <lcmtypes/bot_core/six_axis_force_torque_array_t.hpp>
 
 struct CommandLineConfig
 {
@@ -42,7 +42,7 @@ protected:
   BotFrames* frames_;
   // bot::frames* frames_cpp_;
 
-  pronto::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
+  bot_core::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
   
   // Pose BDI:
@@ -62,8 +62,8 @@ class App : public LegOdoWrapper {
     ~App();
 
   private:
-    void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg);
-    void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg);
+    void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg);
+    void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg);
     void poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
     void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);
 };

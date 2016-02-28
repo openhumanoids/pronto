@@ -1,6 +1,6 @@
 #ifndef COMMON_CONVERSIONS_HPP_
 #define COMMON_CONVERSIONS_HPP_
-#include "lcmtypes/pronto/robot_state_t.hpp"
+#include "lcmtypes/bot_core/robot_state_t.hpp"
 
 static inline Eigen::Isometry3d KDLToEigen(KDL::Frame tf){
   Eigen::Isometry3d tf_out;
@@ -27,7 +27,7 @@ static inline bot_core::pose_t getPoseAsBotPose(Eigen::Isometry3d pose, int64_t 
 }
 
 
-static inline bot_core::pose_t getRobotStatePoseAsBotPose(const pronto::robot_state_t *msg){
+static inline bot_core::pose_t getRobotStatePoseAsBotPose(const bot_core::robot_state_t *msg){
     bot_core::pose_t bdipose;
     bdipose.utime = msg->utime;
     bdipose.pos[0] = msg->pose.translation.x;
@@ -46,7 +46,7 @@ static inline bot_core::pose_t getRobotStatePoseAsBotPose(const pronto::robot_st
   return bdipose;
 }
 
-static inline void insertPoseInRobotState(pronto::robot_state_t& msg, Eigen::Isometry3d pose){
+static inline void insertPoseInRobotState(bot_core::robot_state_t& msg, Eigen::Isometry3d pose){
   msg.pose.translation.x = pose.translation().x();
   msg.pose.translation.y = pose.translation().y();
   msg.pose.translation.z = pose.translation().z();

@@ -8,11 +8,11 @@
 #include <eigen_utils/eigen_utils.hpp>
 #include <lcmtypes/bot_core/rigid_transform_t.hpp>
 #include <lcmtypes/bot_core/pose_t.hpp>
-#include <lcmtypes/pronto/ins_t.hpp>
-#include <lcmtypes/pronto/gps_data_t.hpp>
+#include <lcmtypes/bot_core/ins_t.hpp>
+#include <lcmtypes/bot_core/gps_data_t.hpp>
 #include <lcmtypes/pronto/optical_flow_t.hpp>
 #include <lcmtypes/pronto/indexed_measurement_t.hpp>
-#include <lcmtypes/pronto/kvh_raw_imu_batch_t.hpp>
+#include <lcmtypes/bot_core/kvh_raw_imu_batch_t.hpp>
 
 #include <estimate_tools/imu_stream.hpp>
 #include <estimate_tools/iir_notch.hpp>
@@ -29,13 +29,13 @@ protected:
   std::string channel;
 
   // Microstrain Functions:
-  RBISUpdateInterface * processMessage(const pronto::ins_t * msg);
-  bool processMessageInit(const pronto::ins_t * msg, const std::map<std::string, bool> & sensors_initialized
+  RBISUpdateInterface * processMessage(const bot_core::ins_t * msg);
+  bool processMessageInit(const bot_core::ins_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
 
   // Compariable Atlas Functions:
-  RBISUpdateInterface * processMessageAtlas(const pronto::kvh_raw_imu_batch_t * msg);
-  bool processMessageInitAtlas(const pronto::kvh_raw_imu_batch_t * msg, const std::map<std::string, bool> & sensors_initialized
+  RBISUpdateInterface * processMessageAtlas(const bot_core::kvh_raw_imu_batch_t * msg);
+  bool processMessageInitAtlas(const bot_core::kvh_raw_imu_batch_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
   //////////// Members Particular to Atlas:
   double prev_utime_atlas; // cached previous time
@@ -78,8 +78,8 @@ class GpsHandler {
 protected:
   public:
   GpsHandler(BotParam * _param);
-  RBISUpdateInterface * processMessage(const pronto::gps_data_t * msg);
-  bool processMessageInit(const pronto::gps_data_t * msg, const std::map<std::string, bool> & sensors_initialized
+  RBISUpdateInterface * processMessage(const bot_core::gps_data_t * msg);
+  bool processMessageInit(const bot_core::gps_data_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov,
       RBIS & init_state, RBIM & init_cov);
 

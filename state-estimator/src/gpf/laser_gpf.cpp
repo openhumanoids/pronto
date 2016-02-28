@@ -16,7 +16,7 @@
 #include <lcmtypes/bot_core/planar_lidar_t.hpp>
 #include <lcmtypes/pronto/filter_state_t.hpp>
 #include <lcmtypes/pronto/indexed_measurement_t.hpp>
-#include <lcmtypes/pronto/utime_t.hpp>
+#include <lcmtypes/bot_core/utime_t.hpp>
 #include <lcmtypes/pronto/behavior_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
 
@@ -53,7 +53,7 @@ public:
     bot_gauss_rand_init(time(NULL)); //randomize for particles
 
     laser_queue = new deque<bot_core::planar_lidar_t *>();
-    pointcloud_queue = new deque<pronto::pointcloud_t *>();
+    pointcloud_queue = new deque<bot_core::pointcloud_t *>();
     filter_state_queue = new deque<pronto::filter_state_t *>();
 
     gpf = laser_handler->gpf;
@@ -95,7 +95,7 @@ public:
   GMutex * lcm_data_mutex; //should be held when reading/writing message queues
   GCond * lcm_data_cond; //signals new lcm data
   deque<bot_core::planar_lidar_t *> * laser_queue;
-  deque<pronto::pointcloud_t *> * pointcloud_queue;
+  deque<bot_core::pointcloud_t *> * pointcloud_queue;
   deque<pronto::filter_state_t *> * filter_state_queue;
   int noDrop;
   //------------------------------------------------------
@@ -110,14 +110,14 @@ public:
   int64_t utime_standing_trans;
 
   void laser_disable_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::utime_t * msg)
+      const bot_core::utime_t * msg)
   {
     gpf->laser_enabled = false;
     //fprintf(stderr, "D\n");
   }
 
   void laser_enable_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::utime_t * msg)
+      const bot_core::utime_t * msg)
   {
     gpf->laser_enabled = true;
     //fprintf(stderr, "E\n");
@@ -128,7 +128,7 @@ public:
   }
 
   void use_new_map_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::utime_t * msg){
+      const bot_core::utime_t * msg){
     std::cout << "Deleting current gpf and restarting\n";
     delete laser_handler;
 
@@ -249,17 +249,17 @@ public:
   }
 
   void pointcloud_message_handler(const lcm::ReceiveBuffer* rbuf, const std::string& channel,
-      const pronto::pointcloud_t * msg)
+      const bot_core::pointcloud_t * msg)
   {
     if (counter++ % downsample_factor != 0)
       return;
 
-    pronto::pointcloud_t * msg_copy = new pronto::pointcloud_t(*msg);
+    bot_core::pointcloud_t * msg_copy = new bot_core::pointcloud_t(*msg);
     g_mutex_lock(lcm_data_mutex);
     if (!noDrop) {
       //clear the old messages
       while (!pointcloud_queue->empty()) {
-        pronto::pointcloud_t * msg_queued = pointcloud_queue->front();
+        bot_core::pointcloud_t * msg_queued = pointcloud_queue->front();
         delete msg_queued;
         pointcloud_queue->pop_front();
       }
@@ -277,7 +277,7 @@ public:
     while (1) {
 
       bot_core::planar_lidar_t * laser_msg;
-      pronto::pointcloud_t * pointcloud_msg;
+      bot_core::pointcloud_t * pointcloud_msg;
       int64_t msg_utime;
       if (app->gpf->sensor_mode == LaserGPF::sensor_input_laser){
         if (app->laser_queue->empty() || app->filter_state_queue->empty()) {

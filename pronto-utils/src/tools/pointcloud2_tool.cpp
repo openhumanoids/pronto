@@ -8,8 +8,8 @@
 #include <path_util/path_util.h>
 #include <laser_utils/laser_util.h>
 
-#include <lcmtypes/pronto/pointcloud2_t.hpp>
-#include <lcmtypes/pronto/pointcloud_t.hpp>
+#include <lcmtypes/bot_core/pointcloud2_t.hpp>
+#include <lcmtypes/bot_core/pointcloud_t.hpp>
 
 #include <pronto_utils/pronto_vis.hpp> // visualize pt clds
 #include <pronto_utils/conversions_lcm.hpp>
@@ -42,9 +42,9 @@ class App{
     BotParam* botparam_;
     BotFrames* botframes_;
 
-    void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg);
+    void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pointcloud2_t* msg);
 
-    pronto::pointcloud_t convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud_in, int64_t utime, int32_t seq, std::string frame_id);
+    bot_core::pointcloud_t convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud_in, int64_t utime, int32_t seq, std::string frame_id);
 };    
 
 App::App(boost::shared_ptr<lcm::LCM> &lcm_recv_, boost::shared_ptr<lcm::LCM> &lcm_pub_, const CommandLineConfig& cl_cfg_) : 
@@ -82,9 +82,9 @@ int get_trans_with_utime(BotFrames *bot_frames,
 }
 
 
-pronto::pointcloud_t App::convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud_in, int64_t utime, int32_t seq, std::string frame_id){
+bot_core::pointcloud_t App::convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud_in, int64_t utime, int32_t seq, std::string frame_id){
   // Create an generic pointcloud lcm message from a pcl message
-  pronto::pointcloud_t out;
+  bot_core::pointcloud_t out;
   out.utime = utime;
   out.seq = seq;
   out.frame_id = frame_id;
@@ -101,7 +101,7 @@ pronto::pointcloud_t App::convertPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &c
 }
 
 
-void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::pointcloud2_t* msg){
+void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pointcloud2_t* msg){
   counter_++;
 
   // 1. convert to a pcl point cloud:
@@ -133,7 +133,7 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
     cloud_downsampled->width = cloud_xyzrgb->points.size();
     cloud_downsampled->height = 1;
 
-    pronto::pointcloud_t cloud_downsampled_out = convertPointCloud(*cloud_downsampled, msg->utime, msg->seq, msg->frame_id);
+    bot_core::pointcloud_t cloud_downsampled_out = convertPointCloud(*cloud_downsampled, msg->utime, msg->seq, msg->frame_id);
     lcm_pub_->publish("VELODYNE_SUBSAMPLED",&cloud_downsampled_out);
     pc_vis_->ptcld_to_lcm_from_list(70001, *cloud_downsampled, msg->utime, msg->utime);
 
@@ -153,7 +153,7 @@ void App::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channe
 
 
   // 4. republish horizontal beam as new message
-  pronto::pointcloud_t out;
+  bot_core::pointcloud_t out;
   out.utime = msg->utime;
   out.seq = msg->seq;
   out.frame_id = msg->frame_id;

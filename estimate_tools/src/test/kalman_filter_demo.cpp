@@ -13,8 +13,8 @@
 
 #include <ConciseArgs>
 
-#include <lcmtypes/pronto/joint_state_t.hpp>
-#include <lcmtypes/pronto/robot_state_t.hpp>
+#include <lcmtypes/bot_core/joint_state_t.hpp>
+#include <lcmtypes/bot_core/robot_state_t.hpp>
 
 #include <estimate_tools/kalman_filter.hpp> // Eigen::VectorXf KF
 #include <estimate_tools/simple_kalman_filter.hpp> // Eigen::Vector2f KF
@@ -48,7 +48,7 @@ class App{
     boost::shared_ptr<lcm::LCM> lcm_;
 
     void jointStateHandler(const lcm::ReceiveBuffer* rbuf, 
-                           const std::string& channel, const  pronto::joint_state_t* msg);
+                           const std::string& channel, const  bot_core::joint_state_t* msg); 
     void doFilter(double t, Eigen::VectorXf x, Eigen::VectorXf x_dot);
     const CommandLineConfig cl_cfg_;  
     
@@ -152,7 +152,7 @@ void App::doFilter(double t, Eigen::VectorXf x, Eigen::VectorXf x_dot){
 }
 
 
-void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::joint_state_t* msg){
+void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg){
   int64_t tic = _timestamp_now();
   
   
@@ -226,7 +226,7 @@ void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& c
   
   
 
-  pronto::robot_state_t robot_state_msg;
+  bot_core::robot_state_t robot_state_msg;
   robot_state_msg.utime = msg->utime;
   // Pelvis Pose:
   robot_state_msg.pose.translation.x =0;

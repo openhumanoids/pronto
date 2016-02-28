@@ -19,7 +19,7 @@
 #include <laser_utils/laser_util.h>
 #include <bot_param/param_util.h>
 #include <lcmtypes/pronto/indexed_measurement_t.hpp>
-#include <lcmtypes/pronto/utime_t.hpp>
+#include <lcmtypes/bot_core/utime_t.hpp>
 
 #define RENDERER_NAME "Mav State Estimator"
 
@@ -469,7 +469,7 @@ init_humanoid(RendererMavStateEst *self)
 static void
 init_octomap(RendererMavStateEst *self)
 {
-  pronto::utime_t out_msg;
+  bot_core::utime_t out_msg;
   out_msg.utime = bot_timestamp_now();
 
   lcm::LCM lcm_cpp(self->lcm);

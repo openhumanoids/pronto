@@ -204,14 +204,14 @@ void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::s
 }
 
 
-void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::six_axis_force_torque_array_t* msg){
+void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg){
   force_torque_ = *msg;
   force_torque_init_ = true; 
 }
 
 // TODO: Create Legacy ATLAS_STATE handler
 
-RBISUpdateInterface * LegOdoHandler::processMessage(const pronto::joint_state_t *msg){
+RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg){
   
   if (!bdi_init_){
     std::cout << "POSE_BDI not received yet, not integrating leg odometry =========================\n";

@@ -9,7 +9,7 @@
 #include <mav_state_est/rbis_update_interface.hpp>
 #include <mav_state_est/lcm_front_end.hpp>
 #include <mav_state_est/gpf/laser_gpf_lib.hpp>
-#include <lcmtypes/pronto/pointcloud_t.hpp>
+#include <lcmtypes/bot_core/pointcloud_t.hpp>
 
 namespace MavStateEst {
 
@@ -17,13 +17,13 @@ class RBISLaserGPFMeasurement: public RBISUpdateInterface {
 public:
   LaserGPF *gpf;
   bot_core::planar_lidar_t * laser_msg;
-  pronto::pointcloud_t * pointcloud_msg;
+  bot_core::pointcloud_t * pointcloud_msg;
   lcm_t * lcm_pub;
   std::string pub_channel;
 
   RBISLaserGPFMeasurement(LaserGPF *gpf_, bot_core::planar_lidar_t * laser_msg_, int64_t utime, lcm_t * lcm_pub_,
       const std::string & pub_channel_);
-  RBISLaserGPFMeasurement(LaserGPF *gpf_, pronto::pointcloud_t * pointcloud_msg_, int64_t utime, lcm_t * lcm_pub_,
+  RBISLaserGPFMeasurement(LaserGPF *gpf_, bot_core::pointcloud_t * pointcloud_msg_, int64_t utime, lcm_t * lcm_pub_,
       const std::string & pub_channel_);
   virtual ~RBISLaserGPFMeasurement();
 
@@ -35,7 +35,7 @@ public:
   LaserGPFHandler(lcm_t * lcm, BotParam * _param, BotFrames * _frames);
 
   RBISUpdateInterface * processMessage(const bot_core::planar_lidar_t * msg);
-  RBISUpdateInterface * processMessagePointcloud(const pronto::pointcloud_t * msg);
+  RBISUpdateInterface * processMessagePointcloud(const bot_core::pointcloud_t * msg);
 
   lcm_t * lcm_pub; //needed to copy into update each time to publish message for debugging
   std::string pub_channel;

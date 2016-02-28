@@ -148,20 +148,20 @@ class GlKinematicBody
     bool isMateable;
 
     // state can be set via robot_state_t, or urdf::Model,  or affordance_state_t,  or otdf::ModelInterface;
-    void set_state(const pronto::robot_state_t &msg);
+    void set_state(const bot_core::robot_state_t &msg);
     void run_fk_and_update_urdf_link_shapes_and_tfs(std::map<std::string, double> &jointpos_in,const KDL::Frame &T_world_body, bool update_future_frame);
     
-    bool get_state_as_lcm_msg(pronto::robot_state_t &msg_in)
+    bool get_state_as_lcm_msg(bot_core::robot_state_t &msg_in)
     {
-      pronto::position_3d_t pose;
+      bot_core::position_3d_t pose;
       msg_in.utime = bot_timestamp_now();
       visualization_utils::transformKDLToLCM(_T_world_body,pose);
       msg_in.pose = pose;
       
-      pronto::twist_t twist;
+      bot_core::twist_t twist;
       msg_in.twist =twist;
 
-      pronto::force_torque_t force_torque;   
+      bot_core::force_torque_t force_torque;   
       msg_in.force_torque =force_torque;
       
       msg_in.num_joints = 0;

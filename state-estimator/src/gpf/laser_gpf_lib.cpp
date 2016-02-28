@@ -228,7 +228,7 @@ double LaserGPF::likelihoodFunction(const RBIS & state)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const pronto::pointcloud_t * laser_msg,
+bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const bot_core::pointcloud_t * laser_msg,
     Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective)
 {
   if (getDisabledMeasurement(state, cov, z_effective, R_effective)){
@@ -254,7 +254,7 @@ bool LaserGPF::getMeasurement(const RBIS & state, const RBIM & cov, const bot_co
 }
 
 
-bool LaserGPF::projectLaser(const RBIS & state, const RBIM & cov, const pronto::pointcloud_t * laser_msg){
+bool LaserGPF::projectLaser(const RBIS & state, const RBIM & cov, const bot_core::pointcloud_t * laser_msg){
 
   this->projected_laser_scan = laser_create_projected_scan_from_pointcloud(this->laser_projector,
       laser_msg, "body");
@@ -272,7 +272,7 @@ bool LaserGPF::projectLaser(const RBIS & state, const RBIM & cov, const pronto::
 
 
 laser_projected_scan* LaserGPF::laser_create_projected_scan_from_pointcloud(Laser_projector * projector,
-    const pronto::pointcloud_t *msg, const char * dest_frame)
+    const bot_core::pointcloud_t *msg, const char * dest_frame)
 {
   laser_projected_scan * proj_scan = (laser_projected_scan *) calloc(1, sizeof(laser_projected_scan));
   proj_scan->npoints = msg->n_points;

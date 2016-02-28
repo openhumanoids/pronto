@@ -13,7 +13,7 @@
 #include "file_access_utils.hpp"
 #include "eigen_kdl_conversions.hpp"
 #include "lcmtypes/bot_core.hpp"
-#include "lcmtypes/pronto/robot_urdf_t.hpp"
+#include "lcmtypes/bot_core/robot_urdf_t.hpp"
 #include <bot_vis/bot_vis.h>
 #include <bot_core/bot_core.h>
 #include <path_util/path_util.h>
@@ -49,7 +49,7 @@
     bool _urdf_subscription_on;
     int64_t _last_state_msg_sim_timestamp; 
     int64_t _last_state_msg_system_timestamp; 
-    pronto::robot_state_t _received_endpose;
+    bot_core::robot_state_t _received_endpose;
 
     std::map<std::string,Eigen::Vector3f> ee_forces_map;
     std::map<std::string,Eigen::Vector3f> ee_torques_map;
@@ -70,9 +70,9 @@
   private:
     void handleRobotStateMsg(const lcm::ReceiveBuffer* rbuf,
 			      const std::string& chan, 
-			      const pronto::robot_state_t* msg);
+			      const bot_core::robot_state_t* msg);
     void handleRobotUrdfMsg(const lcm::ReceiveBuffer* rbuf, const std::string& channel, 
-			    const  pronto::robot_urdf_t* msg); 
+			    const  bot_core::robot_urdf_t* msg); 
     
     
    public:

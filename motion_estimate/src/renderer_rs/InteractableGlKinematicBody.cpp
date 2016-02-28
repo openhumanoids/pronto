@@ -21,7 +21,7 @@ InteractableGlKinematicBodyX::~InteractableGlKinematicBodyX()
 }
 
 //======================================================================================================
-void InteractableGlKinematicBodyX::set_state(const pronto::robot_state_t &msg)
+void InteractableGlKinematicBodyX::set_state(const bot_core::robot_state_t &msg)
 {
    GlKinematicBody::set_state(msg);  //code re-use
 }

@@ -12,7 +12,7 @@
 #include <path_util/path_util.h>
 
 
-#include <lcmtypes/pronto/utime_t.hpp>
+#include <lcmtypes/bot_core/utime_t.hpp>
 #include <lcmtypes/bot_core/pose_t.hpp>
 
 #include <ConciseArgs>
@@ -46,7 +46,7 @@ private:
     boost::shared_ptr<lcm::LCM> lcm_;
     bool ready_;
     void navReadyHandler(const lcm::ReceiveBuffer* rbuf,
-                           const std::string& channel, const  pronto::utime_t* msg){
+                           const std::string& channel, const  bot_core::utime_t* msg){
       std::cout << "Received Ready\n";
       ready_ = true;
     }
@@ -260,7 +260,7 @@ public:
 
   }
 
-  void restartHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::utime_t* msg){
+  void restartHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::utime_t* msg){
     // exit
     front_end->exit_estimator = true;
 
