@@ -2,7 +2,7 @@
 
 namespace MavStateEst {
 
-const char * RBISUpdateInterface::sensor_enum_chars = "igvlfsorxdukepabmtw";
+const char * RBISUpdateInterface::sensor_enum_chars = "igvlfsorxdukepabmtwh";
 const char * RBISUpdateInterface::sensor_enum_strings[] =
     { "ins", "gps", "vicon", "laser", "laser_gpf", "scan_matcher", "optic_flow", "reset", "invalid", "rgbd", "fovis", "legodo", "legodo_external", "pose_meas", "altimeter", "airspeed", "sideslip", "init_message", "viewer", "hyq_kse" };
 
