@@ -108,7 +108,6 @@ class leg_estimate{
     
     Eigen::Isometry3d getRunningEstimate(){ return odom_to_body_; }
     
-    void setLegOdometryMode(std::string leg_odometry_mode_in ){ leg_odometry_mode_ = leg_odometry_mode_in; }
     void setInitializationMode(std::string initialization_mode_in ){ initialization_mode_ = initialization_mode_in; }
 
   private:
@@ -126,7 +125,6 @@ class leg_estimate{
 
     /// Parameters
     int verbose_;
-    std::string leg_odometry_mode_;
     // How the position will be initialized
     std::string initialization_mode_;
     // Which link is assumed to be stationary - typically [lr]_foot or [lr]_talus
@@ -166,13 +164,7 @@ class leg_estimate{
     /// Integration Methods:
     bool initializePose(Eigen::Isometry3d body_to_foot);
     bool prepInitialization(Eigen::Isometry3d body_to_l_foot,Eigen::Isometry3d body_to_r_foot, contact_status_id contact_status);
-    // Pure Leg Odometry, no IMU
-    // return: true on initialization, else false
-    bool leg_odometry_basic(Eigen::Isometry3d body_to_l_foot,Eigen::Isometry3d body_to_r_foot, contact_status_id contact_status);
-    // At the moment a foot transition occurs: slave the pelvis pitch and roll and then fix foot using fk.
-    // Dont move or rotate foot after that.
-    // return: true on initialization, else false    
-    bool leg_odometry_gravity_slaved_once(Eigen::Isometry3d body_to_l_foot,Eigen::Isometry3d body_to_r_foot, contact_status_id contact_status);
+
     // Foot position, as with above. For subsequent ticks, foot quaternion is updated using the pelvis quaternion
     // The pelvis position is then backed out using this new foot positon and fk.
     // return: true on initialization, else false    

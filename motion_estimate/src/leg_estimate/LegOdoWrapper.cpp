@@ -56,9 +56,6 @@ void LegOdoWrapper::setupLegOdo() {
   }
 
   leg_est_ = new leg_estimate(lcm_publish_, botparam_, model_);
-  std::string leg_odo_mode = bot_param_get_str_or_fail(botparam_, "state_estimator.legodo_driven_process.integration_mode");
-  std::cout << "Overwriting the leg odom mode:: " << leg_odo_mode << "\n";
-  leg_est_->setLegOdometryMode( leg_odo_mode );
 }
 
 void App::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
