@@ -211,7 +211,7 @@ void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std
 
 // TODO: Create Legacy ATLAS_STATE handler
 
-RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg){
+RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov){
   
   if (!bdi_init_){
     std::cout << "POSE_BDI not received yet, not integrating leg odometry =========================\n";

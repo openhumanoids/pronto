@@ -17,7 +17,7 @@ public:
   
   LegOdoExternalHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, BotParam * param);
 
-  RBISUpdateInterface * processMessage(const pronto::pose_transform_t  * msg);
+  RBISUpdateInterface * processMessage(const pronto::pose_transform_t  * msg, RBIS state, RBIM cov);
 
   lcm::LCM* lcm_pub;
   lcm::LCM* lcm_recv;

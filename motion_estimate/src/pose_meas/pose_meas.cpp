@@ -53,7 +53,7 @@ void PoseMeasHandler::init(BotParam * param)
   }
 }
 
-RBISUpdateInterface * PoseMeasHandler::processMessage(const bot_core::pose_t * msg)
+RBISUpdateInterface * PoseMeasHandler::processMessage(const bot_core::pose_t * msg, RBIS state, RBIM cov)
 {
   // If we have created no_corrections, go silent afterwards
   no_corrections--;
