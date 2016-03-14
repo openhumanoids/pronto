@@ -7,7 +7,6 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_subscribe_,  boost::shared_ptr<lcm::LC
 
   lcm_subscribe_->subscribe("FORCE_TORQUE",&App::forceTorqueHandler,this);
   lcm_subscribe_->subscribe("ATLAS_STATE",&App::jointStateHandler,this);
-  lcm_subscribe_->subscribe("POSE_BDI",&App::poseBDIHandler,this);
   if ( cl_cfg_.republish_incoming){
     lcm_subscribe_->subscribe("VICON_BODY|VICON_FRONTPLATE",&App::viconHandler,this);
   }
@@ -58,25 +57,6 @@ void LegOdoWrapper::setupLegOdo() {
   leg_est_ = new leg_estimate(lcm_publish_, botparam_, model_);
 }
 
-void App::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
-  world_to_body_bdi_full_.utime = msg->utime;
-  world_to_body_bdi_full_.pos = Eigen::Vector3d( msg->pos[0],  msg->pos[1],  msg->pos[2] );
-  world_to_body_bdi_full_.vel = Eigen::Vector3d( msg->vel[0],  msg->vel[1],  msg->vel[2] );
-  world_to_body_bdi_full_.orientation = Eigen::Vector4d( msg->orientation[0],  msg->orientation[1],  msg->orientation[2],  msg->orientation[3] );
-  world_to_body_bdi_full_.rotation_rate = Eigen::Vector3d( msg->rotation_rate[0],  msg->rotation_rate[1],  msg->rotation_rate[2] );
-  world_to_body_bdi_full_.accel = Eigen::Vector3d( msg->accel[0],  msg->accel[1],  msg->accel[2] );    
-  
-  
-  world_to_body_bdi_.setIdentity();
-  world_to_body_bdi_.translation()  << msg->pos[0], msg->pos[1] , msg->pos[2];
-  Eigen::Quaterniond quat = Eigen::Quaterniond(msg->orientation[0], msg->orientation[1], 
-                                               msg->orientation[2], msg->orientation[3]);
-  world_to_body_bdi_.rotate(quat);
-  
-  prev_bdi_utime_ = msg->utime;
-  body_bdi_init_ = true;
-}
-
 void App::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg){
   force_torque_ = *msg;
   force_torque_init_ = true;
@@ -104,13 +84,6 @@ void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& c
     return;
   }
 
-  //if (cl_cfg_.republish_incoming){
-  //  // Don't publish then working live:
-  //  bot_core::pose_t bdipose = getRobotStatePoseAsBotPose(msg);
-  //  lcm_publish_->publish("POSE_BDI", &bdipose);
-  //}
-
-  leg_est_->setPoseBDI( world_to_body_bdi_ );
   leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
                              FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
   leg_est_->updateOdometry(msg->joint_name, msg->joint_position, msg->joint_velocity, msg->utime);

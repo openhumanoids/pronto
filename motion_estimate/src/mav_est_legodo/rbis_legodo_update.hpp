@@ -48,7 +48,6 @@ public:
   LegOdoCommon* leg_odo_common_;
 
   // Ancillary handlers
-  void poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
   void poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
@@ -81,11 +80,7 @@ public:
   Eigen::Isometry3d prev_worldvicon_to_body_vicon_;
   int64_t prev_vicon_utime_;
 
-  PoseT bdi_to_body_full_;  // POSE_BDI
-  bool bdi_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
-
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
-  bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
 
   bot_core::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?

@@ -65,7 +65,6 @@ class leg_estimate{
     ~leg_estimate(){
     }
     
-    void setPoseBDI(Eigen::Isometry3d bdi_to_body_in ){ bdi_to_body_ = bdi_to_body_in; }
     void setPoseBody(Eigen::Isometry3d world_to_body_in ){ 
       world_to_body_ = world_to_body_in; 
       world_to_body_init_ = true;
@@ -187,11 +186,6 @@ class leg_estimate{
     Eigen::Isometry3d odom_to_primary_foot_fixed_; // Position in the odom frame in which the fixed foot is kept
     Eigen::Isometry3d odom_to_secondary_foot_; // Ditto for moving foot (entirely defined by kinematics)
 
-    // Pelvis Position Estimate produced by BDI. 
-    // Used to calculate position delta by defining pelvis and foot orientation
-    // TODO: use estimated state instead
-    Eigen::Isometry3d bdi_to_body_;
-    
     // Pelvis Position produced by mav-estimator
     // TODO: this should be the same as the RBIS state, currently using LCM to provide this
     Eigen::Isometry3d world_to_body_;

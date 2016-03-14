@@ -43,15 +43,7 @@ protected:
   // bot::frames* frames_cpp_;
 
   bot_core::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
-  bool force_torque_init_; // Have we received a force torque message?
-  
-  // Pose BDI:
-  PoseT world_to_body_bdi_full_;  
-  Eigen::Isometry3d world_to_body_bdi_;
-  int64_t prev_bdi_utime_;
-  int64_t body_bdi_init_;  
-  
-  
+  bool force_torque_init_; // Have we received a force torque message?  
   
 };
 
@@ -64,7 +56,6 @@ class App : public LegOdoWrapper {
   private:
     void forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg);
     void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg);
-    void poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
     void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);
 };
 

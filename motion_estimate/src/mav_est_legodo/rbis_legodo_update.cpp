@@ -58,8 +58,6 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     std::cout << "Will not republish other data\n";
   }
   
-  lcm_recv->subscribe("POSE_BDI",&LegOdoHandler::poseBDIHandler,this);
-  lcm_recv->subscribe("POSE_BODY",&LegOdoHandler::poseBodyHandler,this);
   lcm_recv->subscribe("FORCE_TORQUE",&LegOdoHandler::forceTorqueHandler,this);
   
   // Arbitrary Subscriptions:
@@ -81,8 +79,6 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   local_counter_ = 0;
   local_prev_utime_=0;
   
-  bdi_init_ = false;
-  body_init_ = false;
   force_torque_init_ = false;
   
 }
@@ -164,18 +160,6 @@ bot_core::pose_t getPoseAsBotPoseFull(PoseT pose){
   return pose_msg;
 }
 
-PoseT getBotPoseAsPoseFull(const bot_core::pose_t *msg){
-  PoseT pose;
-  pose.utime = msg->utime;
-  pose.pos = Eigen::Vector3d( msg->pos[0],  msg->pos[1],  msg->pos[2] );
-  pose.vel = Eigen::Vector3d( msg->vel[0],  msg->vel[1],  msg->vel[2] );
-  pose.orientation = Eigen::Vector4d( msg->orientation[0],  msg->orientation[1],  msg->orientation[2],  msg->orientation[3] );
-  pose.rotation_rate = Eigen::Vector3d( msg->rotation_rate[0],  msg->rotation_rate[1],  msg->rotation_rate[2] );
-  pose.accel = Eigen::Vector3d( msg->accel[0],  msg->accel[1],  msg->accel[2] );    
-  return pose;
-}
-
-
 Eigen::Isometry3d getPoseAsIsometry3d(PoseT pose){
   Eigen::Isometry3d pose_iso;
   pose_iso.setIdentity();
@@ -192,51 +176,27 @@ void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const
   n_control_contacts_right_ = msg->num_right_foot_contacts;
 }
 
-void LegOdoHandler::poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
-  bdi_to_body_full_ = getBotPoseAsPoseFull(msg);
-  bdi_init_ = true;
-}
-
-void LegOdoHandler::poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
-  world_to_body_full_ = getBotPoseAsPoseFull(msg);
-  body_init_ = true;  
-  // (typical latency is tiny 1-2ms)  
-}
-
-
 void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg){
   force_torque_ = *msg;
-  force_torque_init_ = true; 
+  force_torque_init_ = true;
 }
 
 // TODO: Create Legacy ATLAS_STATE handler
 
 RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov){
-  
-  if (!bdi_init_){
-    std::cout << "POSE_BDI not received yet, not integrating leg odometry =========================\n";
-    return NULL;    
-  }
-  if (!body_init_){
-    std::cout << "POSE_BODY not received yet, not integrating leg odometry =========================\n";
-    return NULL;    
-  }
+
   if (!force_torque_init_){
     std::cout << "FORCE_TORQUE not received yet, not integrating leg odometry =========================\n";
     return NULL;    
-  }  
+  } 
 
+  world_to_body_full_.utime = state.utime;
+  world_to_body_full_.pos = Eigen::Vector3d( state.position()[0], state.position()[1], state.position()[2] );
+  world_to_body_full_.vel = Eigen::Vector3d( state.velocity()[0], state.velocity()[1], state.velocity()[2] );
+  world_to_body_full_.orientation = Eigen::Vector4d( state.quat.w(), state.quat.x(), state.quat.y(), state.quat.z() );
+  world_to_body_full_.rotation_rate = Eigen::Vector3d( state.angularVelocity()[0], state.angularVelocity()[1], state.angularVelocity()[2]);
+  world_to_body_full_.accel = Eigen::Vector3d( state.acceleration()[0], state.acceleration()[1], state.acceleration()[2] );
 
-  // Disabling below will turn off all input of POSE_BDI to leg odom:
-  // which is unused if using the "basic_mode"
-  if (1==1){
-    leg_est_->setPoseBDI(  getPoseAsIsometry3d(bdi_to_body_full_)      );
-  }
-  if (republish_incoming_poses_){ // Don't publish when working live:
-    bot_core::pose_t bdipose = getPoseAsBotPoseFull(bdi_to_body_full_);
-    lcm_pub->publish("POSE_BDI", &bdipose);
-  }
-  
   leg_est_->setPoseBody(  getPoseAsIsometry3d(world_to_body_full_)      );
   
   
@@ -317,7 +277,7 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_
       std::cout << local_counter_ << " skip" << "\n";
       return NULL; 
     }
-  }  
+  }
 }
 
 void LegOdoHandler::republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel){
