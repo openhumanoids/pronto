@@ -172,8 +172,10 @@ bool leg_estimate::initializePose(Eigen::Isometry3d body_to_foot){
   if (initialization_mode_ == "zero"){
     // Initialize with primary foot at (0,0,0)
     // Otherwise, there is a discontinuity at the very start
+    Eigen::Quaterniond q_slaved( world_to_body_.rotation() );
     Eigen::Isometry3d odom_to_body_at_zero;
     odom_to_body_at_zero.setIdentity(); // ... Dont need to use the translation, so not filling it in
+    odom_to_body_at_zero.rotate(q_slaved);
     Eigen::Isometry3d odom_to_r_foot_at_zero = odom_to_body_at_zero*body_to_foot;
     Eigen::Quaterniond q_foot_new( odom_to_r_foot_at_zero.rotation() );
     odom_to_primary_foot_fixed_ = Eigen::Isometry3d::Identity();
@@ -226,6 +228,7 @@ bool leg_estimate::leg_odometry_gravity_slaved_always(Eigen::Isometry3d body_to_
     if (verbose_>2) std::cout << "Using fixed Left foot, update pelvis position\n";
 
     Eigen::Isometry3d odom_to_body_at_zero = Eigen::Isometry3d::Identity(); // ... Dont need to use the translation, so not filling it in
+    odom_to_body_at_zero.rotate( Eigen::Quaterniond(world_to_body_.rotation()) );
 
     Eigen::Isometry3d odom_to_r_foot_at_zero = odom_to_body_at_zero*body_to_l_foot;
     Eigen::Quaterniond q_foot_new( odom_to_r_foot_at_zero.rotation() );
@@ -247,6 +250,7 @@ bool leg_estimate::leg_odometry_gravity_slaved_always(Eigen::Isometry3d body_to_
     // Then do FK and fix that position as the foot position
     Eigen::Isometry3d odom_to_body_switch = Eigen::Isometry3d::Identity();
     odom_to_body_switch.translation() = odom_to_body_.translation();
+    odom_to_body_switch.rotate( Eigen::Quaterniond(world_to_body_.rotation()) );
     odom_to_primary_foot_fixed_ = odom_to_body_switch * body_to_r_foot;
 
     odom_to_body_ = odom_to_primary_foot_fixed_ * body_to_r_foot.inverse();
@@ -256,6 +260,7 @@ bool leg_estimate::leg_odometry_gravity_slaved_always(Eigen::Isometry3d body_to_
     if (verbose_>2) std::cout << "Using fixed Right foot, update pelvis position\n";
 
     Eigen::Isometry3d odom_to_body_at_zero = Eigen::Isometry3d::Identity(); // ... Dont need to use the translation, so not filling it in
+    odom_to_body_at_zero.rotate( Eigen::Quaterniond(world_to_body_.rotation()) );
 
     Eigen::Isometry3d odom_to_r_foot_at_zero = odom_to_body_at_zero*body_to_r_foot;
     Eigen::Quaterniond q_foot_new( odom_to_r_foot_at_zero.rotation() );
@@ -278,6 +283,7 @@ bool leg_estimate::leg_odometry_gravity_slaved_always(Eigen::Isometry3d body_to_
     // Then do FK and fix that position as the foot position
     Eigen::Isometry3d odom_to_body_switch = Eigen::Isometry3d::Identity();
     odom_to_body_switch.translation() = odom_to_body_.translation();
+    odom_to_body_switch.rotate( Eigen::Quaterniond(world_to_body_.rotation()) );
     odom_to_primary_foot_fixed_ = odom_to_body_switch * body_to_l_foot;
 
     odom_to_body_ = odom_to_primary_foot_fixed_ * body_to_l_foot.inverse();
@@ -443,6 +449,7 @@ float leg_estimate::updateOdometry(std::vector<std::string> joint_name,
   float contact_classification = foot_contact_classify_->update(current_utime_, odom_to_primary_foot_fixed_,
                                                        odom_to_secondary_foot_, standing_foot_);
   contact_status_id contact_status = F_STATUS_UNKNOWN;
+
   if (control_mode_ == CONTROLLER_STANDING){
     contact_status =footTransition(); // original method from Dehann, now set to be very conservative
   }else{
@@ -452,6 +459,7 @@ float leg_estimate::updateOdometry(std::vector<std::string> joint_name,
   bool init_this_iteration = leg_odometry_gravity_slaved_always(body_to_l_foot, body_to_r_foot, contact_status);
 
   // NB: the corresponding variables are sent
+
   if (world_to_body_init_){
     world_to_primary_foot_slide_ = world_to_body_*getPrimaryFootFK(primary_foot_, body_to_l_foot, body_to_r_foot);
     world_to_secondary_foot_ = world_to_body_*getSecondaryFootFK(primary_foot_, body_to_l_foot, body_to_r_foot);
