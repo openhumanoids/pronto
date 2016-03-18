@@ -337,6 +337,14 @@ ViconHandler::ViconHandler(BotParam * param, BotFrames * frames)
     mode = ViconHandler::MODE_POSITION_ORIENT;
     std::cout << "Vicon will provide position and orientation measurements." << std::endl;
   }
+  else if (strcmp(mode_str, "orientation") == 0) {
+    mode = ViconHandler::MODE_ORIENTATION;
+    std::cout << "Vicon will provide orientation measurements." << std::endl;
+  }
+  else if (strcmp(mode_str, "yaw") == 0) {
+    mode = ViconHandler::MODE_YAW;
+    std::cout << "Vicon will provide yaw orientation measurements." << std::endl;
+  }
   else {
     mode = ViconHandler::MODE_POSITION;
     std::cout << "Unrecognized Vicon mode. Using position mode by default." << std::endl;
@@ -370,8 +378,17 @@ void ViconHandler::init(BotParam * param)
 
   if (mode == MODE_POSITION) {
     z_indices = RBIS::positionInds();
-  }
-  else {
+  } else if (mode == MODE_YAW){
+      z_indices.resize(1);
+      z_indices(0) = RBIS::chi_ind + 2; // z component only
+      cov_vicon.resize(1,1);
+      cov_vicon(0,0) = pow(bot_to_radians(r_vicon_chi), 2);
+  } else if (mode == MODE_ORIENTATION){
+      z_indices.resize(3);
+      z_indices = RBIS::chiInds();
+      cov_vicon.resize(3,3);
+      cov_vicon = pow(bot_to_radians(r_vicon_chi), 2) * Eigen::Matrix3d::Identity();
+  } else {
     z_indices.resize(6);
     z_indices.head<3>() = RBIS::positionInds();
     z_indices.tail<3>() = RBIS::chiInds();
@@ -400,19 +417,44 @@ RBISUpdateInterface * ViconHandler::processMessage(const bot_core::rigid_transfo
     return NULL;
 
   if (mode == MODE_POSITION) {
-    return new RBISIndexedMeasurement(z_indices, Eigen::Map<const Eigen::Vector3d>( local_to_body.trans_vec ),
-        cov_vicon.block<3, 3>(0, 0), RBISUpdateInterface::vicon,
-        utime);
-  }
-  else {
-    Eigen::VectorXd z_meas(6);
-    Eigen::Quaterniond quat;
-    eigen_utils::botDoubleToQuaternion(quat, local_to_body.rot_quat );
+      return new RBISIndexedMeasurement(z_indices, Eigen::Map<const Eigen::Vector3d>( local_to_body.trans_vec ),
+                                        cov_vicon,RBISUpdateInterface::vicon, msg->utime);
+  } else if(mode == MODE_YAW) {
 
-    z_meas.head<3>() = Eigen::Map<const Eigen::Vector3d>(local_to_body.trans_vec);
+      Eigen::VectorXd z_meas(1);
+      Eigen::Quaterniond quat;
+      eigen_utils::botDoubleToQuaternion(quat, local_to_body.rot_quat);
 
-    return new RBISIndexedPlusOrientationMeasurement(z_indices, z_meas, cov_vicon, quat, RBISUpdateInterface::vicon,
-        utime);
+      return new RBISIndexedPlusOrientationMeasurement(z_indices,
+                                                       z_meas,
+                                                       cov_vicon,
+                                                       quat,
+                                                       RBISUpdateInterface::vicon,
+                                                       msg->utime);
+  }  else if(mode == MODE_ORIENTATION){
+      Eigen::VectorXd z_meas(3);
+      Eigen::Quaterniond quat;
+      eigen_utils::botDoubleToQuaternion(quat, local_to_body.rot_quat);
+
+      return new RBISIndexedPlusOrientationMeasurement(z_indices,
+                                                       z_meas,
+                                                       cov_vicon,
+                                                       quat,
+                                                       RBISUpdateInterface::vicon,
+                                                       msg->utime);
+  }  else if(mode == MODE_POSITION_ORIENT){
+      Eigen::VectorXd z_meas(6);
+      Eigen::Quaterniond quat;
+      eigen_utils::botDoubleToQuaternion(quat, local_to_body.rot_quat );
+
+      z_meas.head<3>() = Eigen::Map<const Eigen::Vector3d>(local_to_body.trans_vec);
+
+      return new RBISIndexedPlusOrientationMeasurement(z_indices,
+                                                       z_meas,
+                                                       cov_vicon,
+                                                       quat,
+                                                       RBISUpdateInterface::vicon,
+                                                       utime);
   }
 }
 
