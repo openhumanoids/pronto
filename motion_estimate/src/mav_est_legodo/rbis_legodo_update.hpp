@@ -89,14 +89,6 @@ public:
   int n_control_contacts_left_;
   int n_control_contacts_right_;
 
-
-  // To locally integrate - to denoise
-  Eigen::Isometry3d local_accum_;
-  bool local_integration_;
-  int local_max_count_;
-  int local_counter_;
-  int64_t local_prev_utime_; 
-
 };
 
 
