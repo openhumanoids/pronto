@@ -65,6 +65,8 @@ public:
   BotFrames* frames;
   
   // Settings 
+  // Number of iterations to assume are zero velocity at start:
+  int zero_initial_velocity;
   // Republish certain incoming messages, so as to produced output logs
   bool republish_incoming_poses_;
   // Publish Debug Data e.g. kinematic velocities and foot contacts

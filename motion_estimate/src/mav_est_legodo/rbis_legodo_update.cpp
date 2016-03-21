@@ -41,7 +41,10 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     std::cout << "Torque-based joint angle adjustment: Not Using\n";
   }
 
+  zero_initial_velocity = bot_param_get_int_or_fail(param, "state_estimator.legodo.zero_initial_velocity");
+  std::cout << "Will assume zero kinematic velocity for first " <<  zero_initial_velocity << " tics\n";
 
+  // Non-algoritim Settings
   publish_diagnostics_ = bot_param_get_boolean_or_fail(param, "state_estimator.legodo.publish_diagnostics");  
   republish_incoming_poses_ = bot_param_get_boolean_or_fail(param, "state_estimator.legodo.republish_incoming_poses");  
   bool republish_cameras = bot_param_get_boolean_or_fail(param, "state_estimator.legodo.republish_cameras");    
@@ -191,6 +194,7 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_
   world_to_body_full_.rotation_rate = Eigen::Vector3d( state.angularVelocity()[0], state.angularVelocity()[1], state.angularVelocity()[2]);
   world_to_body_full_.accel = Eigen::Vector3d( state.acceleration()[0], state.acceleration()[1], state.acceleration()[2] );
   leg_est_->setPoseBody(  getPoseAsIsometry3d(world_to_body_full_)      );
+
   // 1. Do the Leg Odometry Integration
   leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
                              FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
@@ -229,7 +233,22 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_
   int64_t temp;
   bool odo_position_status = leg_est_->getLegOdometryWorldConstraint(odo_position,temp);
   
+  // Ignore the calculated velocity at launch:
+  zero_initial_velocity--;
+  if (zero_initial_velocity > 0){
+    odo_delta.setIdentity();
+    odo_position.setIdentity();
   }
+
+
+  BotTrans odo_deltaT = getPoseAsBotTrans(odo_delta);
+  BotTrans odo_positionT = getPoseAsBotTrans(odo_position);
+  if (publish_diagnostics_) sendTransAsVelocityPose(odo_deltaT, utime, prev_utime, "POSE_BODY_LEGODO_VELOCITY");
+
+  return leg_odo_common_->createMeasurement(odo_positionT, odo_deltaT,
+                                            utime, prev_utime,
+                                            odo_position_status, odo_delta_status);
+
 }
 
 void LegOdoHandler::republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel){
