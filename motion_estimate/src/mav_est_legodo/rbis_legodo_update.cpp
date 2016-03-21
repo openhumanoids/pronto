@@ -74,11 +74,6 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   prev_worldvicon_to_body_vicon_.setIdentity();
   prev_vicon_utime_ = -1;
   
-  local_integration_ = false;
-  local_max_count_ = 10;
-  local_counter_ = 0;
-  local_prev_utime_=0;
-  
   force_torque_init_ = false;
   
 }
@@ -181,7 +176,6 @@ void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std
   force_torque_init_ = true;
 }
 
-// TODO: Create Legacy ATLAS_STATE handler
 
 RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov){
 
@@ -196,10 +190,7 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_
   world_to_body_full_.orientation = Eigen::Vector4d( state.quat.w(), state.quat.x(), state.quat.y(), state.quat.z() );
   world_to_body_full_.rotation_rate = Eigen::Vector3d( state.angularVelocity()[0], state.angularVelocity()[1], state.angularVelocity()[2]);
   world_to_body_full_.accel = Eigen::Vector3d( state.acceleration()[0], state.acceleration()[1], state.acceleration()[2] );
-
   leg_est_->setPoseBody(  getPoseAsIsometry3d(world_to_body_full_)      );
-  
-  
   // 1. Do the Leg Odometry Integration
   leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
                              FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
@@ -238,45 +229,6 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_
   int64_t temp;
   bool odo_position_status = leg_est_->getLegOdometryWorldConstraint(odo_position,temp);
   
-  if (!local_integration_){ // typical case...
-    BotTrans odo_deltaT = getPoseAsBotTrans(odo_delta);
-    BotTrans odo_positionT = getPoseAsBotTrans(odo_position);
-    if (publish_diagnostics_) sendTransAsVelocityPose(odo_deltaT, utime, prev_utime, "POSE_BODY_LEGODO_VELOCITY");    
-    local_prev_utime_ = utime;
-    return leg_odo_common_->createMeasurement(odo_positionT, odo_deltaT, 
-                                              utime, prev_utime, 
-                                              odo_position_status, odo_delta_status);
-  }else{    
-
-    local_accum_ =  local_accum_*odo_delta;
-    local_counter_++;
-    
-    std::cout << local_counter_ << " counter" << "\n";
-    // If the counter is max, then integrate it, else return null pointer
-    if (local_counter_ > local_max_count_){
-      std::cout << local_counter_ << " integrate" << "\n";
-      odo_delta = local_accum_;
-      local_accum_.setIdentity();
-
-      int64_t temp_prev_utime= local_prev_utime_; // local copy to pass
-      local_counter_=0;
-      local_prev_utime_ = utime;
-      
-      if (temp_prev_utime ==0){ // skip the first iteration
-        return NULL; 
-      }
-      
-      BotTrans odo_deltaT = getPoseAsBotTrans(odo_delta);
-      BotTrans odo_positionT = getPoseAsBotTrans(odo_position);
-      if (publish_diagnostics_) sendTransAsVelocityPose(odo_deltaT, utime, temp_prev_utime, "POSE_BODY_LEGODO_VELOCITY");
-      // TODO: currently this only incorporates only ***most recent*** odo_delta_status, should support an average:
-      return leg_odo_common_->createMeasurement(odo_positionT, odo_deltaT, 
-                                                utime, temp_prev_utime, 
-                                                odo_position_status, odo_delta_status); 
-    }else{
-      std::cout << local_counter_ << " skip" << "\n";
-      return NULL; 
-    }
   }
 }
 
