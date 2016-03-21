@@ -89,13 +89,13 @@ LaserGPFHandler::LaserGPFHandler(lcm_t * lcm, BotParam * param, BotFrames * fram
   free(laser_chan);
 }
 
-RBISUpdateInterface * LaserGPFHandler::processMessage(const bot_core::planar_lidar_t * msg)
+RBISUpdateInterface * LaserGPFHandler::processMessage(const bot_core::planar_lidar_t * msg, RBIS state, RBIM cov)
 {
   bot_core::planar_lidar_t * msg_cpy = new bot_core::planar_lidar_t(*msg);
   return new RBISLaserGPFMeasurement(gpf, msg_cpy, msg->utime, lcm_pub, pub_channel);
 }
 
-RBISUpdateInterface * LaserGPFHandler::processMessagePointcloud(const bot_core::pointcloud_t * msg)
+RBISUpdateInterface * LaserGPFHandler::processMessagePointcloud(const bot_core::pointcloud_t * msg, RBIS state, RBIM cov)
 {
   bot_core::pointcloud_t * msg_cpy = new bot_core::pointcloud_t(*msg);
   return new RBISLaserGPFMeasurement(gpf, msg_cpy, msg->utime, lcm_pub, pub_channel);

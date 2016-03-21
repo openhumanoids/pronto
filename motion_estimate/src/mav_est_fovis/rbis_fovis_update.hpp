@@ -23,7 +23,7 @@ public:
   FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
                BotParam * param);
 
-  RBISUpdateInterface * processMessage(const fovis::update_t  * msg);
+  RBISUpdateInterface * processMessage(const fovis::update_t  * msg, RBIS state, RBIM cov);
 
   FovisMode mode;
   Eigen::VectorXi z_indices;

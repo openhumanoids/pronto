@@ -31,7 +31,7 @@ class RgbdGPFHandler {
 public:
   RgbdGPFHandler(lcm_t * lcm, BotParam * param, BotFrames * frames);
 
-  RBISUpdateInterface * processMessage(const kinect::frame_msg_t * msg);
+  RBISUpdateInterface * processMessage(const kinect::frame_msg_t * msg, RBIS state, RBIM cov);
 
   lcm_t * lcm_pub; //needed to copy into update each time to publish message for debugging
   std::string pub_channel;

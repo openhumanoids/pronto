@@ -70,7 +70,7 @@ RgbdGPFHandler::RgbdGPFHandler(lcm_t * lcm, BotParam * param, BotFrames * frames
 
 }
 
-RBISUpdateInterface * RgbdGPFHandler::processMessage(const kinect::frame_msg_t * msg)
+RBISUpdateInterface * RgbdGPFHandler::processMessage(const kinect::frame_msg_t * msg, RBIS state, RBIM cov)
 {
 //  if (counter++ % downsample_factor != 0)
 //    return NULL;

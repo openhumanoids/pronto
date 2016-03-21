@@ -174,7 +174,7 @@ bool InitMessageHandler::processMessageInit(const pronto::filter_state_t * msg,
  * When subscribed as a normal sensor, the reset message will reset the state estimator
  * on the fly.
  */
-RBISUpdateInterface * InitMessageHandler::processMessage(const pronto::filter_state_t * msg)
+RBISUpdateInterface * InitMessageHandler::processMessage(const pronto::filter_state_t * msg, RBIS state, RBIM cov)
 {
   Eigen::Map<const MatrixXd> cov_map(&msg->cov[0], msg->num_states, msg->num_states);
   RBIM init_cov = cov_map;

@@ -65,7 +65,6 @@ class leg_estimate{
     ~leg_estimate(){
     }
     
-    void setPoseBDI(Eigen::Isometry3d bdi_to_body_in ){ bdi_to_body_ = bdi_to_body_in; }
     void setPoseBody(Eigen::Isometry3d world_to_body_in ){ 
       world_to_body_ = world_to_body_in; 
       world_to_body_init_ = true;
@@ -108,7 +107,6 @@ class leg_estimate{
     
     Eigen::Isometry3d getRunningEstimate(){ return odom_to_body_; }
     
-    void setLegOdometryMode(std::string leg_odometry_mode_in ){ leg_odometry_mode_ = leg_odometry_mode_in; }
     void setInitializationMode(std::string initialization_mode_in ){ initialization_mode_ = initialization_mode_in; }
 
   private:
@@ -126,7 +124,6 @@ class leg_estimate{
 
     /// Parameters
     int verbose_;
-    std::string leg_odometry_mode_;
     // How the position will be initialized
     std::string initialization_mode_;
     // Which link is assumed to be stationary - typically [lr]_foot or [lr]_talus
@@ -166,13 +163,7 @@ class leg_estimate{
     /// Integration Methods:
     bool initializePose(Eigen::Isometry3d body_to_foot);
     bool prepInitialization(Eigen::Isometry3d body_to_l_foot,Eigen::Isometry3d body_to_r_foot, contact_status_id contact_status);
-    // Pure Leg Odometry, no IMU
-    // return: true on initialization, else false
-    bool leg_odometry_basic(Eigen::Isometry3d body_to_l_foot,Eigen::Isometry3d body_to_r_foot, contact_status_id contact_status);
-    // At the moment a foot transition occurs: slave the pelvis pitch and roll and then fix foot using fk.
-    // Dont move or rotate foot after that.
-    // return: true on initialization, else false    
-    bool leg_odometry_gravity_slaved_once(Eigen::Isometry3d body_to_l_foot,Eigen::Isometry3d body_to_r_foot, contact_status_id contact_status);
+
     // Foot position, as with above. For subsequent ticks, foot quaternion is updated using the pelvis quaternion
     // The pelvis position is then backed out using this new foot positon and fk.
     // return: true on initialization, else false    
@@ -195,11 +186,6 @@ class leg_estimate{
     Eigen::Isometry3d odom_to_primary_foot_fixed_; // Position in the odom frame in which the fixed foot is kept
     Eigen::Isometry3d odom_to_secondary_foot_; // Ditto for moving foot (entirely defined by kinematics)
 
-    // Pelvis Position Estimate produced by BDI. 
-    // Used to calculate position delta by defining pelvis and foot orientation
-    // TODO: use estimated state instead
-    Eigen::Isometry3d bdi_to_body_;
-    
     // Pelvis Position produced by mav-estimator
     // TODO: this should be the same as the RBIS state, currently using LCM to provide this
     Eigen::Isometry3d world_to_body_;

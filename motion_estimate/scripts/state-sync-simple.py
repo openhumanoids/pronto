@@ -19,14 +19,14 @@ sys.path.append(home_dir + "/software/build/lib/python2.7/site-packages")
 sys.path.append(home_dir + "/software/build/lib/python2.7/dist-packages")
 
 from bot_core.pose_t import pose_t
-from pronto.robot_state_t import robot_state_t
-from pronto.joint_state_t import joint_state_t
-from pronto.vector_3d_t import vector_3d_t
-from pronto.position_3d_t import position_3d_t
-from pronto.twist_t import twist_t
-from pronto.quaternion_t import quaternion_t
-from pronto.twist_t import twist_t
-from pronto.force_torque_t import force_torque_t
+from bot_core.robot_state_t import robot_state_t
+from bot_core.joint_state_t import joint_state_t
+from bot_core.vector_3d_t import vector_3d_t
+from bot_core.position_3d_t import position_3d_t
+from bot_core.twist_t import twist_t
+from bot_core.quaternion_t import quaternion_t
+from bot_core.twist_t import twist_t
+from bot_core.force_torque_t import force_torque_t
 
 ########################################################################################
 def timestamp_now (): return int (time.time () * 1000000)

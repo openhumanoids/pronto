@@ -49,7 +49,7 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames)
 }
 
 ////////// Typical Micro Strain INS /////////////////
-RBISUpdateInterface * InsHandler::processMessage(const bot_core::ins_t * msg)
+RBISUpdateInterface * InsHandler::processMessage(const bot_core::ins_t * msg, RBIS state, RBIM cov)
 {
   //    get everything into the right frame
   double body_accel[3];
@@ -73,7 +73,7 @@ bool InsHandler::processMessageInit(const bot_core::ins_t * msg,
 {
   init_state.utime = msg->utime;
 
-  RBISIMUProcessStep * update = dynamic_cast<RBISIMUProcessStep *>(processMessage(msg));
+  RBISIMUProcessStep * update = dynamic_cast<RBISIMUProcessStep *>(processMessage(msg, init_state, init_cov));
 
   if(  !RBISInitializer::allInitializedExcept(sensors_initialized, "ins")) //force the INS to go last
     return false;
@@ -98,7 +98,7 @@ void InsHandler::doFilter(IMUPacket &raw){
 }
 
 
-RBISUpdateInterface * InsHandler::processMessageAtlas(const bot_core::kvh_raw_imu_batch_t * msg)
+RBISUpdateInterface * InsHandler::processMessageAtlas(const bot_core::kvh_raw_imu_batch_t * msg, RBIS state, RBIM cov)
 {
 
   double linear_acceleration[3];
@@ -194,7 +194,7 @@ bool InsHandler::processMessageInitAtlas(const bot_core::kvh_raw_imu_batch_t * m
 {
   init_state.utime = msg->utime;
 
-  RBISIMUProcessStep * update = dynamic_cast<RBISIMUProcessStep *>(processMessageAtlas(msg));
+  RBISIMUProcessStep * update = dynamic_cast<RBISIMUProcessStep *>(processMessageAtlas(msg, init_state, init_cov));
 
   if (update == NULL){
     // ... this happens regularly at 1000Hz, so nothing to worry about
@@ -293,7 +293,7 @@ GpsHandler::GpsHandler(BotParam * _param)
   cov_xyz = R_gps_diagonal.asDiagonal();
 }
 
-RBISUpdateInterface * GpsHandler::processMessage(const bot_core::gps_data_t * msg)
+RBISUpdateInterface * GpsHandler::processMessage(const bot_core::gps_data_t * msg, RBIS state, RBIM cov)
 {
   if (msg->gps_lock < 3)
     return NULL;
@@ -308,7 +308,7 @@ bool GpsHandler::processMessageInit(const bot_core::gps_data_t * msg,
     RBIS & init_state, RBIM & init_cov)
 {
   init_state.utime = msg->utime;
-  RBISIndexedMeasurement * update = dynamic_cast<RBISIndexedMeasurement *>(GpsHandler::processMessage(msg));
+  RBISIndexedMeasurement * update = dynamic_cast<RBISIndexedMeasurement *>(GpsHandler::processMessage(msg, init_state, init_cov));
 
   if(update == NULL) {
     return false;
@@ -378,7 +378,7 @@ void ViconHandler::init(BotParam * param)
   }
 }
 
-RBISUpdateInterface * ViconHandler::processMessage(const bot_core::rigid_transform_t * msg)
+RBISUpdateInterface * ViconHandler::processMessage(const bot_core::rigid_transform_t * msg, RBIS state, RBIM cov)
 {
 
   BotTrans local_to_vicon;
@@ -454,7 +454,7 @@ bool ViconHandler::processMessageInit(const bot_core::rigid_transform_t * msg,
   return true;
 }
 
-RBISUpdateInterface * IndexedMeasurementHandler::processMessage(const pronto::indexed_measurement_t * msg)
+RBISUpdateInterface * IndexedMeasurementHandler::processMessage(const pronto::indexed_measurement_t * msg, RBIS state, RBIM cov)
 {
   return new RBISIndexedMeasurement(Eigen::Map<const Eigen::VectorXi>(&msg->z_indices[0], msg->measured_dim),
       Eigen::Map<const Eigen::VectorXd>(&msg->z_effective[0], msg->measured_dim),
@@ -468,7 +468,7 @@ bool IndexedMeasurementHandler::processMessageInit(const pronto::indexed_measure
     RBIS & init_state, RBIM & init_cov)
 {
 
-  RBISIndexedMeasurement * update = (RBISIndexedMeasurement *) processMessage(msg);
+  RBISIndexedMeasurement * update = (RBISIndexedMeasurement *) processMessage(msg, init_state, init_cov);
 
   if (update == NULL) {
     return false;
@@ -567,7 +567,7 @@ ScanMatcherHandler::ScanMatcherHandler(BotParam * param)
   cov_scan_match = R_scan_match.asDiagonal();
 }
 
-RBISUpdateInterface * ScanMatcherHandler::processMessage(const bot_core::pose_t * msg)
+RBISUpdateInterface * ScanMatcherHandler::processMessage(const bot_core::pose_t * msg, RBIS state, RBIM cov)
 {
 
   if (mode == MODE_POSITION) {
@@ -623,7 +623,7 @@ OpticalFlowHandler::OpticalFlowHandler(BotParam * param, BotFrames * frames)
   cov_xyrs = R_optical_flow_xyrs.asDiagonal();
 }
 
-RBISUpdateInterface * OpticalFlowHandler::processMessage(const pronto::optical_flow_t * msg)
+RBISUpdateInterface * OpticalFlowHandler::processMessage(const pronto::optical_flow_t * msg, RBIS state, RBIM cov)
 {
 // Camera frame to body frame transform.
   z_xyrs(0) = msg->ux;

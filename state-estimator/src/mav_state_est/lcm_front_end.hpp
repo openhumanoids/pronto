@@ -32,7 +32,7 @@ class LCMFrontEnd;
 template<class lcmType, class SensorHandlerClass>
 class SensorHandler: public SensorHandlerInterface {
 public:
-  typedef RBISUpdateInterface * (SensorHandlerClass::*HandlerFunction)(const lcmType* msg);
+  typedef RBISUpdateInterface * (SensorHandlerClass::*HandlerFunction)(const lcmType* msg, RBIS state, RBIM cov);
 
   SensorHandler(LCMFrontEnd * _lcm_front, const std::string & _sensor_prefix, HandlerFunction _handler_function,
       SensorHandlerClass * handler_class);
@@ -81,7 +81,7 @@ public:
 
   template<class lcmType, class SensorHandlerClass>
   void addSensor(const std::string & sensor_prefix,
-      RBISUpdateInterface * (SensorHandlerClass::*_handler_method)(const lcmType* msg),
+      RBISUpdateInterface * (SensorHandlerClass::*_handler_method)(const lcmType* msg, RBIS state, RBIM cov),
       SensorHandlerClass * handler_class)
   {
     if (!isActive(sensor_prefix)) {
@@ -148,7 +148,12 @@ void SensorHandler<lcmType, SensorHandlerClass>::lcm_message_handler(const lcm::
     return;
 
 //  (subs->handler->*subs->handlerMethod)
-  RBISUpdateInterface * update = (handler->*handler_function)(msg);
+  RBIS head_state;
+  RBIM head_cov;
+
+  lcm_front->state_estimator->getHeadState(head_state, head_cov);
+
+  RBISUpdateInterface * update = (handler->*handler_function)(msg, head_state, head_cov);
   if (update != NULL) {
     update->utime -= utime_delay;
     lcm_front->state_estimator->addUpdate(update, roll_forward_on_receive);

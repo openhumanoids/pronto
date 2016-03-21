@@ -87,7 +87,7 @@ bot_core::pose_t getBotTransAsBotPoseVelocity(BotTrans bt, int64_t utime ){
   return pose;
 }
 
-RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg){
+RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, RBIS state, RBIM cov){
   
   if (msg->estimate_status == fovis::update_t::ESTIMATE_VALID){
     std::cout << "FovisHandler: FOVIS success\n";

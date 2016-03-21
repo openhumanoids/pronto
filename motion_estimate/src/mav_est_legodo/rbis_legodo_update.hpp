@@ -38,7 +38,7 @@ public:
 
   LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
-  RBISUpdateInterface * processMessage(const bot_core::joint_state_t *msg);
+  RBISUpdateInterface * processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov);
 
 
   // Classes:
@@ -48,7 +48,6 @@ public:
   LegOdoCommon* leg_odo_common_;
 
   // Ancillary handlers
-  void poseBDIHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
   void poseBodyHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);  
   void viconHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::rigid_transform_t* msg);  
   void republishHandler (const lcm::ReceiveBuffer* rbuf, const std::string& channel);
@@ -66,6 +65,8 @@ public:
   BotFrames* frames;
   
   // Settings 
+  // Number of iterations to assume are zero velocity at start:
+  int zero_initial_velocity;
   // Republish certain incoming messages, so as to produced output logs
   bool republish_incoming_poses_;
   // Publish Debug Data e.g. kinematic velocities and foot contacts
@@ -81,11 +82,7 @@ public:
   Eigen::Isometry3d prev_worldvicon_to_body_vicon_;
   int64_t prev_vicon_utime_;
 
-  PoseT bdi_to_body_full_;  // POSE_BDI
-  bool bdi_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
-
   PoseT world_to_body_full_;  // POSE_BODY NB: this is whats calculated by the
-  bool body_init_; // Have we received POSE_BDI. TODO: add a constructor to PoseT to store this
 
   bot_core::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
@@ -93,14 +90,6 @@ public:
   // Contact points of the feet deemed to be in contact:
   int n_control_contacts_left_;
   int n_control_contacts_right_;
-
-
-  // To locally integrate - to denoise
-  Eigen::Isometry3d local_accum_;
-  bool local_integration_;
-  int local_max_count_;
-  int local_counter_;
-  int64_t local_prev_utime_; 
 
 };
 
