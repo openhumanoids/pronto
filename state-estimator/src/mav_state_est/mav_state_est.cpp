@@ -27,8 +27,11 @@ MavStateEstimator::~MavStateEstimator()
 
 void MavStateEstimator::addUpdate(RBISUpdateInterface * update, bool roll_forward)
 {
+  // Add current update to history
   updateHistory::historyMapIterator added_it = history.addToHistory(update);
 
+  // If there are no unprocessed updates other than the current one,
+  // the current one only is where the "unprocessed" queue starts
   if (unprocessed_updates_start == history.updateMap.end() ||
       added_it->first < unprocessed_updates_start->first) {
     unprocessed_updates_start = added_it;
@@ -37,30 +40,42 @@ void MavStateEstimator::addUpdate(RBISUpdateInterface * update, bool roll_forwar
     return;
   }
 
+  // Get the update before the first unprocessed update
   updateHistory::historyMapIterator prev_it = unprocessed_updates_start;
   prev_it--;
   updateHistory::historyMapIterator current_it = unprocessed_updates_start;
   //  fprintf(stderr, "roll forward: %s ", RBISUpdateInterface::sensor_enum_strings[prev_it->second->sensor_id]);
+
+  // Iterate over unprocessed updates
   while (current_it != history.updateMap.end()) {
     RBISUpdateInterface * current_update = current_it->second;
     RBISUpdateInterface * prev_update = prev_it->second;
-    current_update->updateFilter(prev_update->posterior_state, prev_update->posterior_covariance, prev_update->loglikelihood);
+
+    // The prior is the previous posterior
+    current_update->updateFilter(prev_update->posterior_state,
+                                 prev_update->posterior_covariance,
+                                 prev_update->loglikelihood);
+
+    // Update the time for the current posterior
     current_update->posterior_state.utime = current_update->utime;
 
-//    if (current_update->posterior_state.hasNan()){
-//      fprintf(stderr,"ERROR: %s Update Made state NAN!\n", RBISUpdateInterface::sensor_enum_strings[current_update->sensor_id]);
-//    }
+    // if (current_update->posterior_state.hasNan()){
+    //   fprintf(stderr,"ERROR: %s Update Made state NAN!\n", 
+    //       RBISUpdateInterface::sensor_enum_strings[current_update->sensor_id]);
+    // }
 
-  //    fprintf(stderr, "->%s  ", RBISUpdateInterface::sensor_enum_strings[current_update->sensor_id]);
+    // fprintf(stderr, "->%s  ", RBISUpdateInterface::sensor_enum_strings[current_update->sensor_id]);
     prev_it = current_it;
     current_it++;
   }
   //  fprintf(stderr, "\n");
 
+  // The newest time is the previous iterator, because the current is end()
   int64_t newest_utime = prev_it->first;
   int64_t oldest_utime = newest_utime - this->utime_history_span;
+  // Resize the history
   history.clearHistoryBeforeUtime(oldest_utime);
-  //we've rolled forward
+  // Have now rolled forward
   unprocessed_updates_start = history.updateMap.end();
 }
 
