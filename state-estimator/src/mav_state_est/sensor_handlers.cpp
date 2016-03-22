@@ -5,14 +5,15 @@ using namespace Eigen;
 namespace MavStateEst {
 
 InsHandler::InsHandler(BotParam * _param, BotFrames * _frames) :
-    accel_bias_update(true),
-    gyro_bias_update(true),
+    accel_bias_update_online(true),
+    gyro_bias_update_online(true),
     accel_bias_initial(Eigen::Vector3d::Zero()),
     gyro_bias_initial(Eigen::Vector3d::Zero()),
-    accel_bias_calc_at_init(true),
-    gyro_bias_calc_at_init(true){
-    // mfallon: this chooses between MICROSTRAIN and ATLAS_IMU_BATCH
-    channel = bot_param_get_str_or_fail(_param, "state_estimator.ins.channel");
+    accel_bias_recalc_at_start(true),
+    gyro_bias_recalc_at_start(true){
+
+  // mfallon: this chooses between MICROSTRAIN and ATLAS_IMU_BATCH
+  channel = bot_param_get_str_or_fail(_param, "state_estimator.ins.channel");
 
   cov_gyro = bot_param_get_double_or_fail(_param, "state_estimator.ins.q_gyro");
   cov_gyro = bot_sq(bot_to_radians(cov_gyro));
@@ -59,14 +60,14 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames) :
   accel_bias_initial << accel_bias_initial_array[0], accel_bias_initial_array[1], accel_bias_initial_array[2];
   std::cout << "INS setting initial accel bias to: " << accel_bias_initial.transpose() << std::endl;
 
-  accel_bias_calc_at_init = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.accel_bias_calc_at_init");
-  std::cout << "INS will " << (accel_bias_calc_at_init ? "" : "NOT ")
+  accel_bias_recalc_at_start = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.accel_bias_recalc_at_start");
+  std::cout << "INS will " << (accel_bias_recalc_at_start ? "" : "NOT ")
             << "recompute initial accel bias at init" << std::endl;
 
-  accel_bias_update = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.accel_bias_update");
-  std::cout << "INS will " << (accel_bias_update ? "" : "NOT ") << "update accel bias online" << std::endl;
+  accel_bias_update_online = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.accel_bias_update_online");
+  std::cout << "INS will " << (accel_bias_update_online ? "" : "NOT ") << "update accel bias online" << std::endl;
   // If we don't want to update the bias, the covariance must be 0
-  if(!accel_bias_update){
+  if(!accel_bias_update_online){
       cov_accel_bias = 0.0;
   }
 
@@ -78,14 +79,14 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames) :
   gyro_bias_initial << gyro_bias_initial_array[0], gyro_bias_initial_array[1], gyro_bias_initial_array[2];
   std::cout << "INS setting initial gyro bias to: " << gyro_bias_initial.transpose() << std::endl;
 
-  gyro_bias_calc_at_init = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.gyro_bias_calc_at_init");
-  std::cout << "INS will " << (gyro_bias_calc_at_init ? "" : "NOT ")
+  gyro_bias_recalc_at_start = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.gyro_bias_recalc_at_start");
+  std::cout << "INS will " << (gyro_bias_recalc_at_start ? "" : "NOT ")
             << "recompute initial gyro bias at init" << std::endl;
 
-  gyro_bias_update = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.gyro_bias_update");
-  std::cout << "INS will " << (gyro_bias_update ? "" : "NOT ") << "update gyro bias online" << std::endl;
+  gyro_bias_update_online = bot_param_get_boolean_or_fail(_param, "state_estimator.ins.gyro_bias_update_online");
+  std::cout << "INS will " << (gyro_bias_update_online ? "" : "NOT ") << "update gyro bias online" << std::endl;
   // If we don't want to update the bias, the covariance must be 0
-  if(!gyro_bias_update){
+  if(!gyro_bias_update_online){
       cov_gyro_bias = 0.0;
   }
 
@@ -116,11 +117,11 @@ RBISUpdateInterface * InsHandler::processMessage(const bot_core::ins_t * msg, RB
             msg->utime);
 
     // We reset the bias values to the original value, if requested
-    if(!gyro_bias_update) {
+    if(!gyro_bias_update_online) {
         update->posterior_state.gyroBias() = gyro_bias_initial;
     }
 
-    if(!accel_bias_update) {
+    if(!accel_bias_update_online) {
         update->posterior_state.accelBias() = accel_bias_initial;
     }
 
@@ -343,12 +344,12 @@ bool InsHandler::processMessageInitCommon(const std::map<std::string, bool> & se
       fprintf(stderr, "Yaw Initialized from INS: %f\n", mag_vec_rpy(2));
     }
 
-    if(accel_bias_calc_at_init) {
+    if(accel_bias_recalc_at_start) {
         std::cout << "Estimated initial gyro bias as: " << init_state.accelBias().transpose() << std::endl;
         accel_bias_initial = init_state.accelBias();
     }
 
-    if(gyro_bias_calc_at_init){
+    if(gyro_bias_recalc_at_start){
         std::cout << "Estimated initial gyro bias as: " << init_state.gyroBias().transpose() << std::endl;
         gyro_bias_initial = init_state.gyroBias();
     }

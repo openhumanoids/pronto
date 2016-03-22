@@ -75,13 +75,13 @@ protected:
   Eigen::Vector3d gyro_bias_sum;
 
   ////////////////////////
-  bool gyro_bias_update;
+  bool gyro_bias_update_online;
   Eigen::Vector3d gyro_bias_initial;
-  bool gyro_bias_calc_at_init;
+  bool gyro_bias_recalc_at_start;
 
-  bool accel_bias_update;
+  bool accel_bias_update_online;
   Eigen::Vector3d accel_bias_initial;
-  bool accel_bias_calc_at_init;
+  bool accel_bias_recalc_at_start;
 
 };
 
