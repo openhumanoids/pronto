@@ -101,7 +101,7 @@ protected:
 class ViconHandler {
 public:
   typedef enum {
-    MODE_POSITION, MODE_POSITION_ORIENT
+    MODE_POSITION, MODE_POSITION_ORIENT, MODE_ORIENTATION, MODE_YAW
   } ViconMode;
 
   ViconHandler(BotParam * param, BotFrames *frames);
