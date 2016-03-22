@@ -22,7 +22,7 @@ class FootContact {
 
     /////////////////////////////////////////////////
     footid standing_foot;
-    float atlas_weight_;
+    float total_force_;
     int64_t transition_timespan;
     bool foottransitionintermediateflag;
 
@@ -37,7 +37,7 @@ class FootContact {
 
 
   public:     
-    FootContact (bool log_data_files_, float atlas_weight_, float schmitt_level_);
+    FootContact (bool log_data_files_, float total_force_, float schmitt_level_);
 
     void terminate();
 

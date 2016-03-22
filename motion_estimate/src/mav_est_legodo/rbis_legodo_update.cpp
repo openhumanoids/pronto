@@ -61,7 +61,11 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     std::cout << "Will not republish other data\n";
   }
   
-  lcm_recv->subscribe("FORCE_TORQUE",&LegOdoHandler::forceTorqueHandler,this);
+  channel_force_torque = bot_param_get_str_or_fail(param, "state_estimator.legodo.channel_force_torque");
+  lcm_recv->subscribe(channel_force_torque.c_str(),&LegOdoHandler::forceTorqueHandler,this);
+  std::cout << "Subscribing to "<< channel_force_torque <<" for Force/Torque measurements\n";
+  // Note reuse of config variable:
+  republish_sensors_ = bot_param_get_boolean_or_fail(param, "state_estimator.republish_sensors");
   
   // Arbitrary Subscriptions:
   if (lcm_pub != lcm_recv && republish_cameras) {
@@ -177,13 +181,18 @@ void LegOdoHandler::controllerInputHandler(const lcm::ReceiveBuffer* rbuf, const
 void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::six_axis_force_torque_array_t* msg){
   force_torque_ = *msg;
   force_torque_init_ = true;
+
+  // F/T isn't received via a processMessage handler, so this republishes it here:
+  if (republish_sensors_)
+    lcm_pub->publish(channel, msg);
+
 }
 
 
 RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov){
 
   if (!force_torque_init_){
-    std::cout << "FORCE_TORQUE not received yet, not integrating leg odometry =========================\n";
+    std::cout << "Force/Torque message not received yet, not integrating leg odometry =========================\n";
     return NULL;    
   } 
 

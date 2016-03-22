@@ -21,6 +21,7 @@ namespace MavStateEst {
 
 class InsHandler {
 protected:
+
   void create(BotParam * _param, BotFrames * _frames);
   public:
   InsHandler(BotParam * _param, BotFrames * _frames);
@@ -72,6 +73,16 @@ protected:
   Eigen::Vector3d g_vec_sum;
   Eigen::Vector3d mag_vec_sum;
   Eigen::Vector3d gyro_bias_sum;
+
+  ////////////////////////
+  bool gyro_bias_update_online;
+  Eigen::Vector3d gyro_bias_initial;
+  bool gyro_bias_recalc_at_start;
+
+  bool accel_bias_update_online;
+  Eigen::Vector3d accel_bias_initial;
+  bool accel_bias_recalc_at_start;
+
 };
 
 
