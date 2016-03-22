@@ -158,17 +158,12 @@ public:
       ins_handler = new InsHandler(front_end->param, front_end->frames);
 
       // TODO: enable easy switching between inertial sensors:
-      if( ins_handler->channel =="MICROSTRAIN_INS"){
+      if( ins_handler->channel =="ATLAS_IMU_BATCH"){
+        front_end->addSensor("ins", &MavStateEst::InsHandler::processMessageAtlas, ins_handler);
+        rbis_initializer->addSensor("ins", &MavStateEst::InsHandler::processMessageInitAtlas, ins_handler);
+      }else{
         front_end->addSensor("ins", &MavStateEst::InsHandler::processMessage, ins_handler);
         rbis_initializer->addSensor("ins", &MavStateEst::InsHandler::processMessageInit, ins_handler);
-      }else if( ins_handler->channel =="ATLAS_IMU_BATCH"){
-        front_end->addSensor("ins", &MavStateEst::InsHandler::processMessageAtlas, ins_handler);
-        rbis_initializer->addSensor("ins", &MavStateEst::InsHandler::processMessageInitAtlas, ins_handler);
-      }else if( ins_handler->channel =="ATLAS_IMU_BATCH_FILTERED"){
-        std::cout << "Filtered IMU expected\n";
-        // messages will not be incorporated twice, either this or the other - but not both
-        front_end->addSensor("ins", &MavStateEst::InsHandler::processMessageAtlas, ins_handler);
-        rbis_initializer->addSensor("ins", &MavStateEst::InsHandler::processMessageInitAtlas, ins_handler);
       }
     }
 
