@@ -63,6 +63,7 @@ public:
   boost::shared_ptr<lcm::LCM> lcm_pub_boost;
   boost::shared_ptr<ModelClient> model_boost;
   BotFrames* frames;
+  std::string channel_force_torque;
   
   // Settings 
   // Number of iterations to assume are zero velocity at start:
@@ -71,6 +72,8 @@ public:
   bool republish_incoming_poses_;
   // Publish Debug Data e.g. kinematic velocities and foot contacts
   bool publish_diagnostics_;
+  // Republish core sensors - currently just Force/Torque
+  bool republish_sensors_;
   int verbose_; 
   
   // Torque Adjustment:
