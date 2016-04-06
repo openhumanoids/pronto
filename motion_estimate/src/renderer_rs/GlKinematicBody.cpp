@@ -850,7 +850,7 @@ void GlKinematicBody::draw_link(shared_ptr<urdf::Geometry> link, const std::stri
  std::string GlKinematicBody::evalMeshFilePath(std::string file_path_expression, bool return_convex_hull_path)
   {
     std::string result = "";
-    std::string package_path = std::string(getModelsPath()) + "/mit_gazebo_models/"; // getModelsPath gives /drc/software/build/models/
+    std::string package_path = std::string(getModelsPath()) + "/";// + "/mit_gazebo_models/"; // getModelsPath gives /drc/software/build/models/
     std::string token_str1 ("package://");
     std::string token_str2 (".");
     size_t found1, found2;
