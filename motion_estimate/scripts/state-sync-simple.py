@@ -14,9 +14,10 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 
 home_dir =os.getenv("DRC_BASE")
-#print home_dir
-sys.path.append(home_dir + "/software/build/lib/python2.7/site-packages")
-sys.path.append(home_dir + "/software/build/lib/python2.7/dist-packages")
+if (home_dir is not None):
+  #print home_dir
+  sys.path.append(home_dir + "/software/build/lib/python2.7/site-packages")
+  sys.path.append(home_dir + "/software/build/lib/python2.7/dist-packages")
 
 from bot_core.pose_t import pose_t
 from bot_core.robot_state_t import robot_state_t
