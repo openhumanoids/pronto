@@ -209,6 +209,7 @@ int main(int argc, char **argv){
   cl_cfg.use_velodyne = false;
   cl_cfg.init_with_message = TRUE;
   cl_cfg.output_channel = "POSE_BODY";
+  cl_cfg.init_channel = "POSE_GROUND_TRUTH";
 
   ConciseArgs parser(argc, argv, "simple-fusion");
   parser.add(cl_cfg.init_with_message, "g", "init_with_message", "Bootstrap internal estimate using VICON or POSE_INIT");
