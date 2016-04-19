@@ -20,6 +20,7 @@ struct CommandLineConfig
   bool use_velodyne;
   bool init_with_message; // initialize off of a pose or vicon
   std::string output_channel;
+  std::string init_channel;
 };
 
 class App{
@@ -90,7 +91,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) :
     pose_initialized_ = true;
   }else{
     lcm_->subscribe("VICON_BODY|VICON_FRONTPLATE",&App::rigidTransformInitHandler,this);
-    lcm_->subscribe("POSE_VICON",&App::poseInitHandler,this);
+    lcm_->subscribe(cl_cfg_.init_channel,&App::poseInitHandler,this);
     std::cout << "Waiting for Init message to LIDAR estimator\n";
   }
 
@@ -213,6 +214,7 @@ int main(int argc, char **argv){
   parser.add(cl_cfg.init_with_message, "g", "init_with_message", "Bootstrap internal estimate using VICON or POSE_INIT");
   parser.add(cl_cfg.output_channel, "o", "output_channel", "Output message e.g POSE_BODY");
   parser.add(cl_cfg.use_velodyne, "v", "use_velodyne", "Use a velodyne instead of the LIDAR");
+  parser.add(cl_cfg.init_channel, "i", "init_channel", "Read the init message from this channel, e.g., POSE_GROUND_TRUTH");
   parser.parse();
 
   boost::shared_ptr<lcm::LCM> lcm(new lcm::LCM);
