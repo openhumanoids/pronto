@@ -71,6 +71,9 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) :
   }else{
     lcm_->subscribe("SCAN",&App::lidarHandler,this);
     int status = get_trans_with_utime( botframes_ ,  "SCAN", "body"  , 0, body_to_lidar_);
+    std::cout << "Body to Lidar from param: " << std::endl;
+    std::cout << body_to_lidar_.matrix() << std::endl;
+
   }
 
   pose_initialized_ = false;
