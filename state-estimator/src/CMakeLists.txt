@@ -16,7 +16,6 @@ pods_use_pkg_config_packages(fixie-vicon-simple-state-estimator
 	bot2-param-client
 	bot2-frames
 	eigen-utils
-	lcmtypes_microstrain
     path-util
     lcmtypes_vicon
     lcmtypes_pronto
