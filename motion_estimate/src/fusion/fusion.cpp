@@ -32,7 +32,7 @@ class StandingPrep{
 public:
     StandingPrep(boost::shared_ptr<lcm::LCM> &lcm_):lcm_(lcm_){
       lcm_->subscribe( "STATE_EST_READY" ,&StandingPrep::navReadyHandler,this);
-      lcm_->subscribe( "POSE_BDI" ,&StandingPrep::poseBDIHandler,this);
+      lcm_->subscribe( "POSE_BODY_ALT" ,&StandingPrep::poseBDIHandler,this);
       ready_ =false;
     }
     ~StandingPrep(){}

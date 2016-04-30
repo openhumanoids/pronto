@@ -158,8 +158,8 @@ function [a,s] = do_pre_process(settings)
 a=[], b=[]
 load([settings.folder_path settings.log_filename]);
 raw = [ 0*ones(size(POSE_VICON,1),1) , POSE_VICON ];
-raw = [raw; 1*ones(size(POSE_BDI,1),1) , POSE_BDI];
-raw = [raw; 2*ones(size(POSE_BODY,1),1) , POSE_BODY]; % usedto used POSE_BODY_ALT
+raw = [raw; 1*ones(size(POSE_BODY_ALT,1),1) , POSE_BODY_ALT];
+raw = [raw; 2*ones(size(POSE_BODY,1),1) , POSE_BODY];
 res = sortrows(raw, 2);
 % convert to mins from zero
 res(:,2) = (res(:,2) - res(1,2))*1E-6;
