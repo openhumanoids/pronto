@@ -216,7 +216,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
 
   lcm_->subscribe( "POSE_BODY" ,&App::poseESTHandler,this);
   lcm_->subscribe( "POSE_MIT" ,&App::poseMITHandler,this);
-  lcm_->subscribe( "POSE_BDI" ,&App::poseBDIHandler,this);
+  lcm_->subscribe( "POSE_BODY_ALT" ,&App::poseBDIHandler,this);
 
   if (cl_cfg_.use_pose_vicon){
     lcm_->subscribe("POSE_VICON",&App::viconPoseHandler,this);  

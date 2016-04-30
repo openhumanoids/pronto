@@ -1,6 +1,6 @@
 // A basic tool to initialize the state estimator
 // by pretending to be a vicon measurement
-// TODO: depreciate this and use POSE_BDI directly within mav-est
+// TODO: depreciate this and use POSE_BODY_ALT directly within mav-est
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
@@ -44,7 +44,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
   botparam_ = bot_param_new_from_file(param_file_full.c_str());
   frames_ = bot_frames_get_global(lcm_->getUnderlyingLCM(), botparam_);
   
-  lcm_->subscribe("POSE_BDI",&App::poseBDIHandler,this);  
+  lcm_->subscribe("POSE_BODY_ALT",&App::poseBDIHandler,this);  
 }
 
 

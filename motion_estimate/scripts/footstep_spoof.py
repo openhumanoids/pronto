@@ -53,7 +53,7 @@ def on_pose_body(channel, data):
     
 def on_deprecated_footstep_plan(channel, data):
   if ( (state.got_pose_bdi == False) or (state.got_pose_body == False) ):
-    print "havent got POSE_BDI and POSE_BODY yet"
+    print "havent got POSE_BODY_ALT and POSE_BODY yet"
     return
     
   m = deprecated_footstep_plan_t.decode(data)
@@ -79,7 +79,7 @@ print "started"
 
 state = State()
 
-sub1 = lc.subscribe("POSE_BDI", on_pose_bdi)
+sub1 = lc.subscribe("POSE_BODY_ALT", on_pose_bdi)
 sub2 = lc.subscribe("POSE_BODY", on_pose_body)
 sub3 = lc.subscribe("CANDIDATE_BDI_FOOTSTEP_PLAN_MIT_FRAME", on_deprecated_footstep_plan)
 

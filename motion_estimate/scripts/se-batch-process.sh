@@ -53,10 +53,10 @@ process_log(){
   fi
 
   #se-leg-odometry -U model_LH_RH.urdf -P drc_robot_02.cfg -L $log_in -pr 0 -r -l $log_out_legodo
-  #bot-log2mat  $log_out_legodo  -c "POSE_BDI|POSE_VICON|POSE_BODY_ALT" -o $log_out_legodo_mat
+  #bot-log2mat  $log_out_legodo  -c "POSE_VICON|POSE_BODY_ALT" -o $log_out_legodo_mat
 
   se-fusion       -U model_LN_RN.urdf -P drc_robot_02_mit.cfg -L $log_in -pr 0    -l $log_out_fusion
-  bot-log2mat  $log_out_fusion  -c "POSE_BDI|POSE_VICON|POSE_BODY_ALT|POSE_BODY|POSE_MIT" -o $log_out_fusion_mat
+  bot-log2mat  $log_out_fusion  -c "POSE_VICON|POSE_BODY_ALT|POSE_BODY|POSE_MIT" -o $log_out_fusion_mat
 
   echo $log_out_legodo_mat
   echo $log_out_fusion_mat

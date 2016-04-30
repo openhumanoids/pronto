@@ -52,7 +52,7 @@ def on_atlas_state(channel, data):
 lc = lcm.LCM()
 print "started"
 
-lc.subscribe("POSE_BDI", on_pose)
+lc.subscribe("POSE_BODY_ALT", on_pose)
 lc.subscribe("ATLAS_IMU_BATCH", on_imu)
 lc.subscribe("ATLAS_STATE", on_atlas_state)
   
