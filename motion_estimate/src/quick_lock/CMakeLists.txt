@@ -13,16 +13,6 @@ target_link_libraries (se-quick-lock lcm pronto_math
                         boost_system boost_thread)
 pods_install_executables(se-quick-lock )
 
-
-add_executable(se-pose-compare pose_compare.cpp)
-pods_use_pkg_config_packages(se-pose-compare
-    path-util ${REQUIRED_PACKAGES}
-    pronto_vis)
-target_link_libraries (se-pose-compare lcm pronto_math
-                        boost_system boost_thread)
-pods_install_executables(se-pose-compare )
-
-
 add_executable(se-yaw-lock yaw_lock.cpp)
 pods_use_pkg_config_packages(se-yaw-lock
     model-client   bot2-param-client  urdf orocos-kdl kdl-parser forward-kinematics
