@@ -2,6 +2,45 @@
 // there after, issue this yaw as a correction to 
 // to the state estimate
 
+/*
+
+inputs are:
+- core robot state
+- pose body
+- controller status
+
+when standing or manipulating
+- and haven't seen a slip recently determine correction (at about 1Hz)
+
+using current state (pose body and joints):
+- find pose of each foot
+
+have we just started standing:
+- capture the positions of the feet
+  [return]
+
+if a yaw jump is detected disable for 5 seconds
+- this is done by comparing the average yaw of the feet
+  not to earlier. it shouldn't have changed
+- to avoid closed loop feedback on controller
+
+else:
+
+assuming the two feet havent slipped since standing
+- get reverse FK from each foot to pelvis
+- average to give pelvis orientation
+- only use the yaw element in the state correction
+
+
+TODO: look at atlas logs and see if yaw slip detection
+occurred during the finals
+TODO: one piece of info we dont currently use is the 
+relative foot velocity in either estimation or failure
+detection
+*/
+
+
+
 #include <boost/shared_ptr.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/algorithm/string.hpp>
@@ -75,6 +114,9 @@ class App{
     void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg);
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
     void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
+
+    void makeCorrection(Eigen::Isometry3d world_to_body, int64_t body_utime);
+
     const CommandLineConfig cl_cfg_;
     int64_t counter_;
 
@@ -138,6 +180,20 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
     return;
   }
 
+  // Get the Body Position:
+  Eigen::Isometry3d world_to_body;
+  world_to_body.setIdentity();
+  world_to_body.translation()  << msg->pos[0], msg->pos[1], msg->pos[2];
+  Eigen::Quaterniond quat = Eigen::Quaterniond(msg->orientation[0], msg->orientation[1],
+                                               msg->orientation[2], msg->orientation[3]);
+  world_to_body.rotate(quat);
+
+  makeCorrection(world_to_body, msg->utime);
+}
+
+
+void App::makeCorrection(Eigen::Isometry3d world_to_body, int64_t body_utime){
+
   // Occasionally send a correction when in either standing or manipulating mode
   if (counter_ % cl_cfg_.correction_period != 0){ // Correct the yaw drift every X tics
     counter_++;
@@ -147,14 +203,14 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
   }
   if (!( (last_controller_state_ == pronto::controller_status_t::STANDING) ||
        (last_controller_state_ == pronto::controller_status_t::MANIPULATING) )){
-    std::cout << msg->utime << " not in standing or manipulation mode, not correcting\n";
+    std::cout << body_utime << " not in standing or manipulation mode, not correcting\n";
     lock_init_ = false;
     return;
   }
 
   if (cl_cfg_.yaw_slip_detect){
-    if (msg->utime < utime_disable_until_){
-      std::cout << "yaw lock disabled until " << utime_disable_until_ << " (" << ((double) (utime_disable_until_ - msg->utime)*1E-6) << " secs more)\n";
+    if (body_utime < utime_disable_until_){
+      std::cout << "yaw lock disabled until " << utime_disable_until_ << " (" << ((double) (utime_disable_until_ - body_utime)*1E-6) << " secs more)\n";
       return;
     }
   }
@@ -175,13 +231,6 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
   Eigen::Isometry3d body_to_l_foot = KDLToEigen(cartpos_out.find("l_foot")->second);
   Eigen::Isometry3d body_to_r_foot = KDLToEigen(cartpos_out.find("r_foot")->second);
 
-  // Get the Body Position:
-  Eigen::Isometry3d world_to_body;
-  world_to_body.setIdentity();
-  world_to_body.translation()  << msg->pos[0], msg->pos[1], msg->pos[2];
-  Eigen::Quaterniond quat = Eigen::Quaterniond(msg->orientation[0], msg->orientation[1],
-                                               msg->orientation[2], msg->orientation[3]);
-  world_to_body.rotate(quat);
 
 
    Eigen::Isometry3d l_foot_to_r_foot = body_to_l_foot.inverse() *body_to_r_foot ;
@@ -216,13 +265,13 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
 
     // If a yaw change of more than XX degrees is detected in the kinematics, don't do yaw lock
     if (yaw_diff_change*180/M_PI >  cl_cfg_.yaw_slip_threshold_degrees ){
-      utime_disable_until_ = msg->utime+ cl_cfg_.yaw_slip_disable_period*1E6;
+      utime_disable_until_ = body_utime + cl_cfg_.yaw_slip_disable_period*1E6;
       std::stringstream message;
       message << "yaw slippage of "<< (yaw_diff_change*180/M_PI) << " degrees detected. Resetting and disabling the yaw lock until " << utime_disable_until_;
       std::cout << message.str() << "\n";
 
       bot_core::utime_t warning_message;
-      warning_message.utime = msg->utime;
+      warning_message.utime = body_utime;
       lcm_->publish(("YAW_SLIP_DETECTED"), &warning_message);
       bot_core::system_status_t stat_msg;
       stat_msg.utime = 0;
@@ -246,9 +295,9 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
   Eigen::Quaterniond world_to_body_using_right_quat(world_to_body_using_right.rotation());
   Eigen::Quaterniond world_to_body_quat_update = world_to_body_using_left_quat.slerp(0.5,world_to_body_using_right_quat);
 
-  std::cout << msg->utime << ": sending POSE_YAW_LOCK\n";
+  std::cout << body_utime << ": sending POSE_YAW_LOCK\n";
   bot_core::pose_t out;
-  out.utime = msg->utime;
+  out.utime = body_utime;
   out.pos[0] = 0;
   out.pos[1] = 0;
   out.pos[2] = 0;
@@ -290,7 +339,7 @@ int main(int argc, char ** argv) {
   cl_cfg.output_channel = "POSE_YAW_LOCK";
   cl_cfg.correction_period = 333; // 333 is one sec of POSE_BODY
 
-  // Added to detect yae slip:
+  // Added to detect yaw slip:
   cl_cfg.yaw_slip_detect = false;
   cl_cfg.yaw_slip_threshold_degrees = 1.5; // degrees
   cl_cfg.yaw_slip_disable_period = 5; // seconds
