@@ -1,3 +1,7 @@
+#ifndef YAW_LOCK_HPP_
+#define YAW_LOCK_HPP_
+
+
 #include "urdf/model.h"
 #include "kdl/tree.hpp"
 #include "kdl_parser/kdl_parser.hpp"
@@ -11,7 +15,7 @@
 
 class YawLock{
   public:
-    YawLock(boost::shared_ptr<lcm::LCM> &lcm_, boost::shared_ptr<ModelClient> &model_);
+    YawLock(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, boost::shared_ptr<ModelClient> &model_);
 
     ~YawLock(){
     }
@@ -48,8 +52,10 @@ class YawLock{
     
 
   private:
+
+    lcm::LCM* lcm_pub;
+    lcm::LCM* lcm_recv;
     
-    boost::shared_ptr<lcm::LCM> lcm_;
     boost::shared_ptr<ModelClient> model_;
     boost::shared_ptr<KDL::TreeFkSolverPosFull_recursive> fksolver_;
     std::vector<std::string> joint_name_;
@@ -78,3 +84,5 @@ class YawLock{
     double yaw_slip_disable_period_;
 
 };
+
+#endif /* YAW_LOCK_HPP_ */

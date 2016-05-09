@@ -30,13 +30,13 @@ struct CommandLineConfig
 
 class App{
   public:
-    App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_);
+    App(lcm::LCM* &lcm_, const CommandLineConfig& cl_cfg_);
 
     ~App(){
     }
 
   private:
-    boost::shared_ptr<lcm::LCM> lcm_;
+    lcm::LCM* lcm_;
     const CommandLineConfig cl_cfg_;
     boost::shared_ptr<ModelClient> model_;
     YawLock* yaw_lock_;
@@ -47,12 +47,12 @@ class App{
 
 };
 
-App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_):
+App::App(lcm::LCM* &lcm_, const CommandLineConfig& cl_cfg_):
     lcm_(lcm_), cl_cfg_(cl_cfg_){
 
   model_ = boost::shared_ptr<ModelClient>(new ModelClient(lcm_->getUnderlyingLCM(), 0));
 
-  yaw_lock_ = new YawLock(lcm_, model_);
+  yaw_lock_ = new YawLock(lcm_, &(*lcm_), model_);
   yaw_lock_->setParameters(cl_cfg_.correction_period, cl_cfg_.yaw_slip_detect, 
     cl_cfg_.yaw_slip_threshold_degrees, cl_cfg_.yaw_slip_disable_period );
 
@@ -124,7 +124,7 @@ int main(int argc, char ** argv) {
   opt.add(cl_cfg.yaw_slip_disable_period, "yp", "yaw_slip_disable_period","Amount of time to disable lock after we have detected (sec)");
   opt.parse();
 
-  boost::shared_ptr<lcm::LCM> lcm(new lcm::LCM);
+  lcm::LCM* lcm(new lcm::LCM);
   if(!lcm->good()){
     std::cerr <<"ERROR: lcm is not good()" <<std::endl;
   }

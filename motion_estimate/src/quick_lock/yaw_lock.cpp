@@ -42,8 +42,8 @@ detection
 #include "yaw_lock.hpp"
 
 
-YawLock::YawLock(boost::shared_ptr<lcm::LCM> &lcm_, boost::shared_ptr<ModelClient> &model_):
-    model_(model_){
+YawLock::YawLock(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, boost::shared_ptr<ModelClient> &model_):
+    lcm_recv(lcm_recv), lcm_pub(lcm_pub), model_(model_){
 
   KDL::Tree tree;
   if (!kdl_parser::treeFromString( model_->getURDFString() ,tree)){
@@ -157,14 +157,14 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
 
       bot_core::utime_t warning_message;
       warning_message.utime = body_utime;
-      lcm_->publish(("YAW_SLIP_DETECTED"), &warning_message);
+      lcm_pub->publish(("YAW_SLIP_DETECTED"), &warning_message);
       bot_core::system_status_t stat_msg;
       stat_msg.utime = 0;
       stat_msg.system = stat_msg.MOTION_ESTIMATION;
       stat_msg.importance = stat_msg.VERY_IMPORTANT;
       stat_msg.frequency = stat_msg.LOW_FREQUENCY;
       stat_msg.value = message.str();
-      lcm_->publish(("SYSTEM_STATUS"), &stat_msg);
+      lcm_pub->publish(("SYSTEM_STATUS"), &stat_msg);
 
       lock_init_ = false;
       return false;
@@ -179,7 +179,6 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
   Eigen::Quaterniond world_to_body_using_left_quat(world_to_body_using_left.rotation());
   Eigen::Quaterniond world_to_body_using_right_quat(world_to_body_using_right.rotation());
   world_to_body_quat_correction = world_to_body_using_left_quat.slerp(0.5,world_to_body_using_right_quat);
-
 
 
 //   std::cout << "==============================\n\n\n";
