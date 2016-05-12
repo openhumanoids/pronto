@@ -6,7 +6,7 @@
 
 //#include <mav_state_est/mav-est-fovis/rbis_fovis_update.hpp>
 #include <mav_state_est/mav-est-legodo/rbis_legodo_update.hpp>
-#include <mav_state_est/mav-est-legodo/rbis_legodo_external_update.hpp>
+#include <mav_state_est/mav-est-yawlock/rbis_yawlock_update.hpp>
 #include <mav_state_est/pose_meas.hpp>
 
 #include <path_util/path_util.h>
@@ -227,15 +227,13 @@ public:
 
     if (front_end->isActive("legodo")) {
       legodo_handler = new LegOdoHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, model, front_end->frames);
-      front_end->addSensor("yaw_lock", &MavStateEst::LegOdoHandler::processMessage, legodo_handler);
+      front_end->addSensor("legodo", &MavStateEst::LegOdoHandler::processMessage, legodo_handler);
     }
 
-    /*
-    if (front_end->isActive("yaw_lock")) {
-      yaw_lock_handler = new YawLockHandler(front_end->lcm_recv, front_end->lcm_pub, model);
-      front_end->addSensor("yaw_lock", &MavStateEst::YawLockHandler::processMessage, yaw_lock_handler);
+    if (front_end->isActive("yawlock")) {
+      yaw_lock_handler = new YawLockHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, model, front_end->frames);
+      front_end->addSensor("yawlock", &MavStateEst::YawLockHandler::processMessage, yaw_lock_handler);
     }
-    */
 
     restart_sub =  front_end->lcm_recv->subscribe( "STATE_EST_RESTART" ,&App::restartHandler,this);
 
@@ -284,7 +282,7 @@ public:
   //RgbdGPFHandler * rgbd_gpf_handler;
   //FovisHandler * fovis_handler;
   LegOdoHandler * legodo_handler;
-  LegOdoExternalHandler * legodo_external_handler;
+  YawLockHandler * yaw_lock_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
   ScanMatcherHandler * scan_matcher_handler;
   OpticalFlowHandler * optical_flow_handler;

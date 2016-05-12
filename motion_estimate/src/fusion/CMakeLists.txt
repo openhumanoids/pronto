@@ -6,7 +6,7 @@ pods_use_pkg_config_packages(se-fusion
 #    mav-est-fovis
     gpf-laser-lib
     mav-est-legodo
-    mav-est-legodo-external
+    mav-est-yawlock
     lcmtypes_pronto
     model-client 
     pronto_vis
