@@ -39,11 +39,14 @@ relative foot velocity in either estimation or failure
 detection
 */
 
-#include "yaw_lock.hpp"
+#include "yawlock.hpp"
+
+
 
 
 YawLock::YawLock(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, boost::shared_ptr<ModelClient> &model_):
-    lcm_recv(lcm_recv), lcm_pub(lcm_pub), model_(model_){
+    lcm_recv(lcm_recv), lcm_pub(lcm_pub), model_(model_), is_robot_standing_(false){
+  // Controller state set to unknonn at start
 
   KDL::Tree tree;
   if (!kdl_parser::treeFromString( model_->getURDFString() ,tree)){
@@ -58,10 +61,6 @@ YawLock::YawLock(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, boost::shared_ptr<Model
   utime_disable_until_ = 0; // don't disable at start (but will be uninitialized)
 
   counter_=0;
-
-  last_controller_state_ = pronto::controller_status_t::UNKNOWN; // 
-  correction_state_ = pronto::controller_status_t::STANDING;
-  //correction_state_ = pronto::controller_status_t::DUMMY; // for testing
 
 }
 
@@ -86,8 +85,7 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
   }else{
     counter_++;
   }
-  if (!( (last_controller_state_ == pronto::controller_status_t::STANDING) ||
-       (last_controller_state_ == pronto::controller_status_t::MANIPULATING) )){
+  if (!is_robot_standing_){
     std::cout << body_utime << " not in standing or manipulation mode, not correcting\n";
     lock_init_ = false;
     return false;

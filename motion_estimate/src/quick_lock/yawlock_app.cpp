@@ -8,6 +8,7 @@
 #include <Eigen/Dense>
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
+#include <lcmtypes/pronto/behavior_t.hpp>
 #include <lcmtypes/bot_core/joint_state_t.hpp>
 #include <lcmtypes/bot_core/system_status_t.hpp>
 #include <lcmtypes/bot_core/utime_t.hpp>
@@ -25,6 +26,8 @@ struct CommandLineConfig
     bool yaw_slip_detect;
     double yaw_slip_threshold_degrees;
     double yaw_slip_disable_period;
+
+    std::string behavior_input_mode;
 };
 
 
@@ -41,9 +44,13 @@ class App{
     boost::shared_ptr<ModelClient> model_;
     YawLock* yaw_lock_;
 
+    Eigen::Isometry3d world_to_body_;
+    bool world_to_body_init_;
+
     void jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg);
     void poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg);
     void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
+    void robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg);    
 
 };
 
@@ -58,35 +65,60 @@ App::App(lcm::LCM* &lcm_, const CommandLineConfig& cl_cfg_):
 
   lcm_->subscribe( "CORE_ROBOT_STATE" ,&App::jointStateHandler,this);
   lcm_->subscribe( "POSE_BODY" ,&App::poseHandler,this);
-  lcm_->subscribe( "CONTROLLER_STATUS" ,&App::controllerStatusHandler,this);
+
+  if (cl_cfg_.behavior_input_mode == "CONTROLLER_STATUS"){
+    // MIT controller:
+    lcm_->subscribe( "CONTROLLER_STATUS" ,&App::controllerStatusHandler,this);
+  }else if (cl_cfg_.behavior_input_mode == "ROBOT_BEHAVIOR") {
+    // ROBOT_BEHAVIOR comes from IHMC or BDI API
+    lcm_->subscribe( "ROBOT_BEHAVIOR" ,&App::robotBehaviorHandler,this);
+  }else{
+    std::cout << "behavior_input_mode not recognised: CONTROLLER_STATUS or ROBOT_BEHAVIOR\n";
+    exit(-1);
+  }
+
+  world_to_body_init_ = false;
 
 }
 
+void App::robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg){
+  bool is_robot_standing = false;
+
+  // If standing or manipulating:
+  if (msg->behavior == pronto::behavior_t::BEHAVIOR_STAND){
+    is_robot_standing = true; 
+  }else if (msg->behavior == pronto::behavior_t::BEHAVIOR_MANIPULATE){
+    is_robot_standing = true; 
+  }
+
+  yaw_lock_->setControllerState(is_robot_standing);  
+}
+
+
 void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg){
-  yaw_lock_->setControllerState(msg->state);  
+  bool is_robot_standing = false;
+
+  // If standing or manipulating:
+  if (msg->state == pronto::controller_status_t::STANDING){
+    is_robot_standing = true; 
+  }else if (msg->state == pronto::controller_status_t::MANIPULATING){
+    is_robot_standing = true; 
+  }
+
+  yaw_lock_->setControllerState(is_robot_standing);  
 }
 
 void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg){
-  yaw_lock_->setJointState(msg->joint_position, msg->joint_name);
-}
 
-
-void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
-  if ( !yaw_lock_->getJointAnglesInit() ){
-    std::cout << "no joints received yet, returning\n";
+  if ( !world_to_body_init_ ){
+    std::cout << "YawLock: pose body now received yet, returning\n";
     return;
   }
 
-  // Get the Body Position:
-  Eigen::Isometry3d world_to_body;
-  world_to_body.setIdentity();
-  world_to_body.translation()  << msg->pos[0], msg->pos[1], msg->pos[2];
-  Eigen::Quaterniond quat = Eigen::Quaterniond(msg->orientation[0], msg->orientation[1],
-                                               msg->orientation[2], msg->orientation[3]);
-  world_to_body.rotate(quat);
+  yaw_lock_->setJointState(msg->joint_position, msg->joint_name);
 
-  Eigen::Quaterniond world_to_body_quat_correction; 
-  if (yaw_lock_->getCorrection(world_to_body, msg->utime, world_to_body_quat_correction) ){
+  Eigen::Quaterniond world_to_body_quat_correction;  
+  if (yaw_lock_->getCorrection(world_to_body_, msg->utime, world_to_body_quat_correction) ){
 
     // send corrections
     std::cout << msg->utime << ": sending POSE_YAW_LOCK\n";
@@ -106,9 +138,21 @@ void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel
 }
 
 
+void App::poseHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::pose_t* msg){
+
+  world_to_body_.setIdentity();
+  world_to_body_.translation()  << msg->pos[0], msg->pos[1], msg->pos[2];
+  Eigen::Quaterniond quat = Eigen::Quaterniond(msg->orientation[0], msg->orientation[1],
+                                               msg->orientation[2], msg->orientation[3]);
+  world_to_body_.rotate(quat);
+  world_to_body_init_ = true;
+}
+
+
 int main(int argc, char ** argv) {
   CommandLineConfig cl_cfg;
   cl_cfg.output_channel = "POSE_YAW_LOCK";
+  cl_cfg.behavior_input_mode = "CONTROLLER_STATUS";
   cl_cfg.correction_period = 333; // 333 is one sec of POSE_BODY
 
   // Added to detect yaw slip:
@@ -118,6 +162,7 @@ int main(int argc, char ** argv) {
 
   ConciseArgs opt(argc, (char**)argv);
   opt.add(cl_cfg.output_channel, "o", "output_channel","Output measurement channel");
+  opt.add(cl_cfg.behavior_input_mode, "b", "behavior","Should we listen to CONTROLLER_STATUS or ROBOT_BEHAVIOR for robot behavior");  
   opt.add(cl_cfg.correction_period, "p", "correction_period","Period (in samples) between corrections");
   opt.add(cl_cfg.yaw_slip_detect, "yd", "yaw_slip_detect","Try to detect foot slippage");
   opt.add(cl_cfg.yaw_slip_threshold_degrees, "ya", "yaw_slip_threshold_degrees","Threshold in yaw we detect");

@@ -84,7 +84,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   // Arbitrary Subscriptions:
   if (lcm_pub != lcm_recv && republish_cameras) {
     std::cout << "Will republish camera data\n";
-    lcm_recv->subscribe("WEBCAM",&LegOdoHandler::republishHandler,this);  
+    lcm_recv->subscribe("WEBCAM|VICON_pelvis_val",&LegOdoHandler::republishHandler,this);  
   }
  
   lcm_recv->subscribe("CONTROLLER_FOOT_CONTACT",&LegOdoHandler::controllerInputHandler,this);

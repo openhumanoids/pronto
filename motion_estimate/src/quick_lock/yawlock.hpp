@@ -1,5 +1,5 @@
-#ifndef YAW_LOCK_HPP_
-#define YAW_LOCK_HPP_
+#ifndef YAWLOCK_HPP_
+#define YAWLOCK_HPP_
 
 
 #include "urdf/model.h"
@@ -9,7 +9,6 @@
 #include <model-client/model-client.hpp>
 #include <pronto_utils/pronto_math.hpp>
 
-#include <lcmtypes/pronto/controller_status_t.hpp>
 #include <lcmtypes/bot_core/system_status_t.hpp>
 #include <lcmtypes/bot_core/utime_t.hpp>
 
@@ -28,8 +27,8 @@ class YawLock{
         yaw_slip_disable_period_ = yaw_slip_disable_period_in;
     }
 
-    void setControllerState(int last_controller_state_in){
-      last_controller_state_ = last_controller_state_in;
+    void setControllerState(int is_robot_standing_in){
+      is_robot_standing_ = is_robot_standing_in;
     }
 
     void setJointState(std::vector<float> joint_position_in, 
@@ -73,9 +72,8 @@ class YawLock{
 
     int64_t counter_;
 
-    int last_controller_state_;
+    bool is_robot_standing_;
     double current_yaw_;
-    int correction_state_; // state in which we can apply the change
 
     // Parameters
     int correction_period_;
@@ -85,4 +83,4 @@ class YawLock{
 
 };
 
-#endif /* YAW_LOCK_HPP_ */
+#endif /* YAWLOCK_HPP_ */
