@@ -70,7 +70,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   }
   if (republish_incoming_poses_){
     std::cout << "Will republish a variety of channels\n";
-    lcm_recv->subscribe("VICON_BODY|VICON_FRONTPLATE",&LegOdoHandler::viconHandler,this);
+    lcm_recv->subscribe("VICON_BODY|VICON_FRONTPLATE|VICON_pelvis_val",&LegOdoHandler::viconHandler,this);
   }else{
     std::cout << "Will not republish other data\n";
   }
@@ -84,7 +84,7 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   // Arbitrary Subscriptions:
   if (lcm_pub != lcm_recv && republish_cameras) {
     std::cout << "Will republish camera data\n";
-    lcm_recv->subscribe("WEBCAM|VICON_pelvis_val",&LegOdoHandler::republishHandler,this);  
+    lcm_recv->subscribe("WEBCAM|POSE_BODY_ALT",&LegOdoHandler::republishHandler,this);  
   }
  
   lcm_recv->subscribe("CONTROLLER_FOOT_CONTACT",&LegOdoHandler::controllerInputHandler,this);
@@ -288,8 +288,9 @@ void LegOdoHandler::viconHandler(const lcm::ReceiveBuffer* rbuf, const std::stri
   
   // Apply the body to frontplate transform
   Eigen::Isometry3d frontplate_vicon_to_body_vicon;
-  //frames_cpp->get_trans_with_utime( "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);
-  get_trans_with_utime(frames, "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);        
+  // Atlas:
+  //get_trans_with_utime(frames, "body_vicon" , "frontplate_vicon", msg->utime, frontplate_vicon_to_body_vicon);        
+  get_trans_with_utime(frames, "body_vicon" , "vicon_frame", msg->utime, frontplate_vicon_to_body_vicon);          
   Eigen::Isometry3d worldvicon_to_body_vicon = worldvicon_to_frontplate_vicon* frontplate_vicon_to_body_vicon;
   bot_core::pose_t pose_msg = getPoseAsBotPose(worldvicon_to_body_vicon, msg->utime);
   

@@ -20,6 +20,7 @@ folder_path = [main_dir run_dir '/'];
 
 logs = dir( [folder_path '*mat'])
 
+
 settings.parse_async =0;
 settings.plot_async = 0;
 settings.parse_sync = 1;
@@ -51,23 +52,23 @@ end
 if (settings.do_sync_comparison)
   h=figure('Position', [1, 1, 1700, 1200]);
   for i = 1:size(which_process,2)
-   
-    a = [summary(i).m.xyz_drift ];
-    b = [summary(i).m.xy_drift ];
-    c = [summary(i).m.z_drift ];
-    d = [summary(i).m.rpy_drift *180/pi];
+    a = [summary(i).b.xyz_drift  summary(i).m.xyz_drift ];
+    b = [summary(i).b.xy_drift  summary(i).m.xy_drift ];
+    c = [summary(i).b.z_drift  summary(i).m.z_drift ];
+    d = [summary(i).b.rpy_drift  summary(i).m.rpy_drift ];
     
     log_summary = [a;b;c;d];
     subplot(3,3,i); hold on; bar(log_summary,.75,'grouped')
     set(gca,'fontSize',7)
 
-    ylabel(num2str(summary(i).m.t, '%2.0f sec'))
+    ylabel(num2str(summary(i).b.t, '%2.0f sec'))
     fname = logs(which_process(i) ).name;
-    title( fname(1:31) )
+    %title( fname(1:31) )
+    title( fname )
     set(gca,'XTick',[1,2,3,4]);set(gca,'XTickLabel',{'XYZ drift','XY drift','Z drift','Yaw drift'})
   end
   subplot(3,3,8)
-  xlabel('Vicon: Blue, Pronto: Magenta | Drift in dimensions')
+  xlabel('Alt: Blue, Pronto: Magenta | Drift in dimensions')
 end
 png_fname = [folder_path 'summary.png'];
 saveas( h, png_fname,'png');
@@ -76,6 +77,10 @@ saveas( h, png_fname,'png');
 function summary = file_analysis(settings)
 %reads the data and does the parse-sync procedure
 [a,s] = do_pre_process(settings)
+
+%keyboard
+%save run_summary a s settings
+
 summary = do_plotting(a,s,settings)
 
 
@@ -96,19 +101,25 @@ end
 
 if (settings.do_sync_comparison)
   %only looks at yaw?  
+  s.b.rpy_drift =  s.v.rot_rpy(:,3)  - s.b.rel_v.rot_rpy(:,3);
   s.m.rpy_drift =  s.v.rot_rpy(:,3)  - s.m.rel_v.rot_rpy(:,3);
-  
+  s.b.xyz_drift =  sqrt(sum((s.v.trans_vec - s.b.rel_v.trans_vec).^2,2));
   %column of euclidean differences for each point
   s.m.xyz_drift =  sqrt(sum((s.v.trans_vec - s.m.rel_v.trans_vec).^2,2));
- 
+  s.b.xy_drift =  sqrt(sum((s.v.trans_vec(:,1:2) - s.b.rel_v.trans_vec(:,1:2) ).^2,2));
   s.m.xy_drift =  sqrt(sum((s.v.trans_vec(:,1:2) - s.m.rel_v.trans_vec(:,1:2) ).^2,2));
-  
+  s.b.z_drift =  sqrt(sum((s.v.trans_vec(:,3) - s.b.rel_v.trans_vec(:,3) ).^2,2));
   s.m.z_drift =  sqrt(sum((s.v.trans_vec(:,3) - s.m.rel_v.trans_vec(:,3) ).^2,2));
   
   handles_b=make_plots_synced(s, settings.log_filename);
   handles = [handles;handles_b];
   
   
+  summary.b.xy_drift  = s.b.xy_drift(end);
+  summary.b.xyz_drift = s.b.xyz_drift(end);
+  summary.b.z_drift   = s.b.z_drift(end);
+  summary.b.rpy_drift = s.b.rpy_drift(end);
+  summary.b.t         = s.b.t(end);
   summary.m.xy_drift  = s.m.xy_drift(end);
   summary.m.xyz_drift = s.m.xyz_drift(end);
   summary.m.z_drift   = s.m.z_drift(end);
@@ -134,19 +145,20 @@ end
 function [a,s] = do_pre_process(settings)
 a=[]; b=[];
 load([settings.folder_path settings.log_filename]);
-
-if exist('POSE_VICON')
-  raw = [ 0*ones(size(POSE_VICON,1),1) , POSE_VICON ]; 
-end
-
-raw = [raw; 2*ones(size(POSE_BODY,1),1) , POSE_BODY]; 
-
+raw = [ 0*ones(size(POSE_VICON,1),1) , POSE_VICON ];
+raw = [raw; 1*ones(size(POSE_BODY_ALT,1),1) , POSE_BODY_ALT];
+raw = [raw; 2*ones(size(POSE_BODY,1),1) , POSE_BODY];
 res = sortrows(raw, 2);
-
+% convert to mins from zero
 res(:,2) = (res(:,2) - res(1,2))*1E-6;
 
-clip_start =1;
-
+clip_start =0;
+if (clip_start)
+  disp('Clipping first 15 seconds')
+  idx_keep = res(:,2) > 15;
+  res = res(idx_keep,:);
+  res(:,2) = res(:,2) - res(1,2); % rezero
+end
 
 
 %%%%% Parseing %%%%%%%%%%%%%%%%%%
@@ -181,15 +193,19 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function a=parse_async(res)
+% extract the vicon, alt or pronto estimates:
 i_vicon = res(:,1) ==0;
-i_mit =  res(:,1) ==2;
+i_alt =  res(:,1) ==1;
+i_pronto =  res(:,1) ==2;
 a.v = split_data(res,i_vicon);
-a.m = split_data(res,i_mit);
+a.b = split_data(res,i_alt);
+a.m = split_data(res,i_pronto);
 
 % Transform the Asynchronous Log into the vicon frame
 a.v.init.trans_vec = a.v.trans_vec(1,:);
 a.v.init.rot_quat = a.v.rot_quat(1,:);
-
+disp('b -> v [async]')
+a.b=transform_est_to_vicon(a.v.init, a.b,1);
 disp('m -> v [async]')
 a.m=transform_est_to_vicon(a.v.init, a.m,1);
 
@@ -205,7 +221,7 @@ function s=parse_sync(res)
 % Synchronize the log:
 
 %get first vicon
-%last_b = res(  find(res(:,1) == 1 ,1) , :);
+last_b = res(  find(res(:,1) == 1 ,1) , :);
 
 %get first pronto
 last_m = res(  find(res(:,1) == 2 ,1) , :);
@@ -218,8 +234,10 @@ n_cols = size(res(1,:),2);
 n_rows = sum(res(:,1) == 0);
 
 res_sync.v = zeros(n_rows,n_cols);
+res_sync.b = zeros(n_rows,n_cols);
 res_sync.m = zeros(n_rows,n_cols);
 
+res_sync.b(1,:) = last_b;
 res_sync.v(1,:) = last_v;
 res_sync.m(1,:) = last_m;
 
@@ -228,11 +246,13 @@ res_sync.m(1,:) = last_m;
 %and before the time stamp in the initial input
 counter=1;
 for i=1:size(res,1)
-
   if ( res(i,1)  ==0 )
     counter=counter+1;
     res_sync.v(counter,:) = res(i,:);
     res_sync.m(counter,:) = last_m;
+    res_sync.b(counter,:) = last_b;
+  elseif ( res(i,1)  ==1 )
+    last_b = res(i,:);
   elseif ( res(i,1)  ==2 )
     last_m = res(i,:);
   end
@@ -242,8 +262,11 @@ end
 %other as possible
 
 %get only the timestamps, positions and rpy orientations
+s.b = split_data(res_sync.b , 1:size(res_sync.b,1));
 s.m = split_data(res_sync.m , 1:size(res_sync.m,1));
 s.v = split_data(res_sync.v , 1:size(res_sync.v,1));
+
+
 
 % Transform the Synchronous Log into the vicon frame
 s.v.init.trans_vec =s.v.trans_vec(1,:);
@@ -251,6 +274,8 @@ s.v.init.rot_quat = s.v.rot_quat(1,:);
 
 %also add representations of the data relative to the initial position and
 %orientation of the input (vicon)
+disp('b -> v [sync]')
+s.b=transform_est_to_vicon(s.v.init, s.b,0);
 disp('m -> v [sync]')
 s.m=transform_est_to_vicon(s.v.init, s.m, 0);
 
@@ -260,36 +285,31 @@ function handles= make_plots_synced(s,log_filename)
 handles=figure('Position', [1, 1, 1700, 900]);
 
 subplot(2,3,1); hold on
+plot(s.b.t,s.b.rpy_drift*180/pi,'b','MarkerSize',2);
 p1 = plot(s.m.t,s.m.rpy_drift*180/pi,'m');
-xlabel('Time [seconds]')
-ylabel('Corresponding Yaw Difference [degrees]')
-title('Pronto Yaw Drift vs Time')
+title('Yaw Drift [deg]')
 
 
 subplot(2,3,2); hold on
+plot(s.b.t,s.b.xyz_drift,'b');
 p2 = plot(s.m.t,s.m.xyz_drift,'m');
-xlabel('Time [seconds]')
-ylabel('Corresponding XYZ Difference [meters]')
-title('Pronto XYZ Drift')
+title('XYZ Drift')
 
 
 subplot(2,3,3); hold on
+plot(s.b.t,s.b.xy_drift,'b');
 p3 = plot(s.m.t,s.m.xy_drift,'m');
-xlabel('Time [seconds]')
-ylabel('Corresponding XY Difference [meters]')
-title('Pronto XY Drift')
+title('XY Drift')
 
 
 subplot(2,3,4); hold on
+plot(s.b.t,s.b.z_drift,'b')
 plot(s.m.t,s.m.z_drift,'m')
-xlabel('Time [seconds]')
-ylabel('Corresponding Z Difference [meters]')
-title('Pronto Z Drift')
+title('Z Drift')
 
 diff_val = 10; % time between samples of distance travelled from vicon
 % 100 is 1Hz | 10 is 10Hz
-cum_dist = cumsum(sqrt(sum(    (diff ( s.v.trans_vec(1:10:end,:)  ))  .^2,2)));
-%get every 10 time stamps
+cum_dist = cumsum(sqrt(sum((diff ( s.v.trans_vec(1:10:end,:)  )).^2,2)));
 time_temp = s.v.t(1:10:end);
 t_cum_dist = time_temp(2:end);
 
@@ -313,57 +333,49 @@ handles=figure('Position', [1, 1, 1700, 900]);
 
 subplot(2,3,1)
 hold on
-v3 = plot(d.v.t(:), d.v.trans_vec(:,1),'b');
-p3 = plot(d.m.rel_v.t(:), d.m.rel_v.trans_vec(:,1),'m');
-legend([v3, p3], {'VICON','Pronto'})
-title('Aligned X and Time')
-xlabel('Time [seconds]')
-ylabel('Z [meters]')
+plot(d.v.trans_vec(:,1), d.v.trans_vec(:,2),'g')
+plot(d.b.trans_vec(:,1), d.b.trans_vec(:,2),'b')
+plot(d.m.trans_vec(:,1), d.m.trans_vec(:,2),'m')
+axis equal
+title('unaligned x and y')
 
 %plotting relative to initial vicon position
 subplot(2,3,2)
 hold on
-i2 = plot(d.v.trans_vec(1,1), d.v.trans_vec(1,2),'.','markersize',20, 'color', 'k');
-v2 = plot(d.v.trans_vec(:,1), d.v.trans_vec(:,2),'b');
-p2 = plot(d.m.rel_v.trans_vec(:,1), d.m.rel_v.trans_vec(:,2),'m');
-legend([i2, v2, p2], {'Start','VICON','Pronto'})
+plot(d.v.trans_vec(:,1), d.v.trans_vec(:,2),'g')
+plot(d.b.rel_v.trans_vec(:,1), d.b.rel_v.trans_vec(:,2),'b')
+plot(d.m.rel_v.trans_vec(:,1), d.m.rel_v.trans_vec(:,2),'m')
 axis equal
-title('Aligned X and Y')
-xlabel('X [meters]')
-ylabel('Y [meters]')
+title('aligned x and y')
+xlabel(log_filename)
 
 subplot(2,3,3)
 hold on
-v3 = plot(d.v.t(:), d.v.trans_vec(:,3),'b');
-p3 = plot(d.m.rel_v.t(:), d.m.rel_v.trans_vec(:,3),'m');
-legend([v3, p3], {'VICON','Pronto'})
-title('Aligned Z and Time')
-xlabel('Time [seconds]')
-ylabel('Z [meters]')
+plot(d.v.t(:), d.v.trans_vec(:,3),'g')
+plot(d.b.rel_v.t(:), d.b.rel_v.trans_vec(:,3),'b')
+plot(d.m.rel_v.t(:), d.m.rel_v.trans_vec(:,3),'m')
+title('aligned z and time')
 
 subplot(2,3,4)
 hold on
-plot(d.v.t(:), d.v.rot_rpy(:,1)*180/pi,'b')
+plot(d.v.t(:), d.v.rot_rpy(:,1)*180/pi,'g')
+plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,1)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,1)*180/pi,'m')
-legend('VICON','Pronto', 'Location','SouthWest')
-xlabel('Time [seconds]')
-ylabel('Roll [degrees]')
-title('Aligned Roll and Time')
+title('aligned roll (deg) and time')
 
 subplot(2,3,5)
 hold on
-plot(d.v.t(:), d.v.rot_rpy(:,2)*180/pi,'b')
+plot(d.v.t(:), d.v.rot_rpy(:,2)*180/pi,'g')
+plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,2)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,2)*180/pi,'m')
-legend('VICON','Pronto')
-xlabel('Time [seconds]')
-ylabel('Pitch [degrees]')
-title('Aligned Pitch and Time')
+title('aligned pitch (deg) and time')
 
 subplot(2,3,6)
 hold on
-plot(d.v.t(:), d.v.rot_rpy(:,3)*180/pi,'b')
+plot(d.v.t(:), d.v.rot_rpy(:,3)*180/pi,'g')
+plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,3)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,3)*180/pi,'m')
-legend('VICON','Pronto')
+legend('g VICON','b Alt','m Pronto')
 xlabel('Time [seconds]')
 ylabel('Yaw [degrees]')
 title('Aligned Yaw and Time')

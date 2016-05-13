@@ -52,9 +52,6 @@ end
 
 % all:
 which_process= 1:size(logs,1)
-% most interesting ones: [skip two 
-% which_process=[1,2,3,4,5,6,7,8]
-% which_process = [6]
 
 
 %%%%%%%%%%%%%%%% DO WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,13 +83,14 @@ if (settings.do_sync_comparison)
     set(gca,'XTick',[1,2,3,4]);set(gca,'XTickLabel',{'XYZ drift','XY drift','Z drift','Yaw drift'})
   end
   subplot(3,3,8)
-  xlabel('BDI: Blue, MIT: Magenta | Drift in dimensions')
+  xlabel('Alt: Blue, MIT: Magenta | Drift in dimensions')
 end
 png_fname = [folder_path 'summary.png'];
 saveas( h, png_fname,'png');
 
 
 function summary = file_analysis(settings)
+%reads the data and does the parse-sync procedure
 [a,s] = do_pre_process(settings)
 
 %keyboard
@@ -104,19 +102,24 @@ summary = do_plotting(a,s,settings)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [summary] = do_plotting(a,s,settings)
 %%%% Plotting  %%%%%%%%%%%%%%%%%%
+% s is the synced dataset
+
 handles=[];
 if (settings.plot_async==1)
   make_plots(a,settings.log_filename)
 end
 if (settings.plot_sync==1)
+  %makes first figure of plots  
   handles_a=make_plots(s,settings.log_filename);
   handles = [handles;handles_a];
 end
 
 if (settings.do_sync_comparison)
+  %only looks at yaw?  
   s.b.rpy_drift =  s.v.rot_rpy(:,3)  - s.b.rel_v.rot_rpy(:,3);
   s.m.rpy_drift =  s.v.rot_rpy(:,3)  - s.m.rel_v.rot_rpy(:,3);
   s.b.xyz_drift =  sqrt(sum((s.v.trans_vec - s.b.rel_v.trans_vec).^2,2));
+  %column of euclidean differences for each point
   s.m.xyz_drift =  sqrt(sum((s.v.trans_vec - s.m.rel_v.trans_vec).^2,2));
   s.b.xy_drift =  sqrt(sum((s.v.trans_vec(:,1:2) - s.b.rel_v.trans_vec(:,1:2) ).^2,2));
   s.m.xy_drift =  sqrt(sum((s.v.trans_vec(:,1:2) - s.m.rel_v.trans_vec(:,1:2) ).^2,2));
@@ -155,7 +158,7 @@ end
 
 
 function [a,s] = do_pre_process(settings)
-a=[], b=[]
+a=[]; b=[];
 load([settings.folder_path settings.log_filename]);
 raw = [ 0*ones(size(POSE_VICON,1),1) , POSE_VICON ];
 raw = [raw; 1*ones(size(POSE_BODY_ALT,1),1) , POSE_BODY_ALT];
@@ -250,13 +253,28 @@ a.m=transform_est_to_vicon(a.v.init, a.m,1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function s=parse_sync(res)
+%parse_sync works by only selecting pose_body points at time steps closest
+%and before pose_vicon time steps. it then retains only timestamps,
+%position, quaternion and rpy equivalent. also, it represents all data
+%relative to the initial vicon estimate, so that all data starts from the
+%same location and is relative to the same initial starting point and is
+%thus comparable
+
 % Synchronize the log:
+
+%get first vicon
 last_b = res(  find(res(:,1) == 1 ,1) , :);
+
+%get first pronto
 last_m = res(  find(res(:,1) == 2 ,1) , :);
+
+%get first initial input - also vicon in this case
 last_v = res(  find(res(:,1) == 0 ,1) , :);
 
 n_cols = size(res(1,:),2);
+%number of data points in the initial input - vicon in this case
 n_rows = sum(res(:,1) == 0);
+
 res_sync.v = zeros(n_rows,n_cols);
 res_sync.b = zeros(n_rows,n_cols);
 res_sync.m = zeros(n_rows,n_cols);
@@ -265,11 +283,11 @@ res_sync.b(1,:) = last_b;
 res_sync.v(1,:) = last_v;
 res_sync.m(1,:) = last_m;
 
+%for each time stamp in the initial input (vicon)
+%search within each of the data sets and collect the data point closest to
+%and before the time stamp in the initial input
 counter=1;
 for i=1:size(res,1)
-  %if ( rem(i,10000) ==0)
-  %  disp(i)
-  %end
   if ( res(i,1)  ==0 )
     counter=counter+1;
     res_sync.v(counter,:) = res(i,:);
@@ -281,6 +299,11 @@ for i=1:size(res,1)
     last_m = res(i,:);
   end
 end
+
+%res_sync has 3 arrays of the same size with time points as close to each
+%other as possible
+
+%get only the timestamps, positions and rpy orientations
 s.b = split_data(res_sync.b , 1:size(res_sync.b,1));
 s.m = split_data(res_sync.m , 1:size(res_sync.m,1));
 s.v = split_data(res_sync.v , 1:size(res_sync.v,1));
@@ -290,10 +313,13 @@ s.v = split_data(res_sync.v , 1:size(res_sync.v,1));
 % Transform the Synchronous Log into the vicon frame
 s.v.init.trans_vec =s.v.trans_vec(1,:);
 s.v.init.rot_quat = s.v.rot_quat(1,:);
+
+%also add representations of the data relative to the initial position and
+%orientation of the input (vicon)
 disp('b -> v [sync]')
 s.b=transform_est_to_vicon(s.v.init, s.b,0);
 disp('m -> v [sync]')
-s.m=transform_est_to_vicon(s.v.init, s.m,0);
+s.m=transform_est_to_vicon(s.v.init, s.m, 0);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -301,20 +327,20 @@ function handles= make_plots_synced(s,log_filename)
 handles=figure('Position', [1, 1, 1700, 900]);
 
 subplot(2,3,1); hold on
-plot(s.b.t,s.b.rpy_drift*180/pi,'b','MarkerSize',2)
-plot(s.m.t,s.m.rpy_drift*180/pi,'m','MarkerSize',2)
+plot(s.b.t,s.b.rpy_drift*180/pi,'b','MarkerSize',2);
+p1 = plot(s.m.t,s.m.rpy_drift*180/pi,'m');
 title('Yaw Drift [deg]')
 
 
 subplot(2,3,2); hold on
-plot(s.b.t,s.b.xyz_drift,'b')
-plot(s.m.t,s.m.xyz_drift,'m')
+plot(s.b.t,s.b.xyz_drift,'b');
+p2 = plot(s.m.t,s.m.xyz_drift,'m');
 title('XYZ Drift')
 
 
 subplot(2,3,3); hold on
-plot(s.b.t,s.b.xy_drift,'b')
-plot(s.m.t,s.m.xy_drift,'m')
+plot(s.b.t,s.b.xy_drift,'b');
+p3 = plot(s.m.t,s.m.xy_drift,'m');
 title('XY Drift')
 
 
@@ -331,8 +357,12 @@ t_cum_dist = time_temp(2:end);
 
 subplot(2,3,5); hold on
 plot(t_cum_dist, cum_dist)
-title('Distance Travelled [samples at 10Hz]')
-xlabel(log_filename)
+cum_dist(end)
+t_cum_dist(end)
+
+title('Vicon Distance Travelled [samples at 10Hz]')
+xlabel('Time [seconds]')
+ylabel('Distance [meters]')
 
 drawnow
 pause(0.1)
@@ -342,21 +372,6 @@ pause(0.1)
 % plot generic details - either sync or asyc
 function handles=make_plots(d,log_filename)
 handles=figure('Position', [1, 1, 1700, 900]);
-%subplot(2,3,1)
-%hold on
-%dim =3;
-%plot(d.v.t, d.v.rot_rpy(:,dim),'g')
-%plot(d.b.t, d.b.rot_rpy(:,dim),'b')
-%plot(d.m.t, d.m.rot_rpy(:,dim),'m')
-%title('unaligned yaw versus time')
-
-%subplot(2,3,1)
-%hold on
-%dim =3;
-%plot(d.v.t, d.v.trans_vec(:,dim),'g')
-%plot(d.b.t, d.b.trans_vec(:,dim),'b')
-%plot(d.m.t, d.m.trans_vec(:,dim),'m')
-%title('unaligned z vrs time')
 
 subplot(2,3,1)
 hold on
@@ -366,6 +381,7 @@ plot(d.m.trans_vec(:,1), d.m.trans_vec(:,2),'m')
 axis equal
 title('unaligned x and y')
 
+%plotting relative to initial vicon position
 subplot(2,3,2)
 hold on
 plot(d.v.trans_vec(:,1), d.v.trans_vec(:,2),'g')
@@ -401,14 +417,24 @@ hold on
 plot(d.v.t(:), d.v.rot_rpy(:,3)*180/pi,'g')
 plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,3)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,3)*180/pi,'m')
-title('aligned yaw (deg) and time')
+legend('VICON','Pronto')
+xlabel('Time [seconds]')
+ylabel('Yaw [degrees]')
+title('Aligned Yaw and Time')
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [mode] = split_data(res, i)
 global bot_;
+%this function just returns the timestamps, positions and rpy orientation
+%for all data points
+
+%get all times
 mode.t    = res(i,2);
+%get all positions
 mode.trans_vec  = res(i,3:5);
+%get all rotations
 mode.rot_quat = res(i,9:12);
 % TODO:VECTORIZED THIS
 for i=1:size(mode.rot_quat,1)
@@ -417,7 +443,11 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function e=transform_est_to_vicon(v_init,e, use_subset)
+function e=transform_est_to_vicon(v_init, e, use_subset)
+%I think the purpose of this is to make everything relative to the initial
+%position and orientation of the input (vicon) so that numbers are
+%comparable
+
 global bot_
 init.trans_vec = e.trans_vec(1,:);
 init.rot_quat = e.rot_quat(1,:);
@@ -428,11 +458,14 @@ else
   indices = 1:size(e.trans_vec,1); % use all data
 end
 
-%for i=100:size(e.trans_vec,1)
 for i=1:size(indices,2)
   e_current.trans_vec =  e.trans_vec( indices(i),:);
   e_current.rot_quat =  e.rot_quat( indices(i),:);
+  
   e_current_rel_v = transform_relative(v_init, init, e_current);
+  
+  %store an estimate of the motion travelled relative to the initial
+  %position and orientation of the input (vicon)
   e.rel_v.trans_vec(i,:) = e_current_rel_v.trans_vec;
   e.rel_v.rot_quat(i,:) = e_current_rel_v.rot_quat;
   
