@@ -36,7 +36,6 @@ public:
   void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
   void robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg);
 
-
   // Utilities
   lcm::LCM* lcm_pub;
   lcm::LCM* lcm_recv;
@@ -45,13 +44,8 @@ public:
   boost::shared_ptr<ModelClient> model_boost;
   BotFrames* frames;
 
-
-
   Eigen::VectorXi z_indices;
   Eigen::MatrixXd cov_scan_match;
-
-
-    
 };
 
 
