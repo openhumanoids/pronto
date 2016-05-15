@@ -24,6 +24,8 @@ add_subdirectory(src/leg_estimate)
 add_subdirectory(src/mav_est_legodo)
 add_subdirectory(src/pose_meas)
 
+add_subdirectory(src/quick_lock)
+
 # estimator proper
 add_subdirectory(src/fusion)
 
@@ -36,7 +38,6 @@ add_subdirectory(src/renderer_frames_pronto)
 add_subdirectory(src/pronto_viewer)
 
 
-add_subdirectory(src/quick_lock)
 
 
 

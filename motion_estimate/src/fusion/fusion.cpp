@@ -6,7 +6,7 @@
 
 //#include <mav_state_est/mav-est-fovis/rbis_fovis_update.hpp>
 #include <mav_state_est/mav-est-legodo/rbis_legodo_update.hpp>
-#include <mav_state_est/mav-est-legodo/rbis_legodo_external_update.hpp>
+#include <mav_state_est/mav-est-yawlock/rbis_yawlock_update.hpp>
 #include <mav_state_est/pose_meas.hpp>
 
 #include <path_util/path_util.h>
@@ -180,7 +180,7 @@ public:
     }
 
     if (front_end->isActive("pose_meas") || rbis_initializer->initializingWith("pose_meas")) {
-      // Correct the pose in manner similar to vicon corrections: typically so as to init the estimator at BDI's position
+      // Correct the pose in manner similar to vicon corrections: typically so as to init the estimator at the POSE_BODY_ALT position
       pose_meas_handler = new PoseMeasHandler(front_end->param, front_end->frames);
       front_end->addSensor("pose_meas", &MavStateEst::PoseMeasHandler::processMessage, pose_meas_handler);
       rbis_initializer->addSensor("pose_meas", &MavStateEst::PoseMeasHandler::processMessageInit, pose_meas_handler);
@@ -213,43 +213,27 @@ public:
           indexed_measurement_handler);
     }
 
-    //if (front_end->isActive("rgbd_gpf")) {
-    //  rgbd_gpf_handler = new RgbdGPFHandler(front_end->lcm_pub->getUnderlyingLCM(), front_end->param,
-    //      front_end->frames);
-    //  front_end->addSensor("rgbd_gpf", &MavStateEst::RgbdGPFHandler::processMessage, rgbd_gpf_handler);
-    //}
 
 
-    //if (front_end->isActive("fovis")) {
-    //  fovis_handler = new FovisHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
-    //  front_end->addSensor("fovis", &MavStateEst::FovisHandler::processMessage, fovis_handler);
-    //}
-
-
+    ModelClient* model;
+    if (urdf_file == ""){
+      model = new ModelClient(  front_end->lcm_recv->getUnderlyingLCM(), 0);
+    }else{
+      // urdf_file should now be the path from the models directory including the robot's named folder
+      //std::string urdf_file = "atlas_v3/model_LH_RH.urdf";
+      std::string urdf_filename_full = std::string(getModelsPath()) + "/" + std::string( urdf_file );
+      model = new ModelClient( urdf_filename_full );
+    }
 
     if (front_end->isActive("legodo")) {
-      // legodo_handler = new LegOdoHandler(front_end->param);
-
-      ModelClient* model;
-      if (urdf_file == ""){
-        model = new ModelClient(  front_end->lcm_recv->getUnderlyingLCM(), 0);
-      }else{
-        // urdf_file should now be the path from the models directory including the robot's named folder
-        //std::string urdf_file = "atlas_v3/model_LH_RH.urdf";
-        std::string urdf_filename_full = std::string(getModelsPath()) + "/" + std::string( urdf_file );
-        model = new ModelClient( urdf_filename_full );
-      }
       legodo_handler = new LegOdoHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, model, front_end->frames);
-
       front_end->addSensor("legodo", &MavStateEst::LegOdoHandler::processMessage, legodo_handler);
     }
 
-    if (front_end->isActive("legodo_external")) {
-      legodo_external_handler = new LegOdoExternalHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param);
-      front_end->addSensor("legodo_external", &MavStateEst::LegOdoExternalHandler::processMessage, legodo_external_handler);
+    if (front_end->isActive("yawlock")) {
+      yaw_lock_handler = new YawLockHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, model, front_end->frames);
+      front_end->addSensor("yawlock", &MavStateEst::YawLockHandler::processMessage, yaw_lock_handler);
     }
-
-
 
     restart_sub =  front_end->lcm_recv->subscribe( "STATE_EST_RESTART" ,&App::restartHandler,this);
 
@@ -298,7 +282,7 @@ public:
   //RgbdGPFHandler * rgbd_gpf_handler;
   //FovisHandler * fovis_handler;
   LegOdoHandler * legodo_handler;
-  LegOdoExternalHandler * legodo_external_handler;
+  YawLockHandler * yaw_lock_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
   ScanMatcherHandler * scan_matcher_handler;
   OpticalFlowHandler * optical_flow_handler;
