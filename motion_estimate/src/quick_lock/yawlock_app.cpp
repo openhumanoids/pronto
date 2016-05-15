@@ -14,7 +14,7 @@
 #include <lcmtypes/bot_core/utime_t.hpp>
 #include <pronto_utils/pronto_math.hpp>
 
-#include <yaw_lock/yaw_lock.hpp>
+#include <mav_state_est/mav-est-yawlock/yawlock.hpp>
 
 
 struct CommandLineConfig
