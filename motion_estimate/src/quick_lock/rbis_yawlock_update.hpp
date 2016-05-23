@@ -16,6 +16,7 @@
 #include "yawlock.hpp"
 
 #include <lcmtypes/bot_core/joint_state_t.hpp>
+#include <lcmtypes/bot_core/ins_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
 #include <lcmtypes/pronto/behavior_t.hpp>
 
@@ -33,8 +34,14 @@ public:
   YawLock* yaw_lock_;
 
   // Ancillary handler
+  void insHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::ins_t* msg);
+
   void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
   void robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg);
+
+
+  RBISUpdateInterface * getCorrection(const bot_core::joint_state_t *msg, RBIS state, RBIM cov);
+
 
   // Utilities
   lcm::LCM* lcm_pub;
@@ -46,6 +53,9 @@ public:
 
   Eigen::VectorXi z_indices;
   Eigen::MatrixXd cov_scan_match;
+
+  BotTrans ins_to_body;
+  
 };
 
 

@@ -201,6 +201,11 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
   std::cout << rpy_update[0]*180/M_PI << ", " << rpy_update[1]*180/M_PI << " " << rpy_update[2]*180/M_PI << " output rpy [deg]\n";
   std::cout << "\n";
 
+  // testing hack - remove me:
+  //rpy_update[2] =+ 1;
+  //world_to_body_quat_correction = euler_to_quat(rpy_update[0], rpy_update[1], rpy_update[2]);
+
+
   
   return true;
 }
