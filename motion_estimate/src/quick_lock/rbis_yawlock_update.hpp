@@ -40,9 +40,6 @@ public:
   void robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg);
 
 
-  RBISUpdateInterface * getCorrection(const bot_core::joint_state_t *msg, RBIS state, RBIM cov);
-
-
   // Utilities
   lcm::LCM* lcm_pub;
   lcm::LCM* lcm_recv;
@@ -55,6 +52,7 @@ public:
   Eigen::MatrixXd cov_scan_match;
 
   BotTrans ins_to_body;
+  double cov_yaw_bias;
   
 };
 
