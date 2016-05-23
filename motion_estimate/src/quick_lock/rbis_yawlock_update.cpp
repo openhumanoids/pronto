@@ -101,7 +101,6 @@ YawLockHandler::YawLockHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
 
 
 /// LCM Handlers ////////////////////////////////////
-double body_gyro[3];
 void YawLockHandler::insHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::ins_t* msg){
   //double body_gyro[3];
   bot_quat_rotate_to(ins_to_body.rot_quat, msg->gyro, body_gyro);

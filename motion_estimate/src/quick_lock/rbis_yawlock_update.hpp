@@ -57,6 +57,7 @@ public:
   Eigen::MatrixXd cov_scan_match;
 
   BotTrans ins_to_body;
+  double body_gyro[3];
   
   // Required because IHMC's 'standing' state is reported during walking
   // This is used to infer when it is truely standing
