@@ -91,7 +91,7 @@ void App::robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string
     is_robot_standing = true; 
   }
 
-  yaw_lock_->setControllerState(is_robot_standing);  
+  yaw_lock_->setIsRobotStanding(is_robot_standing);
 }
 
 
@@ -105,7 +105,7 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
     is_robot_standing = true; 
   }
 
-  yaw_lock_->setControllerState(is_robot_standing);  
+  yaw_lock_->setIsRobotStanding(is_robot_standing);
 }
 
 void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg){

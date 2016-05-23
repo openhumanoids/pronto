@@ -27,8 +27,12 @@ class YawLock{
         yaw_slip_disable_period_ = yaw_slip_disable_period_in;
     }
 
-    void setControllerState(int is_robot_standing_in){
+    void setIsRobotStanding(bool is_robot_standing_in){
       is_robot_standing_ = is_robot_standing_in;
+    }
+
+    bool getIsRobotStanding(){
+      return is_robot_standing_;
     }
 
     void setJointState(std::vector<float> joint_position_in, 

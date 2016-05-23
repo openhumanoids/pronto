@@ -25,6 +25,9 @@ namespace MavStateEst {
   
 class YawLockHandler {
 public:
+  typedef enum {
+    MODE_YAWBIAS, MODE_YAW, MODE_YAWBIAS_YAW
+  } YawLockMode;
 
   YawLockHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
@@ -40,6 +43,8 @@ public:
   void robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg);
 
 
+  YawLockMode mode;
+
   // Utilities
   lcm::LCM* lcm_pub;
   lcm::LCM* lcm_recv;
@@ -52,8 +57,11 @@ public:
   Eigen::MatrixXd cov_scan_match;
 
   BotTrans ins_to_body;
-  double cov_yaw_bias;
   
+  // Required because IHMC's 'standing' state is reported during walking
+  // This is used to infer when it is truely standing
+  int64_t last_ihmc_walking_utime;
+
 };
 
 
