@@ -23,6 +23,11 @@ YawLockHandler::YawLockHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   yaw_lock_->setParameters(correction_period, yaw_slip_detect, 
     yaw_slip_threshold_degrees, yaw_slip_disable_period );
 
+  std::string left_standing_link = bot_param_get_str_or_fail(param, "state_estimator.legodo.left_standing_link");
+  std::string right_standing_link = bot_param_get_str_or_fail(param, "state_estimator.legodo.right_standing_link");
+  yaw_lock_->setStandingLinks(left_standing_link, right_standing_link );
+
+
   if (behavior_channel == "CONTROLLER_STATUS"){
     // MIT controller:
     lcm_recv->subscribe( "CONTROLLER_STATUS" ,&YawLockHandler::controllerStatusHandler,this);

@@ -46,6 +46,12 @@ class YawLock{
         return joint_angles_init_;
     }
 
+    void setStandingLinks(std::string left_standing_link_in, 
+                       std::string right_standing_link_in){
+      left_standing_link_ = left_standing_link_in;
+      right_standing_link_ = right_standing_link_in;
+    }
+
     // Determine the actual yaw correction to be made.
     // Input is the current floating base
     // output bool is true if a correction should be made
@@ -84,6 +90,9 @@ class YawLock{
     bool yaw_slip_detect_;
     double yaw_slip_threshold_degrees_;
     double yaw_slip_disable_period_;
+
+    std::string left_standing_link_;
+    std::string right_standing_link_;
 
 };
 

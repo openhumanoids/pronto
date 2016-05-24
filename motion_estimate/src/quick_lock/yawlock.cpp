@@ -111,12 +111,12 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
     std::cerr << "Error: could not calculate forward kinematics!" <<std::endl;
     exit(-1);
   }
-  Eigen::Isometry3d body_to_l_foot = KDLToEigen(cartpos_out.find("l_foot")->second);
-  Eigen::Isometry3d body_to_r_foot = KDLToEigen(cartpos_out.find("r_foot")->second);
+  Eigen::Isometry3d body_to_l_foot = KDLToEigen(cartpos_out.find( left_standing_link_ )->second);
+  Eigen::Isometry3d body_to_r_foot = KDLToEigen(cartpos_out.find( right_standing_link_ )->second);
 
 
 
-   Eigen::Isometry3d l_foot_to_r_foot = body_to_l_foot.inverse() *body_to_r_foot ;
+  Eigen::Isometry3d l_foot_to_r_foot = body_to_l_foot.inverse() *body_to_r_foot ;
 
   // If not initialized then do so:
   if ( !lock_init_ ){

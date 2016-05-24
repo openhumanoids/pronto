@@ -18,7 +18,12 @@ files=(
         #'raluca-turning-180deg-snippet.lcmlog'
         'lcmlog__2016-05-03_vicon-walking-5'
         'lcmlog__2016-05-03_vicon-walking-4'
-        'lcmlog__2016-05-03_vicon-walking-3.snippet'
+        # original
+        #'lcmlog__2016-05-03_vicon-walking-3'
+        # about 40sec:400sec
+        #'lcmlog__2016-05-03_vicon-walking-3.snippet'
+        # about 0sec:400sec (to capture standing at start)
+        'lcmlog__2016-05-03_vicon-walking-3.snippet.long.start'
       )
 
 
