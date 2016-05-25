@@ -86,14 +86,14 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
     counter_++;
   }
   if (!is_robot_standing_){
-    std::cout << body_utime << " not in standing or manipulation mode, not correcting\n";
+    std::cout << "YAWLOCK: " <<  body_utime << " not in standing or manipulation mode, not correcting\n";
     lock_init_ = false;
     return false;
   }
 
   if (yaw_slip_detect_){
     if (body_utime < utime_disable_until_){
-      std::cout << "yaw lock disabled until " << utime_disable_until_ << " (" << ((double) (utime_disable_until_ - body_utime)*1E-6) << " secs more)\n";
+      std::cout << "YAWLOCK: yaw lock disabled until " << utime_disable_until_ << " (" << ((double) (utime_disable_until_ - body_utime)*1E-6) << " secs more)\n";
       return false;
     }
   }
@@ -144,13 +144,13 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
     double l_foot_to_r_foot_original_rpy[3];
     quat_to_euler( Eigen::Quaterniond(l_foot_to_r_foot_original_.rotation()), l_foot_to_r_foot_original_rpy[0], l_foot_to_r_foot_original_rpy[1], l_foot_to_r_foot_original_rpy[2]);
     double yaw_diff_change = fabs( l_foot_to_r_foot_rpy[2] - l_foot_to_r_foot_original_rpy[2] );
-    std::cout <<  "left-right yaw angle: " << l_foot_to_r_foot_original_rpy[2]*180/M_PI << " original | " << l_foot_to_r_foot_rpy[2]*180/M_PI << " now | " << yaw_diff_change*180/M_PI << " change (deg)\n";
+    std::cout <<  "YAWLOCK: left-right yaw angle: " << l_foot_to_r_foot_original_rpy[2]*180/M_PI << " original | " << l_foot_to_r_foot_rpy[2]*180/M_PI << " now | " << yaw_diff_change*180/M_PI << " change (deg)\n";
 
     // If a yaw change of more than XX degrees is detected in the kinematics, don't do yaw lock
     if (yaw_diff_change*180/M_PI >  yaw_slip_threshold_degrees_ ){
       utime_disable_until_ = body_utime + yaw_slip_disable_period_*1E6;
       std::stringstream message;
-      message << "yaw slippage of "<< (yaw_diff_change*180/M_PI) << " degrees detected. Resetting and disabling the yaw lock until " << utime_disable_until_;
+      message << "YAWLOCK: yaw slippage of "<< (yaw_diff_change*180/M_PI) << " degrees detected. Resetting and disabling the yaw lock until " << utime_disable_until_;
       std::cout << message.str() << "\n";
 
       bot_core::utime_t warning_message;
@@ -197,8 +197,8 @@ bool YawLock::getCorrection(Eigen::Isometry3d world_to_body,
   quat_to_euler( Eigen::Quaterniond(world_to_body_quat_correction.w(), world_to_body_quat_correction.x(),
                                     world_to_body_quat_correction.y(), world_to_body_quat_correction.z()) ,
                  rpy_update[0], rpy_update[1], rpy_update[2]);
-  std::cout << rpy_update[0] << ", " << rpy_update[1] << " " << rpy_update[2] << " output rpy [rad]\n";
-  std::cout << rpy_update[0]*180/M_PI << ", " << rpy_update[1]*180/M_PI << " " << rpy_update[2]*180/M_PI << " output rpy [deg]\n";
+  std::cout << "YAWLOCK: " << rpy_update[0] << ", " << rpy_update[1] << " " << rpy_update[2] << " output rpy [rad]\n";
+  std::cout << "YAWLOCK: " << rpy_update[0]*180/M_PI << ", " << rpy_update[1]*180/M_PI << " " << rpy_update[2]*180/M_PI << " output rpy [deg]\n";
   std::cout << "\n";
  
   return true;

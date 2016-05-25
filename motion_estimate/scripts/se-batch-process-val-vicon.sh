@@ -11,7 +11,7 @@ path=$HOME
 path+="/logs/valkyrie"
 path+='/20160503-vicon-walking/'
 path_out=$HOME
-path_out+='/Desktop/results-pronto-vicon'
+path_out+='/results-pronto-vicon'
 
 unset files
 files=(

@@ -14,7 +14,7 @@ close all
 global bot_
 bot_ = bot;
 
-main_dir = [getenv('HOME')  '/Desktop/']
+main_dir = [getenv('HOME')  '/']
 run_dir = 'results-pronto-vicon'
 folder_path = [main_dir run_dir '/'];
 
@@ -111,6 +111,10 @@ if (settings.do_sync_comparison)
   s.b.z_drift =  sqrt(sum((s.v.trans_vec(:,3) - s.b.rel_v.trans_vec(:,3) ).^2,2));
   s.m.z_drift =  sqrt(sum((s.v.trans_vec(:,3) - s.m.rel_v.trans_vec(:,3) ).^2,2));
   
+  s.b.x_drift =  sqrt(sum((s.v.trans_vec(:,1) - s.b.rel_v.trans_vec(:,1) ).^2,2));
+  s.m.x_drift =  sqrt(sum((s.v.trans_vec(:,1) - s.m.rel_v.trans_vec(:,1) ).^2,2));
+    
+  
   handles_b=make_plots_synced(s, settings.log_filename);
   handles = [handles;handles_b];
   
@@ -118,11 +122,14 @@ if (settings.do_sync_comparison)
   summary.b.xy_drift  = s.b.xy_drift(end);
   summary.b.xyz_drift = s.b.xyz_drift(end);
   summary.b.z_drift   = s.b.z_drift(end);
+  summary.b.x_drift   = s.b.x_drift(end);
   summary.b.rpy_drift = s.b.rpy_drift(end);
   summary.b.t         = s.b.t(end);
+  
   summary.m.xy_drift  = s.m.xy_drift(end);
   summary.m.xyz_drift = s.m.xyz_drift(end);
   summary.m.z_drift   = s.m.z_drift(end);
+  summary.m.x_drift   = s.m.x_drift(end);
   summary.m.rpy_drift = s.m.rpy_drift(end);
   summary.m.t         = s.m.t(end);
   
@@ -307,13 +314,20 @@ plot(s.b.t,s.b.z_drift,'b')
 plot(s.m.t,s.m.z_drift,'m')
 title('Z Drift')
 
+
+subplot(2,3,5); hold on
+plot(s.b.t,s.b.x_drift,'b')
+plot(s.m.t,s.m.x_drift,'m')
+title('X Drift')
+
 diff_val = 10; % time between samples of distance travelled from vicon
 % 100 is 1Hz | 10 is 10Hz
 cum_dist = cumsum(sqrt(sum((diff ( s.v.trans_vec(1:10:end,:)  )).^2,2)));
 time_temp = s.v.t(1:10:end);
 t_cum_dist = time_temp(2:end);
 
-subplot(2,3,5); hold on
+
+subplot(2,3,6); hold on
 plot(t_cum_dist, cum_dist)
 cum_dist(end)
 t_cum_dist(end)
