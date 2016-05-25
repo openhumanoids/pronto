@@ -28,6 +28,9 @@ struct CommandLineConfig
     double yaw_slip_disable_period;
 
     std::string behavior_input_mode;
+
+    std::string left_standing_link;
+    std::string right_standing_link;
 };
 
 
@@ -66,6 +69,8 @@ App::App(lcm::LCM* &lcm_, const CommandLineConfig& cl_cfg_):
   lcm_->subscribe( "CORE_ROBOT_STATE" ,&App::jointStateHandler,this);
   lcm_->subscribe( "POSE_BODY" ,&App::poseHandler,this);
 
+  yaw_lock_->setStandingLinks( cl_cfg_.left_standing_link, cl_cfg_.right_standing_link );
+
   if (cl_cfg_.behavior_input_mode == "CONTROLLER_STATUS"){
     // MIT controller:
     lcm_->subscribe( "CONTROLLER_STATUS" ,&App::controllerStatusHandler,this);
@@ -91,7 +96,7 @@ void App::robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string
     is_robot_standing = true; 
   }
 
-  yaw_lock_->setControllerState(is_robot_standing);  
+  yaw_lock_->setIsRobotStanding(is_robot_standing);
 }
 
 
@@ -105,7 +110,7 @@ void App::controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::str
     is_robot_standing = true; 
   }
 
-  yaw_lock_->setControllerState(is_robot_standing);  
+  yaw_lock_->setIsRobotStanding(is_robot_standing);
 }
 
 void App::jointStateHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::joint_state_t* msg){
@@ -155,6 +160,9 @@ int main(int argc, char ** argv) {
   cl_cfg.behavior_input_mode = "CONTROLLER_STATUS";
   cl_cfg.correction_period = 333; // 333 is one sec of POSE_BODY
 
+  cl_cfg.left_standing_link = "l_foot";
+  cl_cfg.right_standing_link = "r_foot";
+
   // Added to detect yaw slip:
   cl_cfg.yaw_slip_detect = false;
   cl_cfg.yaw_slip_threshold_degrees = 1.5; // degrees
@@ -167,6 +175,8 @@ int main(int argc, char ** argv) {
   opt.add(cl_cfg.yaw_slip_detect, "yd", "yaw_slip_detect","Try to detect foot slippage");
   opt.add(cl_cfg.yaw_slip_threshold_degrees, "ya", "yaw_slip_threshold_degrees","Threshold in yaw we detect");
   opt.add(cl_cfg.yaw_slip_disable_period, "yp", "yaw_slip_disable_period","Amount of time to disable lock after we have detected (sec)");
+  opt.add(cl_cfg.left_standing_link, "lf", "left_standing_link","left_standing_link");
+  opt.add(cl_cfg.right_standing_link, "rf", "right_standing_link","right_standing_link");
   opt.parse();
 
   lcm::LCM* lcm(new lcm::LCM);

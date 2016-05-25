@@ -27,8 +27,12 @@ class YawLock{
         yaw_slip_disable_period_ = yaw_slip_disable_period_in;
     }
 
-    void setControllerState(int is_robot_standing_in){
+    void setIsRobotStanding(bool is_robot_standing_in){
       is_robot_standing_ = is_robot_standing_in;
+    }
+
+    bool getIsRobotStanding(){
+      return is_robot_standing_;
     }
 
     void setJointState(std::vector<float> joint_position_in, 
@@ -40,6 +44,12 @@ class YawLock{
 
     bool getJointAnglesInit(){
         return joint_angles_init_;
+    }
+
+    void setStandingLinks(std::string left_standing_link_in, 
+                       std::string right_standing_link_in){
+      left_standing_link_ = left_standing_link_in;
+      right_standing_link_ = right_standing_link_in;
     }
 
     // Determine the actual yaw correction to be made.
@@ -80,6 +90,9 @@ class YawLock{
     bool yaw_slip_detect_;
     double yaw_slip_threshold_degrees_;
     double yaw_slip_disable_period_;
+
+    std::string left_standing_link_;
+    std::string right_standing_link_;
 
 };
 

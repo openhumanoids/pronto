@@ -95,28 +95,29 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames) :
 ////////// Typical Micro Strain INS /////////////////
 RBISUpdateInterface * InsHandler::processMessage(const bot_core::ins_t * msg, RBIS state, RBIM cov)
 {
-  //    get everything into the right frame
+  // get everything in the right frame
   double body_accel[3];
   bot_trans_apply_vec(&ins_to_body, msg->accel, body_accel);
   Eigen::Map<Eigen::Vector3d> accelerometer(body_accel);
 
+
+  // mfallon thinks this was incorrect as the addition of the translation seems wrong:
+  // experimentally the bias estimator estimates the body-imu translation (fixed may 2014):
+  // bot_trans_apply_vec(&ins_to_body, msg->gyro, body_gyro);
   double body_gyro[3];
-  // was this. mfallon thinks this is incorrect as the addition of the trans seems wrong:
-  // experimentally the bias estimator estimates the body-imu translation (fixed may 2014)
-  //bot_trans_apply_vec(&ins_to_body, msg->gyro, body_gyro);
   bot_quat_rotate_to(ins_to_body.rot_quat, msg->gyro, body_gyro);
   Eigen::Map<Eigen::Vector3d> gyro(body_gyro);
 
-    RBISIMUProcessStep* update = new RBISIMUProcessStep(gyro,
-            accelerometer,
-            cov_gyro,
-            cov_accel,
-            cov_gyro_bias,
-            cov_accel_bias,
-            dt,
-            msg->utime);
+  RBISIMUProcessStep* update = new RBISIMUProcessStep(gyro,
+          accelerometer,
+          cov_gyro,
+          cov_accel,
+          cov_gyro_bias,
+          cov_accel_bias,
+          dt,
+          msg->utime);
 
-    // We reset the bias values to the original value, if requested
+    // Reset the bias values to the original value, if requested
     if(!gyro_bias_update_online) {
         update->posterior_state.gyroBias() = gyro_bias_initial;
     }

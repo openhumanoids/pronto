@@ -16,6 +16,7 @@
 #include "yawlock.hpp"
 
 #include <lcmtypes/bot_core/joint_state_t.hpp>
+#include <lcmtypes/bot_core/ins_t.hpp>
 #include <lcmtypes/pronto/controller_status_t.hpp>
 #include <lcmtypes/pronto/behavior_t.hpp>
 
@@ -24,6 +25,9 @@ namespace MavStateEst {
   
 class YawLockHandler {
 public:
+  typedef enum {
+    MODE_YAWBIAS, MODE_YAW, MODE_YAWBIAS_YAW
+  } YawLockMode;
 
   YawLockHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
@@ -33,8 +37,13 @@ public:
   YawLock* yaw_lock_;
 
   // Ancillary handler
+  void insHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  bot_core::ins_t* msg);
+
   void controllerStatusHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::controller_status_t* msg);
   void robotBehaviorHandler(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const  pronto::behavior_t* msg);
+
+
+  YawLockMode mode;
 
   // Utilities
   lcm::LCM* lcm_pub;
@@ -46,6 +55,14 @@ public:
 
   Eigen::VectorXi z_indices;
   Eigen::MatrixXd cov_scan_match;
+
+  BotTrans ins_to_body;
+  double body_gyro[3];
+  
+  // Required because IHMC's 'standing' state is reported during walking
+  // This is used to infer when it is truely standing
+  int64_t last_ihmc_walking_utime;
+
 };
 
 
