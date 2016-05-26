@@ -96,6 +96,9 @@ LegOdoHandler::LegOdoHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   prev_vicon_utime_ = -1;
   
   force_torque_init_ = false;
+
+  left_force_tare_ = bot_param_get_double_or_fail(param, "state_estimator.legodo.left_force_tare");
+  right_force_tare_ = bot_param_get_double_or_fail(param, "state_estimator.legodo.right_force_tare");
   
 }
 
@@ -218,9 +221,15 @@ RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_
   world_to_body_full_.accel = Eigen::Vector3d( state.acceleration()[0], state.acceleration()[1], state.acceleration()[2] );
   leg_est_->setPoseBody(  getPoseAsIsometry3d(world_to_body_full_)      );
 
+  // NB: remove a tare value from each sensor. This is temporary for Valkyrie in May 2016 until NASA enable taring
+  float left_force_corrected = force_torque_.sensors[0].force[2] - left_force_tare_;
+  float right_force_corrected = force_torque_.sensors[1].force[2] - right_force_tare_;
+
   // 1. Do the Leg Odometry Integration
-  leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
-                             FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
+  leg_est_->setFootSensing(  FootSensing( fabs( left_force_corrected ), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
+                             FootSensing( fabs( right_force_corrected ), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
+  //leg_est_->setFootSensing(  FootSensing( fabs(force_torque_.sensors[0].force[2]), force_torque_.sensors[0].moment[0],  force_torque_.sensors[0].moment[1]),
+  //                           FootSensing( fabs(force_torque_.sensors[1].force[2]), force_torque_.sensors[1].moment[0],  force_torque_.sensors[1].moment[1]));
   leg_est_->setControlContacts(n_control_contacts_left_, n_control_contacts_right_);
 
   // 1.1 Apply the joint torque-to-angle adjustment

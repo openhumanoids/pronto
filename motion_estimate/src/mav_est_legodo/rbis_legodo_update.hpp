@@ -90,6 +90,10 @@ public:
   bot_core::six_axis_force_torque_array_t force_torque_; // Most recent force torque messurement
   bool force_torque_init_; // Have we received a force torque message?
  
+  // NB: remove a tare value from each sensor. This is temporary for Valkyrie in May 2016 until NASA enable taring
+  float left_force_tare_;
+  float right_force_tare_;
+
   // Contact points of the feet deemed to be in contact:
   int n_control_contacts_left_;
   int n_control_contacts_right_;
