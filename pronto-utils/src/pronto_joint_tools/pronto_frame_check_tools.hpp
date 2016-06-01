@@ -42,7 +42,7 @@ public:
       std::cout << "head" << " to " << "body" << " last updated " << last_update_utime_2 << "\n";
       std::cout << "body" << " to " << "local" << " last updated " << last_update_utime_3 << "\n";
       
-      if (( (last_update_utime_1 > 0) && (last_update_utime_2 > 0) )  && (last_update_utime_3 > 0) ){
+      if ( (last_update_utime_1 > 0)   && (last_update_utime_3 > 0) ){
         local_to_head_frame_valid_ = true;
         return true;
       }else{
