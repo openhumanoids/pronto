@@ -149,6 +149,7 @@ class GlKinematicBody
 
     // state can be set via robot_state_t, or urdf::Model,  or affordance_state_t,  or otdf::ModelInterface;
     void set_state(const bot_core::robot_state_t &msg);
+    void set_state(const KDL::Frame &T_world_body, std::map<std::string, double> &jointpos_in);    
     void run_fk_and_update_urdf_link_shapes_and_tfs(std::map<std::string, double> &jointpos_in,const KDL::Frame &T_world_body, bool update_future_frame);
     
     bool get_state_as_lcm_msg(bot_core::robot_state_t &msg_in)
