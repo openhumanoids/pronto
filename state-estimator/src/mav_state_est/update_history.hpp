@@ -21,6 +21,20 @@ public:
   ~updateHistory();
 
   /**
+   * @brief removeCollectionFromHistory removes a collection of objects from the history
+   * @param rbisus vector of objects to be removed
+   * @return a pointer to the element before the first in the collection
+   */
+  historyMapIterator removeSeriesFromHistory(std::vector<RBISUpdateInterface*> rbisus);
+
+  /**
+   * @brief removeFromHistory removes an object from history
+   * @param rbisu the object to be removed
+   * @return a pointer to the object before the one just removed
+   */
+  historyMapIterator removeFromHistory(RBISUpdateInterface* rbisu);
+
+  /**
    * add object to history
    *
    * returns iterator to obj in the history map

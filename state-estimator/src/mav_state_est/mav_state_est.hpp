@@ -17,6 +17,7 @@ public:
 
   int64_t utime_history_span;
 
+  void removeUpdate(RBISUpdateInterface* update);
   void addUpdate(RBISUpdateInterface * update, bool roll_forward);
   void getHeadState(RBIS & head_state, RBIM & head_cov);
   double getMeasurementsLogLikelihood();
