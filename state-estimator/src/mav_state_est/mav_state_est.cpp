@@ -27,7 +27,12 @@ MavStateEstimator::~MavStateEstimator()
 
 void MavStateEstimator::removeUpdate(RBISUpdateInterface *update){
     // Remove the update from history
-    updateHistory::historyMapIterator current_it = history.removeFromHistory(update);
+    unprocessed_updates_start = history.removeFromHistory(update);
+
+    // Get the update before the first unprocessed update
+    updateHistory::historyMapIterator prev_it = unprocessed_updates_start;
+    --prev_it;
+    updateHistory::historyMapIterator current_it = unprocessed_updates_start;
 
     // Recompute the state from where the update was removed
     while(current_it != history.updateMap.end()){
@@ -43,7 +48,7 @@ void MavStateEstimator::removeUpdate(RBISUpdateInterface *update){
         current_update->posterior_state.utime = current_update->utime;
 
         prev_it = current_it;
-        current_it++;
+        ++current_it;
     }
     unprocessed_updates_start = history.updateMap.end();
 }
