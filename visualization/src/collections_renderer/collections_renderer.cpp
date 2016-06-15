@@ -626,6 +626,7 @@ static void draw_square(RendererCollections *self, double x, double y, double z,
   glPopMatrix();
 }
 
+
 class ObjCollection : public Collection {
 public:
   typedef vs_object_collection_t my_vs_collection_t;
@@ -692,7 +693,10 @@ public:
         double size = 0.1; // 0.1m is the size of the plotted poses
 	      size = size*self->param_pose_width;
 
-        Eigen::Vector3d obj_rpy = Eigen::Matrix3d(Eigen::Quaterniond(obj.qw, obj.qx, obj.qy, obj.qz)).eulerAngles(0,1,2);
+        // Retrive euler angles and reverse the order to get rpy:
+        // Corresponds to a snippet of code from Matt Antone. (AffordanceUpdater.cpp in map server)
+        Eigen::Vector3d obj_ypr = Eigen::Matrix3d(Eigen::Quaterniond(obj.qw, obj.qx, obj.qy, obj.qz)).eulerAngles(2,1,0);
+        Eigen::Vector3d obj_rpy = Eigen::Vector3d( obj_ypr[2], obj_ypr[1], obj_ypr[0]);
 
         bool is_last = (maxid == obj.id);
         switch(type) {
@@ -1053,7 +1057,10 @@ public:
 
             float alpha = self->param_alpha_points; 
 
-            Eigen::Vector3d obj_rpy = Eigen::Matrix3d(Eigen::Quaterniond(obj.qw, obj.qx, obj.qy, obj.qz)).eulerAngles(0,1,2);
+            // Retrive euler angles and reverse the order to get rpy:
+            // Corresponds to a snippet of code from Matt Antone. (AffordanceUpdater.cpp in map server)
+            Eigen::Vector3d obj_ypr = Eigen::Matrix3d(Eigen::Quaterniond(obj.qw, obj.qx, obj.qy, obj.qz)).eulerAngles(2,1,0);
+            Eigen::Vector3d obj_rpy = Eigen::Vector3d( obj_ypr[2], obj_ypr[1], obj_ypr[0]);
 
             glVertexPointer(3, GL_FLOAT, 0, entries);
             if (colors) glColorPointer(4, GL_FLOAT, 0, colors);
