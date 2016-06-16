@@ -75,4 +75,27 @@ Eigen::Isometry3d getTransAsVelocityTrans(Eigen::Isometry3d msgT, int64_t dt){
   return msgT_vel;
 }
 
+
+// Given an Isometry3d representing velocity,
+// inserts the translation components as the velocity components in the pose (for visualization in signal scope)
+bot_core::pose_t getIsometry3dAsBotPoseVelocity(Eigen::Isometry3d pose_iso_velocity, int64_t utime ){
+  bot_core::pose_t pose;
+  pose.utime = utime;
+  pose.pos[0] = 0;
+  pose.pos[1] = 0;
+  pose.pos[2] = 0;
+  pose.orientation[0] = 0;
+  pose.orientation[1] = 0;
+  pose.orientation[2] = 0;
+  pose.orientation[3] = 0;
+  pose.vel[0] = pose_iso_velocity.translation().x();
+  pose.vel[1] = pose_iso_velocity.translation().y();
+  pose.vel[2] = pose_iso_velocity.translation().z();
+  pose.rotation_rate[0] = 0;
+  pose.rotation_rate[1] = 0;
+  pose.rotation_rate[2] = 0;
+  return pose;
+}
+
+
 }
