@@ -13,6 +13,7 @@ include(cmake/pods.cmake)
 #lcmtypes_build(C_AGGREGATE_HEADER pronto_tools.h)
 
 add_subdirectory(src/pronto_math)
+add_subdirectory(src/conversions)
 add_subdirectory(src/pronto_vis)
 add_subdirectory(src/pronto_lcm)
 add_subdirectory(src/pronto_filters)
