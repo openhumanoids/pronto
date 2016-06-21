@@ -244,7 +244,7 @@ static double time_elevation(RendererCollections *self, int64_t id, double z, in
   time_scale =self->param_time_scale * self->param_pose_width;
 
   if (!self->param_use_time && !self->param_use_time_collection) return z;
-	double newz = 0.0;
+  double newz = 0.0;
   if (self->param_use_time) {
     int64_t min_id = self->obj_minid;
     int64_t max_id = self->obj_maxid;
@@ -265,7 +265,7 @@ static double time_elevation_collection(RendererCollections *self, int64_t id, d
   time_scale =self->param_time_scale * self->param_pose_width;
 
   if (!self->param_use_time_collection) return z;
-	double newz = 0.0;
+  double newz = 0.0;
   if (self->param_use_time_collection) {
     newz += collid * time_scale;
   }
@@ -691,7 +691,7 @@ public:
         double z = time_elevation(self, obj.id, obj.z, it->first);
 
         double size = 0.1; // 0.1m is the size of the plotted poses
-	      size = size*self->param_pose_width;
+        size = size*self->param_pose_width;
 
         // Retrive euler angles and reverse the order to get rpy:
         // Corresponds to a snippet of code from Matt Antone. (AffordanceUpdater.cpp in map server)
@@ -732,7 +732,7 @@ public:
           draw_sonarcone(self, obj.x, obj.y, z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
           draw_axis(self, obj.x, obj.y, obj.z, obj_rpy(2), obj_rpy(1), obj_rpy(0), size, is_last);
           break;
-	}
+        }
       }
     }
     glPopAttrib ();
@@ -765,7 +765,7 @@ public:
 
   virtual void draw(void *_self, int64_t range_start, int64_t range_end) {
     RendererCollections *self = (RendererCollections*) _self;
-		
+
     CollectionConfig & config = collectionConfig[id];
     bool isconf = config.is_configured();
 
@@ -781,7 +781,7 @@ public:
       color[2] = colors[3*(id%num_colors)+2];
       color[3] = colors[3*(id%num_colors)+3];
     }
-		
+
     for (elements_t::iterator it = elements.begin(); it != elements.end(); it++) {
       vs_link_t& link = it->second;
       collections_t::iterator collection_it1 = self->collections.find(link.collection1);
@@ -1075,8 +1075,8 @@ public:
                 glRotatef(bot_to_degrees(obj_rpy(1)),0.0,1.0,0.0);
                 glRotatef(bot_to_degrees(obj_rpy(0)),1.0,0.0,0.0);
 
-		glColor4f(255,255,155,1.0);
-		glLineWidth((GLfloat)self->param_point_width);
+                glColor4f(255,255,155,1.0);
+                glLineWidth((GLfloat)self->param_point_width);
 
                 float line_fan[2*element.npoints*3];
                 for (int i=0; i<element.npoints; ++i) {
@@ -1102,9 +1102,9 @@ public:
             }
 
             if (self->param_fill_scans) {
- 	        rgb[0] = 0;
-		rgb[1] = 0;
-		rgb[2] = 0;
+              rgb[0] = 0;
+              rgb[1] = 0;
+              rgb[2] = 0;
             }
 
             glTranslatef(obj.x, obj.y, z);
