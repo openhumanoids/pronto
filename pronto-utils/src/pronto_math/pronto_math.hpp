@@ -19,7 +19,7 @@ struct obj_cfg{
 
 struct ptcld_cfg{
   ptcld_cfg(int id, std::string name, int type, bool reset,
-      int obj_coll, bool use_rgb, std::vector<float> rgb ):
+      int obj_coll, int use_rgb, std::vector<float> rgb ):
     id(id), name(name), type(type), reset(reset),
     obj_coll(obj_coll), use_rgb(use_rgb), rgb(rgb) {}
   int id;
@@ -32,7 +32,7 @@ struct ptcld_cfg{
   //int64_t obj_id; // which object in the pose collection is it relative to | was "element_id"
   //float rgba[4];
 
-  bool use_rgb; // use this single color [0] or use colors in the cloud itself [0]
+  int use_rgb; // [-1] send no colors and have view pick, [0] use a single color, [-1] use colors in the XYZRGB cloud itself
   std::vector <float> rgb; // 3 vals 0->1
   // inline specification: http://live.boost.org/doc/libs/1_36_0/libs/assign/doc/index.html
 };
