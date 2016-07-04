@@ -214,7 +214,11 @@ void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::Po
     this_plist->npoints = npts;
     // 3.2: colors:
     vs_color_t* colors = new vs_color_t[npts];
-    this_plist->ncolors = npts;
+    // TODO: this sends the points, but they are not used. Should avoid sending altogether
+    if (pcfg.use_rgb == -1)
+      this_plist->ncolors = 0; // have viewer pick the color
+    else
+      this_plist->ncolors = npts;
     // 3.3: normals:
     this_plist->nnormals = 0;
     this_plist->normals = NULL;
@@ -224,7 +228,7 @@ void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::Po
 
     float rgba[4];
     for(size_t j=0; j<npts; j++) {  //Nransac
-      if (  pcfg.use_rgb){// use the rgb value
+      if (  pcfg.use_rgb == 1){// use the rgb value
         rgba[0] = pcfg.rgb[0];
         rgba[1] = pcfg.rgb[1];
         rgba[2] = pcfg.rgb[2];
@@ -287,7 +291,12 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t
   this_plist->npoints = npts;
   // 3.2: colors:
   vs_color_t* colors = new vs_color_t[npts];
-  this_plist->ncolors = npts;
+
+  // TODO: this sends the points, but they are not used. Should avoid sending altogether
+  if ( pcfg.use_rgb == -1 )
+    this_plist->ncolors = 0; // have the viewer choose the colors.
+  else
+    this_plist->ncolors = npts;
   // 3.3: normals:
   this_plist->nnormals = 0;
   this_plist->normals = NULL;
@@ -297,7 +306,7 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t
 
   float rgba[4];
   for(int j=0; j<npts; j++) {  //Nransac
-    if (  pcfg.use_rgb){// use the rgb value
+    if (  pcfg.use_rgb == 1){// use the rgb value
       //rgba[3] = ptcoll_cfg.rgba[3];
       rgba[0] = pcfg.rgb[0];
       rgba[1] = pcfg.rgb[1];
@@ -541,10 +550,15 @@ void pronto_vis::mesh_to_lcm(ptcld_cfg pcfg, pcl::PolygonMesh::Ptr mesh,
     points->npointids = 0;
     points->pointids = NULL;
 
-    points->ncolors = N_points;
     vs_color_t* colors = new vs_color_t[N_points];
-    points->npoints = N_points;
+    // TODO: this sends the points, but they are not used. Should avoid sending altogether
+    if (  pcfg.use_rgb == -1)
+      points->ncolors = 0;
+    else
+      points->ncolors = N_points;
+
     vs_point3d_t* entries = new vs_point3d_t[N_points];
+    points->npoints = N_points;
 
     points->id = i; // ... still i - not k
     points->collection = pcfg.obj_coll;//PoseCollID;//collection.objectCollectionId();
@@ -557,7 +571,7 @@ void pronto_vis::mesh_to_lcm(ptcld_cfg pcfg, pcl::PolygonMesh::Ptr mesh,
       entries[j].y =(float) tmp(1);
       entries[j].z =(float) tmp(2);
       // r,g,b: input is ints 0->255, opengl wants floats 0->1
-      if (  pcfg.use_rgb){// use the rgb value
+      if (  pcfg.use_rgb == 1){// use the rgb value
         rgba[0] = pcfg.rgb[0];
         rgba[1] = pcfg.rgb[1];
         rgba[2] = pcfg.rgb[2];
