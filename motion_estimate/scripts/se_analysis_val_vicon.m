@@ -159,7 +159,10 @@ res = sortrows(raw, 2);
 % convert to mins from zero
 res(:,2) = (res(:,2) - res(1,2))*1E-6;
 
-clip_start =0;
+% NBNBN: this is important because the pronto estimate initialises with
+% some dynamics. After about 7 seconds where it rotates until coming to a halt
+% the estimate can be trusted after that
+clip_start =1;
 if (clip_start)
   disp('Clipping first 15 seconds')
   idx_keep = res(:,2) > 15;
@@ -370,19 +373,22 @@ plot(d.b.rel_v.t(:), d.b.rel_v.trans_vec(:,3),'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.trans_vec(:,3),'m')
 title('aligned z and time')
 
+b_rpy_error = median(abs(d.v.rot_rpy(:,1:3) - d.b.rel_v.rot_rpy(:,1:3)))*180/pi;
+m_rpy_error = median(abs(d.v.rot_rpy(:,1:3) - d.m.rel_v.rot_rpy(:,1:3)))*180/pi;
+
 subplot(2,3,4)
 hold on
 plot(d.v.t(:), d.v.rot_rpy(:,1)*180/pi,'g')
 plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,1)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,1)*180/pi,'m')
-title('aligned roll (deg) and time')
+title( ['aligned roll (deg) and time | median b:' num2str(b_rpy_error(1),'%0.4f') ' m ' num2str(m_rpy_error(1),'%0.4f')]  )
 
 subplot(2,3,5)
 hold on
 plot(d.v.t(:), d.v.rot_rpy(:,2)*180/pi,'g')
 plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,2)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,2)*180/pi,'m')
-title('aligned pitch (deg) and time')
+title( ['aligned pitch (deg) and time | median b:' num2str(b_rpy_error(2),'%0.4f') ' m ' num2str(m_rpy_error(2),'%0.4f')]  )
 
 subplot(2,3,6)
 hold on
