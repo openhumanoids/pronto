@@ -16,10 +16,8 @@ bot_ = bot;
 
 main_dir = [getenv('HOME')  '/']
 run_dir = 'results-pronto-vicon'
-folder_path = [main_dir run_dir '/'];
-
-logs = dir( [folder_path '*mat'])
-
+settings.folder_path = [main_dir run_dir '/'];
+settings.logs = dir( [settings.folder_path '*mat'])
 
 settings.parse_async =0;
 settings.plot_async = 0;
@@ -30,23 +28,36 @@ settings.do_sync_comparison=1;
 settings.vicon_median_filter =0;
 settings.vicon_invalid_filter =0;
 
-for i=1:size(logs,1)
-  disp([ num2str(i) ': ' logs(i).name])
+for i=1:size(settings.logs,1)
+  disp([ num2str(i) ': ' settings.logs(i).name])
 end
 
 % all:
-which_process= 1:size(logs,1)
+which_process= 1:size(settings.logs,1)
 
 
 %%%%%%%%%%%%%%%% DO WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:size(which_process,2)
   disp(num2str(i))
-  settings.folder_path  = folder_path
-  settings.log_filename = logs( which_process(i) ).name
+  settings.log_filename = settings.logs( which_process(i) ).name
   summary(i) = file_analysis( settings  );
 end
 
+summary_plotting(which_process,settings, summary)
 
+
+function summary = file_analysis(settings)
+%reads the data and does the parse-sync procedure
+[a,s] = do_pre_process(settings)
+
+%keyboard
+%save run_summary a s settings
+
+summary = do_plotting(a,s,settings)
+
+
+
+function summary_plotting(which_process,settings, summary)
 %save summary summary
 
 if (settings.do_sync_comparison)
@@ -62,7 +73,7 @@ if (settings.do_sync_comparison)
     set(gca,'fontSize',7)
 
     ylabel(num2str(summary(i).b.t, '%2.0f sec'))
-    fname = logs(which_process(i) ).name;
+    fname = settings.logs(which_process(i) ).name;
     %title( fname(1:31) )
     title( fname )
     set(gca,'XTick',[1,2,3,4]);set(gca,'XTickLabel',{'XYZ drift','XY drift','Z drift','Yaw drift'})
@@ -70,18 +81,8 @@ if (settings.do_sync_comparison)
   subplot(3,3,8)
   xlabel('Alt: Blue, Pronto: Magenta | Drift in dimensions')
 end
-png_fname = [folder_path 'summary.png'];
+png_fname = [settings.folder_path 'summary.png'];
 saveas( h, png_fname,'png');
-
-
-function summary = file_analysis(settings)
-%reads the data and does the parse-sync procedure
-[a,s] = do_pre_process(settings)
-
-%keyboard
-%save run_summary a s settings
-
-summary = do_plotting(a,s,settings)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
