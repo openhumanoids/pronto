@@ -16,10 +16,8 @@ bot_ = bot;
 
 main_dir = [getenv('HOME')  '/']
 run_dir = 'results-pronto-vicon'
-folder_path = [main_dir run_dir '/'];
-
-logs = dir( [folder_path '*mat'])
-
+settings.folder_path = [main_dir run_dir '/'];
+settings.logs = dir( [settings.folder_path '*mat'])
 
 settings.parse_async =0;
 settings.plot_async = 0;
@@ -30,23 +28,36 @@ settings.do_sync_comparison=1;
 settings.vicon_median_filter =0;
 settings.vicon_invalid_filter =0;
 
-for i=1:size(logs,1)
-  disp([ num2str(i) ': ' logs(i).name])
+for i=1:size(settings.logs,1)
+  disp([ num2str(i) ': ' settings.logs(i).name])
 end
 
 % all:
-which_process= 1:size(logs,1)
+which_process= 1:size(settings.logs,1)
 
 
 %%%%%%%%%%%%%%%% DO WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:size(which_process,2)
   disp(num2str(i))
-  settings.folder_path  = folder_path
-  settings.log_filename = logs( which_process(i) ).name
+  settings.log_filename = settings.logs( which_process(i) ).name
   summary(i) = file_analysis( settings  );
 end
 
+summary_plotting(which_process,settings, summary)
 
+
+function summary = file_analysis(settings)
+%reads the data and does the parse-sync procedure
+[a,s] = do_pre_process(settings)
+
+%keyboard
+%save run_summary a s settings
+
+summary = do_plotting(a,s,settings)
+
+
+
+function summary_plotting(which_process,settings, summary)
 %save summary summary
 
 if (settings.do_sync_comparison)
@@ -62,7 +73,7 @@ if (settings.do_sync_comparison)
     set(gca,'fontSize',7)
 
     ylabel(num2str(summary(i).b.t, '%2.0f sec'))
-    fname = logs(which_process(i) ).name;
+    fname = settings.logs(which_process(i) ).name;
     %title( fname(1:31) )
     title( fname )
     set(gca,'XTick',[1,2,3,4]);set(gca,'XTickLabel',{'XYZ drift','XY drift','Z drift','Yaw drift'})
@@ -70,18 +81,8 @@ if (settings.do_sync_comparison)
   subplot(3,3,8)
   xlabel('Alt: Blue, Pronto: Magenta | Drift in dimensions')
 end
-png_fname = [folder_path 'summary.png'];
+png_fname = [settings.folder_path 'summary.png'];
 saveas( h, png_fname,'png');
-
-
-function summary = file_analysis(settings)
-%reads the data and does the parse-sync procedure
-[a,s] = do_pre_process(settings)
-
-%keyboard
-%save run_summary a s settings
-
-summary = do_plotting(a,s,settings)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,7 +160,10 @@ res = sortrows(raw, 2);
 % convert to mins from zero
 res(:,2) = (res(:,2) - res(1,2))*1E-6;
 
-clip_start =0;
+% NBNBN: this is important because the pronto estimate initialises with
+% some dynamics. After about 7 seconds where it rotates until coming to a halt
+% the estimate can be trusted after that
+clip_start =1;
 if (clip_start)
   disp('Clipping first 15 seconds')
   idx_keep = res(:,2) > 15;
@@ -370,19 +374,22 @@ plot(d.b.rel_v.t(:), d.b.rel_v.trans_vec(:,3),'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.trans_vec(:,3),'m')
 title('aligned z and time')
 
+b_rpy_error = median(abs(d.v.rot_rpy(:,1:3) - d.b.rel_v.rot_rpy(:,1:3)))*180/pi;
+m_rpy_error = median(abs(d.v.rot_rpy(:,1:3) - d.m.rel_v.rot_rpy(:,1:3)))*180/pi;
+
 subplot(2,3,4)
 hold on
 plot(d.v.t(:), d.v.rot_rpy(:,1)*180/pi,'g')
 plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,1)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,1)*180/pi,'m')
-title('aligned roll (deg) and time')
+title( ['aligned roll (deg) and time | median b:' num2str(b_rpy_error(1),'%0.4f') ' m ' num2str(m_rpy_error(1),'%0.4f')]  )
 
 subplot(2,3,5)
 hold on
 plot(d.v.t(:), d.v.rot_rpy(:,2)*180/pi,'g')
 plot(d.b.rel_v.t(:), d.b.rel_v.rot_rpy(:,2)*180/pi,'b')
 plot(d.m.rel_v.t(:), d.m.rel_v.rot_rpy(:,2)*180/pi,'m')
-title('aligned pitch (deg) and time')
+title( ['aligned pitch (deg) and time | median b:' num2str(b_rpy_error(2),'%0.4f') ' m ' num2str(m_rpy_error(2),'%0.4f')]  )
 
 subplot(2,3,6)
 hold on
