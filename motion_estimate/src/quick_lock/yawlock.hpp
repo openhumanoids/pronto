@@ -9,6 +9,7 @@
 #include <model-client/model-client.hpp>
 #include <pronto_utils/pronto_math.hpp>
 
+#include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core/system_status_t.hpp>
 #include <lcmtypes/bot_core/utime_t.hpp>
 

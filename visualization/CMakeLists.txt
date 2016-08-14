@@ -31,7 +31,7 @@ pods_install_libraries(vs_vis)
 pods_install_headers(${hpp_files} DESTINATION visualization)
 
 pods_install_pkg_config_file(visualization
-    LIBS -l${LCMTYPES_LIBS} -lvs_vis -lglut
+    LIBS -l${LCMTYPES_LIBS} -lvs_vis -lglut -lgthread-2.0
     REQUIRES lcm 
     VERSION 0.0.1)
 
