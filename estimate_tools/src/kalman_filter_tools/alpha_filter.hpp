@@ -11,16 +11,20 @@ namespace EstimateTools {
 
 class AlphaFilter{
   public:
-    AlphaFilter(double alpha_= 0.0);
+    AlphaFilter(Eigen::VectorXd &alpha);
+    AlphaFilter(double alpha);
 
     ~AlphaFilter(){
     }
 
-    void processSample(Eigen::VectorXd& x, Eigen::VectorXd &x_filtered);
+    void processSample(const Eigen::VectorXd& x, Eigen::VectorXd &x_filtered);
 
   private:
-    double alpha_;
+    double single_alpha_;
+    Eigen::VectorXd alpha_;
+    Eigen::VectorXd one_minus_alpha_;
 
+    bool use_single_alpha_;
     bool init_;
     bool verbose_;
 
