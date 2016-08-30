@@ -95,12 +95,10 @@ InsHandler::InsHandler(BotParam * _param, BotFrames * _frames) :
 ////////// Typical Micro Strain INS /////////////////
 RBISUpdateInterface * InsHandler::processMessage(const bot_core::ins_t * msg, MavStateEstimator* state_estimator)
 {
-  // get everything in the right frame
+
   double body_accel[3];
-  bot_trans_apply_vec(&ins_to_body, msg->accel, body_accel);
-  // fix suggested by mcamurri in https://github.com/openhumanoids/pronto/issues/67
-  // testing hasn't been conclusive on this yet
-  //bot_quat_rotate_to (ins_to_body.rot_quat, msg->accel, body_accel);
+  //bot_trans_apply_vec(&ins_to_body, msg->accel, body_accel);
+  bot_quat_rotate_to(ins_to_body.rot_quat, msg->accel, body_accel);
   Eigen::Map<Eigen::Vector3d> accelerometer(body_accel);
 
 
