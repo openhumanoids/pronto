@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <cmath>
 
+#include <estimate_tools/SimpleFilter.h>
+
 namespace EstimateTools {
 
 inline double computeAlphaGivenBreakFrequencyInHz(double breakFrequencyInHz, double dt){
@@ -24,9 +26,9 @@ inline double computeAlphaGivenBreakFrequencyInHz(double breakFrequencyInHz, dou
     return alpha;
 }
 
-class SingleAlphaFilter{
+class SingleAlphaFilter: public SimpleFilter{
   public:
-    SingleAlphaFilter(const double & breakFrequencyInHz);
+    SingleAlphaFilter(const double & breakFrequencyInHz, bool verbose = false);
     virtual ~SingleAlphaFilter() {}
 
     double processSample(const double & x, const double & t);
