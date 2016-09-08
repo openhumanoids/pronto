@@ -17,6 +17,21 @@ public:
     AlphaFilter(const std::set<std::string> &target_joints, float alpha);
 
     /**
+     * @brief getAlpha get alpha value
+     * @return alpha value
+     */
+    double getAlpha() { return _alpha; }
+
+    /**
+     * @brief update update the internal state of the filter by new measurements
+     * The method will exchange the provided values with the filtered values in-place.
+     * @param name full list of joint names as provided from the LCM message
+     * @param measurement new measured joint positions
+     */
+    void update(const std::vector<std::string> &name, std::vector<float> &measurement);
+
+private:
+    /**
      * @brief setup set-up the filter by obtaining the target indices and initial values
      * Call this method once (e.g. check if isConfigured returns false) to obtain the
      * indices of the target joints in the full joint vector and to set the initial
@@ -33,20 +48,6 @@ public:
      */
     bool isConfigured() { return _configured; }
 
-    /**
-     * @brief getAlpha get alpha value
-     * @return alpha value
-     */
-    double getAlpha() { return _alpha; }
-
-    /**
-     * @brief update update the internal state of the filter by new measurements
-     * The method will exchange the provided values with the filtered values in-place.
-     * @param measurement new measured joint positions
-     */
-    void update(std::vector<float> &measurement);
-
-private:
     bool _configured;       //!< flag to indicated if setup has been called
     double _alpha;          //!< alpha value of filter
     const std::set<std::string> _target_joints; //!< list of joints to be filtered

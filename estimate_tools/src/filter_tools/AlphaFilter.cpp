@@ -30,10 +30,16 @@ void AlphaFilter::setup(const std::vector<std::string> &name, const std::vector<
     _configured = true;
 }
 
-void AlphaFilter::update(std::vector<float> &measurement) {
-    const float n_alpha = 1-_alpha;
-    for(size_t i = 0; i<_values.size(); i++) {
-        _values[i] = _alpha * measurement[_target_index[i]] +  n_alpha * _values[i];
-        measurement[_target_index[i]] = _values[i];
+void AlphaFilter::update(const std::vector<std::string> &name, std::vector<float> &measurement) {
+    if(!isConfigured()) {
+        // configure filter once
+        setup(name, measurement);
+    }
+    else {
+        const float n_alpha = 1-_alpha;
+        for(size_t i = 0; i<_values.size(); i++) {
+            _values[i] = _alpha * measurement[_target_index[i]] +  n_alpha * _values[i];
+            measurement[_target_index[i]] = _values[i];
+        }
     }
 }
