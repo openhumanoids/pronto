@@ -48,8 +48,7 @@ public:
 
 private:
     bool _configured;       //!< flag to indicated if setup has been called
-    const double _alpha;    //!< alpha value of filter
-    const double _n_alpha;  //!< (1-alpha) value
+    double _alpha;          //!< alpha value of filter
     const std::set<std::string> _target_joints; //!< list of joints to be filtered
     std::vector<unsigned int> _target_index;    //!< indices of filtered joints in full joints
     std::vector<float> _values; //!< internal state of filter, e.g. the filtered values
