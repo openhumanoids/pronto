@@ -22,8 +22,8 @@ sys.path.append(home_dir + "/drc/software/build/lib/python2.7/dist-packages")
 #sys.path.append(home_dir + "/otherprojects/pronto-distro/build/lib/python2.7/dist-packages")
 
 from bot_core.pose_t import pose_t
-from pronto.robot_state_t import robot_state_t
-from pronto.joint_state_t import joint_state_t
+from bot_core.robot_state_t import robot_state_t
+from bot_core.joint_state_t import joint_state_t
 ########################################################################################
 def timestamp_now (): return int (time.time () * 1000000)
 
