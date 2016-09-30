@@ -30,6 +30,7 @@ class LidarOdomConfig
     int beamSkip; //downsample ranges by only taking 1 out of every beam_skip points
     double spatialDecimationThresh; //don't discard a point if its range is more than this many std devs from the mean range (end of hallway)
     double maxRange; //discard beams with reading further than this value
+    double minRange; //discard beams with reading nearer than this value
     float validBeamAngles[2]; //valid part of the field of view of the laser in radians, 0 is the center beam
  
     //hardcoded scan matcher params

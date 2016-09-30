@@ -4,6 +4,7 @@ LidarOdomConfig::LidarOdomConfig(){
   laserType = FRSM_HOKUYO_UTM;
   beamSkip = 3;
   spatialDecimationThresh = .2;
+  minRange = 0.1;
   maxRange = 29.7;
   // Full 270 range for a UTM-30LX
   validBeamAngles[0]= -2.356194;
@@ -111,7 +112,7 @@ void LidarOdom::doOdometry(float* ranges, int nranges, float rad0, float radstep
     frsmPoint * points = (frsmPoint *) calloc(nranges, sizeof(frsmPoint));
     int numValidPoints = frsm_projectRangesAndDecimate(cfg_.beamSkip,
             cfg_.spatialDecimationThresh, ranges, nranges, rad0,
-            radstep, points, cfg_.maxRange, cfg_.validBeamAngles[0],
+            radstep, points, cfg_.minRange, cfg_.maxRange, cfg_.validBeamAngles[0],
             cfg_.validBeamAngles[1]);
     if (numValidPoints < 30) {
         fprintf(stderr, "WARNING! NOT ENOUGH VALID POINTS! numValid=%d\n",
@@ -158,7 +159,7 @@ void LidarOdom::doOdometry(float* ranges, int nranges, float rad0, float radstep
 /////// CODE BELOW IS TO ACCEPT A SET OF X,Y POINTS AND TREAT THEM AS LIDAR RETURNS
 /////// ORIGINALLY USED FOR HORIZONTAL DATA COMING FROM A VELODYNE
 int projectPointsToPoints(std::vector<float> x, std::vector<float> y, int numPoints,
-    frsmPoint * points, double maxRange = 1e10, 
+    frsmPoint * points, double minRange = 0.1, double maxRange = 1e10, 
     double * aveValidRange = NULL, double * stddevValidRange = NULL)
 {
   int count = 0;
@@ -167,7 +168,7 @@ int projectPointsToPoints(std::vector<float> x, std::vector<float> y, int numPoi
 
   for (int i = 0; i < numPoints; i++) {
     double range = sqrt( x[i]*x[i] + y[i]*y[i] );
-    if (range > .1 && range < maxRange ) {
+    if (range > minRange && range < maxRange ) {
       points[count].x = x[i];
       points[count].y = y[i];
       count++;
@@ -189,14 +190,14 @@ int projectPointsToPoints(std::vector<float> x, std::vector<float> y, int numPoi
 
 
 int projectPointsAndDecimate(int beamskip, float spatialDecimationThresh, std::vector<float> x, std::vector<float> y, int npoints,
-    frsmPoint * points, double maxRange = 1e10)
+    frsmPoint * points, double minRange = 0.1, double maxRange = 1e10)
 {
   int lastAdd = -1000;
   double aveRange;
   double stdDevRange;
 
   int numValidPoints = projectPointsToPoints(x, y, npoints,
-    points, maxRange, &aveRange, &stdDevRange);
+    points, minRange, maxRange, &aveRange, &stdDevRange);
 
   frsmPoint origin = { 0, 0 };
   frsmPoint lastAddPoint = { 0, 0 };
@@ -222,13 +223,14 @@ void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoin
 }
 
 void LidarOdom::doOdometry(std::vector<float> x, std::vector<float> y, int npoints, int64_t utime, ScanTransform* prior){
+    double minRange = 0.1;
     double maxRange = 39.0;
     int beamSkip = 3;
 
     //Project ranges into points, and decimate points so we don't have too many
     frsmPoint * points = (frsmPoint *) calloc(npoints, sizeof(frsmPoint));
     int numValidPoints = projectPointsAndDecimate(beamSkip,
-            cfg_.spatialDecimationThresh, x, y, npoints, points, maxRange);
+            cfg_.spatialDecimationThresh, x, y, npoints, points, minRange, maxRange);
     if (numValidPoints < 30) {
         fprintf(stderr, "WARNING! NOT ENOUGH VALID POINTS! numValid=%d\n",
                 numValidPoints);
