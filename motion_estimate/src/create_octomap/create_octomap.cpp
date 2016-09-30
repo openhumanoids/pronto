@@ -222,6 +222,7 @@ int main(int argc, char ** argv) {
   opt.add(ca_cfg.lidar_channel, "l", "lidar_channel","lidar_channel");
   opt.add(ca_cfg.batch_size, "s", "batch_size","Size of the batch of scans");
   opt.add(ca_cfg.min_range, "m", "min_range","Min Range to use");
+  opt.add(ca_cfg.max_range, "M", "max_range","Max Range to use");
   //
   opt.add(pcd_filename, "f", "pcd_filename","Process this PCD file");    
   opt.add(input, "i", "input","Input mode: 0=lcm 1=file 2=republish pcd only");    
