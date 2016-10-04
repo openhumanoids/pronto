@@ -6,7 +6,6 @@
 #
 
 find_package(PkgConfig REQUIRED)
-add_definitions( -std=gnu99)
 
 add_library(renderer_rs SHARED renderer_rs.cpp
   RobotStateListener.cpp

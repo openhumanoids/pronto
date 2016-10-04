@@ -18,10 +18,8 @@ pods_install_executables(se-kalman-filter-demo )
 
 ################
 # Accel Filters
-add_executable(se-filtering-demo filtering_demo.cpp )
+add_executable(se-filtering-demo filtering_demo.cpp)
 pods_use_pkg_config_packages(se-filtering-demo 
-    path-util filter_tools estimate_tools)
-# bot2-frames_cpp  pronto_vis  )
-target_link_libraries (se-filtering-demo lcm )
-# pronto_math  )
-pods_install_executables(se-filtering-demo )
+    path-util filter_tools estimate_tools lcmtypes_bot2-core)
+target_link_libraries (se-filtering-demo lcm)
+pods_install_executables(se-filtering-demo)

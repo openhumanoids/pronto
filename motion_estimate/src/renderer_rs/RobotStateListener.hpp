@@ -12,7 +12,7 @@
 #include "InteractableGlKinematicBody.hpp"
 #include "file_access_utils.hpp"
 #include "eigen_kdl_conversions.hpp"
-#include "lcmtypes/bot_core.hpp"
+#include "lcmtypes/bot_core/robot_state_t.hpp"
 #include "lcmtypes/bot_core/robot_urdf_t.hpp"
 #include <bot_vis/bot_vis.h>
 #include <bot_core/bot_core.h>

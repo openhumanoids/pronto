@@ -3,7 +3,8 @@
 // TODO: depreciate this and use POSE_BODY_ALT directly within mav-est
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
-#include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/bot_core/pose_t.hpp>
+#include <lcmtypes/bot_core/rigid_transform_t.hpp>
 #include <path_util/path_util.h>
 #include <bot_frames/bot_frames.h>
 #include <Eigen/Dense>

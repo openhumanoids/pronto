@@ -9,7 +9,11 @@
 #include <kdl_parser/kdl_parser.hpp>
 #include <forward_kinematics/treefksolverposfull_recursive.hpp>
 
-#include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/bot_core/robot_state_t.hpp>
+#include <lcmtypes/bot_core/position_3d_t.hpp>
+#include <lcmtypes/bot_core/twist_t.hpp>
+#include <lcmtypes/bot_core/force_torque_t.hpp>
+
 #include <bot_vis/bot_vis.h>
 #include <bot_core/bot_core.h>
 #include <path_util/path_util.h>
