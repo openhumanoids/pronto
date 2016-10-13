@@ -56,3 +56,5 @@ pods_install_python_script(se-filter-atlas-state scripts/filterAtlasState.py)
 
 pods_install_python_script(se-state-sync-simple-hyq scripts/state-sync-simple-hyq.py)
 
+pods_install_python_script(se-send-a-pose scripts/send_a_pose.py)
+

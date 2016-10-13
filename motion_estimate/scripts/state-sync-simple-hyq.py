@@ -31,23 +31,35 @@ global joint_state
 
 joint_state = joint_state_t()
 
+joint_state.joint_name = ['lf_haa_joint', 'lf_hfe_joint', 'lf_kfe_joint', 'rf_haa_joint', 'rf_hfe_joint', 'rf_kfe_joint', 'lh_haa_joint', 'lh_hfe_joint', 'lh_kfe_joint', 'rh_haa_joint', 'rh_hfe_joint', 'rh_kfe_joint', 'ptu_pan', 'ptu_tilt']
+joint_state.num_joints = len(joint_state.joint_name)
+joint_state.joint_position = [0] * len(joint_state.joint_name)
+joint_state.joint_velocity = [0] * len(joint_state.joint_name)
+joint_state.joint_effort = [0] * len(joint_state.joint_name)
+received_joint_state = False
 
+skip_joint_angles = True
+if skip_joint_angles:
+  received_joint_state = True
 
 
 def on_joint_state(channel, data):
-  global joint_state
+  global joint_state, received_joint_state
   joint_state = joint_state_t.decode(data)
+  received_joint_state = True
+
 
 def on_pose_body(channel, data):
-  if (joint_state.num_joints==0):
-    return
+  if (skip_joint_angles is False):
+    if (received_joint_state is False):
+      return
 
   m = pose_t.decode(data)
 
   o = robot_state_t()
   o.utime = m.utime
+
   o.num_joints = joint_state.num_joints
-  #o.joint_name = ["" for x in range(o.num_joints)]
   o.joint_name = joint_state.joint_name
   o.joint_position = joint_state.joint_position
   o.joint_velocity = joint_state.joint_velocity
