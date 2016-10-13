@@ -21,3 +21,13 @@ pods_use_pkg_config_packages(collections_viewer bot2-vis
 target_link_libraries(collections_viewer ${Boost_LIBRARIES})
 
 pods_install_executables(collections_viewer)
+
+
+
+
+
+add_executable(collections_example_simple collections_example_simple.cpp)
+pods_use_pkg_config_packages(collections_example_simple lcm)
+
+# make executables public
+pods_install_executables(collections_example_simple)
