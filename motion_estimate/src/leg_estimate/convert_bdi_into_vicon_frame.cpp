@@ -1,7 +1,8 @@
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
 
-#include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/bot_core/pose_t.hpp>
+#include <lcmtypes/bot_core/rigid_transform_t.hpp>
 
 #include <pronto_utils/pronto_vis.hpp>
 #include <path_util/path_util.h>

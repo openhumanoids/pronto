@@ -1,7 +1,11 @@
 #include <zlib.h>
 #include <lcm/lcm-cpp.hpp>
 
-#include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/bot_core/planar_lidar_t.hpp>
+#include <lcmtypes/bot_core/pointcloud_t.hpp>
+#include <lcmtypes/bot_core/pose_t.hpp>
+#include <lcmtypes/bot_core/rigid_transform_t.hpp>
+
 #include <boost/shared_ptr.hpp>
 #include "lidar-odometry.hpp"
 

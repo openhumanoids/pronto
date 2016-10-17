@@ -4,7 +4,7 @@
 #include <deque>
 #include <boost/shared_ptr.hpp>
 #include <lcm/lcm-cpp.hpp>
-#include <lcmtypes/bot_core.hpp>
+#include <lcmtypes/bot_core/planar_lidar_t.hpp>
 #include <lcmtypes/bot_core/pointcloud2_t.hpp>
 
 #include <laser_utils/laser_util.h>
