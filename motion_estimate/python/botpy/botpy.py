@@ -1,9 +1,9 @@
-from drc.robot_state_t import robot_state_t
-from drc.position_3d_t import position_3d_t
-from drc.vector_3d_t import vector_3d_t
-from drc.quaternion_t import quaternion_t
-from drc.twist_t import twist_t
-from drc.force_torque_t import force_torque_t
+from bot_core.robot_state_t import robot_state_t
+from bot_core.position_3d_t import position_3d_t
+from bot_core.vector_3d_t import vector_3d_t
+from bot_core.quaternion_t import quaternion_t
+from bot_core.twist_t import twist_t
+from bot_core.force_torque_t import force_torque_t
 import time
 import math
 import numpy as np
@@ -76,7 +76,7 @@ def quat_mult (a, b):
   return np.array(c)
 
 
-def getDrcPosition3dAsBotTrans(pose):  
+def getPosition3dAsBotTrans(pose):  
   p = BotTrans()
   p.trans_vec = np.array([pose.translation.x, pose.translation.y, pose.translation.z])
   p.rot_quat = np.array([pose.rotation.w, pose.rotation.x, pose.rotation.y, pose.rotation.z])
@@ -88,7 +88,7 @@ def getBotCorePose3dAsBotTrans(pose):
   p.rot_quat = np.array(pose.orientation)
   return p
 
-def getBotTransAsDrcPosition3d(pose_in):
+def getBotTransAsPosition3d(pose_in):
   pose = position_3d_t()
   translation = vector_3d_t()
   translation.x =pose_in.trans_vec[0]
@@ -109,7 +109,7 @@ def getBotTransAsDrcPosition3d(pose_in):
 
 
 
-def drcPosition3dToXYZRPY(pose):
+def Position3dToXYZRPY(pose):
   xyz = [pose.translation.x, pose.translation.y, pose.translation.z]
   rpy = quat_to_euler([pose.rotation.w, pose.rotation.x, pose.rotation.y, pose.rotation.z])
   xyzrpy=xyz
