@@ -38,6 +38,13 @@ add_subdirectory(src/renderer_frames_pronto)
 add_subdirectory(src/pronto_viewer)
 
 
+# require python
+find_package(PythonInterp REQUIRED)
+
+# install all python files in the python/ subdirectory
+pods_install_python_packages(${CMAKE_CURRENT_SOURCE_DIR}/python)
+
+pods_install_python_script(botpy botpy.main)
 
 
 
