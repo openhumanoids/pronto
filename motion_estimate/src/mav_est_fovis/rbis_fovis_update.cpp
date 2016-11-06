@@ -148,46 +148,13 @@ void printTrans(BotTrans bt, std::string message){
 }
 
 
-
-
 // Difference the transform and scale by elapsed time:
-
 BotTrans FovisHandler::getTransAsVelocityTrans(BotTrans msgT, int64_t utime, int64_t prev_utime){
+  Eigen::Isometry3d msgE = getBotTransAsEigen(msgT);
+  Eigen::Isometry3d msgE_vel = pronto::getDeltaAsVelocity(msgE, (utime-prev_utime) );
   BotTrans msgT_vel;
-  memset(&msgT_vel, 0, sizeof(msgT_vel));
-  
-  double rpy[3];
-  bot_quat_to_roll_pitch_yaw(msgT.rot_quat,rpy);
-  double elapsed_time = ( (double) utime -  prev_utime)/1000000;
-  double rpy_rate[3];
-  rpy_rate[0] = rpy[0]/elapsed_time;
-  rpy_rate[1] = rpy[1]/elapsed_time;
-  rpy_rate[2] = rpy[2]/elapsed_time;
-  
-  if (verbose_){
-    std::stringstream ss;
-    ss << utime << " msgT: ";
-    printTrans(msgT, ss.str() );  
-    std::cout << "Elapsed Time: " << elapsed_time  << " sec\n";
-    std::cout << "RPY: " << rpy[0] << ", "<<rpy[1] << ", "<<rpy[2] <<" rad\n";
-    std::cout << "RPY: " << rpy[0]*180/M_PI << ", "<<rpy[1]*180/M_PI << ", "<<rpy[2]*180/M_PI <<" deg\n";
-    std::cout << "RPY: " << rpy_rate[0] << ", "<<rpy_rate[1] << ", "<<rpy_rate[2] <<" rad/s | velocity scaled\n";
-    std::cout << "RPY: " << rpy_rate[0]*180/M_PI << ", "<<rpy_rate[1]*180/M_PI << ", "<<rpy_rate[2]*180/M_PI <<" deg/s | velocity scaled\n";
-    std::cout << "XYZ: " << msgT.trans_vec[0] << ", "  << msgT.trans_vec[1] << ", "  << msgT.trans_vec[2] << "\n";
-  }
-  
-  msgT_vel.trans_vec[0] = msgT.trans_vec[0]/elapsed_time;
-  msgT_vel.trans_vec[1] = msgT.trans_vec[1]/elapsed_time;
-  msgT_vel.trans_vec[2] = msgT.trans_vec[2]/elapsed_time;
-  bot_roll_pitch_yaw_to_quat (rpy_rate, msgT_vel.rot_quat);
-  
-  if (verbose_){
-    std::stringstream ss2;
-    ss2 << " msgT_vel: ";
-    printTrans(msgT_vel, ss2.str() );
-    std::cout << "\n\n";
-  }  
-  
+  msgT_vel = getEigenAsBotTrans(msgE_vel);
+ 
   return msgT_vel;
 }
 
@@ -195,7 +162,6 @@ BotTrans FovisHandler::getTransAsVelocityTrans(BotTrans msgT, int64_t utime, int
 /// Publishing Functions 
 // Convert the delta position into a velocity 
 // as a bot_pose message for visualization with signal scope:
-// [duplicated in rbis_legodo_common.cpp]
 void FovisHandler::sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel){
   BotTrans msgT_vel = getTransAsVelocityTrans(msgT, utime, prev_utime);
   bot_core::pose_t vel_pose = getBotTransAsBotPoseVelocity(msgT_vel, utime)  ;
