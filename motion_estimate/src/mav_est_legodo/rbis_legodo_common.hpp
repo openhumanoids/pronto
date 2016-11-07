@@ -5,6 +5,7 @@
 #include <mav_state_est/sensor_handlers.hpp>
 #include <pronto_utils/pronto_math.hpp>
 #include <pronto_utils/pronto_conversions_lcm.hpp> // visualize pt clds
+#include <pronto_utils/pronto_conversions_bot_core.hpp>
 
 namespace MavStateEst {
 

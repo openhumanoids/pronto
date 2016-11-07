@@ -8,6 +8,9 @@
 
 #include <lcmtypes/fovis_bot2.hpp>
 
+#include <pronto_utils/pronto_vis.hpp>
+#include <pronto_utils/pronto_conversions_lcm.hpp>
+#include <pronto_utils/pronto_conversions_bot_core.hpp>
 #include <mav_state_est/rbis_update_interface.hpp>
 #include <mav_state_est/sensor_handlers.hpp>
 
@@ -17,11 +20,11 @@ class FovisHandler {
 public:
   // Typical mode is MODE_VELOCITY_ROT_RATE
   typedef enum {
-    MODE_LIN_RATE, MODE_ROT_RATE, MODE_LIN_AND_ROT_RATE
+    MODE_LIN_RATE, MODE_ROT_RATE, MODE_LIN_AND_ROT_RATE, MODE_LIN
   } FovisMode;
 
   FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
-               BotParam * param);
+               BotParam * param, BotFrames * frames);
 
   RBISUpdateInterface * processMessage(const fovis::update_t  * msg, RBIS state, RBIM cov);
 
@@ -31,8 +34,10 @@ public:
   
   lcm::LCM* lcm_pub;
   lcm::LCM* lcm_recv;
+  BotFrames* frames;
+  pronto_vis* pc_vis_;
   
-// both duplicated in leg odom
+  // both duplicated in leg odom
   BotTrans getTransAsVelocityTrans(BotTrans msgT,
            int64_t utime, int64_t prev_utime);  
   
