@@ -20,7 +20,7 @@ add_subdirectory(src/leg_estimate)
 ##add_subdirectory(src/gpf-rgbd-lib)
 
 # mav modules :
-#add_subdirectory(src/mav_est_fovis)
+add_subdirectory(src/mav_est_fovis)
 add_subdirectory(src/mav_est_legodo)
 add_subdirectory(src/pose_meas)
 

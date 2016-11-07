@@ -4,7 +4,7 @@
 #include <mav_state_est/mav_state_est.hpp>
 #include <mav_state_est/gpf/rbis_gpf_update.hpp>
 
-//#include <mav_state_est/mav-est-fovis/rbis_fovis_update.hpp>
+#include <mav_state_est/mav-est-fovis/rbis_fovis_update.hpp>
 #include <mav_state_est/mav-est-legodo/rbis_legodo_update.hpp>
 #include <mav_state_est/mav-est-yawlock/rbis_yawlock_update.hpp>
 #include <mav_state_est/pose_meas.hpp>
@@ -214,6 +214,11 @@ public:
     }
 
 
+    if (front_end->isActive("fovis")) {
+      fovis_handler = new FovisHandler(front_end->lcm_recv, front_end->lcm_pub, front_end->param, front_end->frames);
+      front_end->addSensor("fovis", &MavStateEst::FovisHandler::processMessage, fovis_handler);
+    }
+
 
     ModelClient* model;
     if (urdf_file == ""){
@@ -280,7 +285,7 @@ public:
   GpsHandler * gps_handler;
   LaserGPFHandler * laser_gpf_handler;
   //RgbdGPFHandler * rgbd_gpf_handler;
-  //FovisHandler * fovis_handler;
+  FovisHandler * fovis_handler;
   LegOdoHandler * legodo_handler;
   YawLockHandler * yaw_lock_handler;
   IndexedMeasurementHandler * indexed_measurement_handler;
