@@ -156,14 +156,13 @@ RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, 
     Isometry3dTime current_body_T = Isometry3dTime(msg->timestamp , current_body );
     pc_vis_->pose_to_lcm_from_list(7003, current_body_T );
 
-    //Eigen::Vector3d diff = Eigen::Vector3d( t1_body_vo.translation() - t1_body.translation() ); 
-    //std::cout << diff.transpose() << " is diff\n";
+    Eigen::Vector3d diff = Eigen::Vector3d( t1_body_vo.translation() - t1_body.translation() ); 
+    std::cout << diff.transpose() << " is diff\n";
   }
-
 
   if (msg->estimate_status == fovis::update_t::ESTIMATE_VALID){
   }else{
-    std::cout << "FovisHandler: FOVIS failure, quitting\n";
+    std::cout << "FovisHandler: FOVIS failure, not integrating this measurement\n";
     return NULL;
   }
   
