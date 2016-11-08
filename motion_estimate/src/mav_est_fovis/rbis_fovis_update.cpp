@@ -85,6 +85,10 @@ FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   }
 
   cov_fovis = R_fovis.asDiagonal();
+
+  prev_t0_body_ = Eigen::Isometry3d::Identity();
+  prev_t0_body_utime_ = 0;
+
 }
 
 
@@ -124,10 +128,21 @@ bot_core::pose_t getBotTransAsBotPoseVelocity(BotTrans bt, int64_t utime ){
   return pose;
 }
 
+
+
 RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, RBIS state, RBIM cov){
-  // TODO check that these trans are valid
+
   Eigen::Isometry3d t0_body = Eigen::Isometry3d::Identity();
-  get_trans_with_utime(frames, "body" , "local", msg->prev_timestamp, t0_body);
+  if (msg->prev_timestamp != prev_t0_body_utime_){
+    // TODO check that these trans are valid
+    int status = get_trans_with_utime(frames, "body" , "local", msg->prev_timestamp, t0_body);
+
+    prev_t0_body_ = t0_body;
+    prev_t0_body_utime_ = msg->prev_timestamp;
+  }else{
+    t0_body = prev_t0_body_;
+  }
+
 
   Eigen::Isometry3d t1_body = Eigen::Isometry3d::Identity();
   get_trans_with_utime(frames, "body" , "local", msg->timestamp, t1_body);

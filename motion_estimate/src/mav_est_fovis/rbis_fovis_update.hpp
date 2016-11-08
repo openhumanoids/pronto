@@ -48,6 +48,8 @@ public:
   bool verbose_;  
   
 
+  Eigen::Isometry3d prev_t0_body_;
+  int64_t prev_t0_body_utime_;
 };
 
 
