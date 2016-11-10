@@ -171,8 +171,10 @@ RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, 
     Isometry3dTime current_body_T = Isometry3dTime(msg->timestamp , current_body );
     pc_vis_->pose_to_lcm_from_list(7003, current_body_T );
 
-    Eigen::Vector3d diff = Eigen::Vector3d( t1_body_vo.translation() - t1_body.translation() ); 
-    std::cout << diff.transpose() << " is diff\n";
+    //std::cout << t1_body.translation().transpose() << " body\n";
+    //std::cout << t1_body_vo.translation().transpose() << " vo delta\n";
+    //Eigen::Vector3d diff = Eigen::Vector3d( t1_body_vo.translation() - t1_body.translation() ); 
+    //std::cout << diff.transpose() << " is diff\n\n";
   }
 
   if (msg->estimate_status == fovis::update_t::ESTIMATE_VALID){
