@@ -1,0 +1,32 @@
+package pronto;
+// this message is a duplicate of fovis_update_t.lcm
+// also, its contents are being abused here
+
+struct update_t {
+    int64_t timestamp;
+    int64_t prev_timestamp;
+    
+    // motion estimates are given in the camera coordinate frame, where Z is forward, 
+    // X is right, and Y is down.
+    //
+    // The translation and rotation represent the transformation T that brings
+    // points in the current camera frame to the previous body frame
+    // coordinates.
+    //
+    // If P_{prev} and P_{cur} represent the coordinates of a single point in
+    // the previous and current frames, respectively, then 
+    //     P_{prev} = T * P_{cur}
+
+    double translation[3]; // translation vector
+    double rotation[4];    // quaternion, given as w, x, y, z
+
+    double covariance[6][6]; //x,y,z,r,p,yaw
+
+    int8_t estimate_status;
+
+    const int8_t NO_DATA = 0;
+    const int8_t ESTIMATE_VALID = 1;
+    const int8_t ESTIMATE_INSUFFICIENT_FEATURES = 2;
+    const int8_t ESTIMATE_DEGENERATE = 3;
+    const int8_t ESTIMATE_REPROJECTION_ERROR = 4;
+}

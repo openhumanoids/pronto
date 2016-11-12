@@ -467,8 +467,10 @@ float leg_estimate::updateOdometry(std::vector<std::string> joint_name,
       std::cout << "3 Leg Estimate: Changing Foot Constraint\n";
       world_to_primary_foot_transition_ = world_to_primary_foot_slide_;
       world_to_primary_foot_transition_init_ = true;
-      Isometry3dTime world_to_primary_trans_T = Isometry3dTime(current_utime_ , world_to_primary_foot_transition_ ) ;
-      pc_vis_->pose_to_lcm_from_list(1014, world_to_primary_trans_T);
+      if (publish_diagnostics_){ // this was enabled by default for a long time
+        Isometry3dTime world_to_primary_trans_T = Isometry3dTime(current_utime_ , world_to_primary_foot_transition_ ) ;
+        pc_vis_->pose_to_lcm_from_list(1014, world_to_primary_trans_T);
+      }
     }
   }
 

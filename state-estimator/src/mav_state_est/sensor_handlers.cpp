@@ -349,7 +349,7 @@ bool InsHandler::processMessageInitCommon(const std::map<std::string, bool> & se
     }
 
     if(accel_bias_recalc_at_start) {
-        std::cout << "Estimated initial gyro bias as: " << init_state.accelBias().transpose() << std::endl;
+        std::cout << "Estimated initial accel bias as: " << init_state.accelBias().transpose() << std::endl;
         accel_bias_initial = init_state.accelBias();
     }
 

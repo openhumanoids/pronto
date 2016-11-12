@@ -4,10 +4,17 @@
 namespace MavStateEst {
 
 FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
-                           BotParam * param): lcm_recv(lcm_recv), lcm_pub(lcm_pub){
+                           BotParam * param, BotFrames * frames): lcm_recv(lcm_recv), lcm_pub(lcm_pub), frames(frames){
   verbose_ = true;
-  publish_diagnostics_ = true;
+  publish_diagnostics_ = false;
   
+  pc_vis_ = new pronto_vis( lcm_pub->getUnderlyingLCM());
+  // obj: id name type reset
+  pc_vis_->obj_cfg_list.push_back( obj_cfg(7000,"Pronto-VO Pose t0",5,1) );
+  pc_vis_->obj_cfg_list.push_back( obj_cfg(7001,"Pronto-VO Pose t1 kin",5,1) );
+  pc_vis_->obj_cfg_list.push_back( obj_cfg(7002,"Pronto-VO Pose t1 vo",5,1) );
+  pc_vis_->obj_cfg_list.push_back( obj_cfg(7003,"Pronto-VO Pose current",5,1) );
+
   char* mode_str = bot_param_get_str_or_fail(param, "state_estimator.fovis.mode");
 
   if (strcmp(mode_str, "lin_rot_rate") == 0) {
@@ -18,7 +25,12 @@ FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     mode = FovisHandler::MODE_LIN_RATE;
     std::cout << "FOVIS will provide velocity rates." << std::endl;
   }
+  else if (strcmp(mode_str, "lin") == 0){
+    mode = FovisHandler::MODE_LIN;
+    std::cout << "FOVIS will provide linear position corrections." << std::endl;
+  }
   else{
+
     // ... incomplete...
   }
   free(mode_str);
@@ -29,6 +41,10 @@ FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     R_fovis.resize(6);
   }
   else if (mode == MODE_LIN_RATE){
+    z_indices.resize(3);
+    R_fovis.resize(3);
+  }
+  else if (mode == MODE_LIN){
     z_indices.resize(3);
     R_fovis.resize(3);
   }
@@ -49,21 +65,46 @@ FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
     z_indices.head<3>() = eigen_utils::RigidBodyState::velocityInds();
     z_indices.tail<3>() = eigen_utils::RigidBodyState::angularVelocityInds();
 
-
   }else if (mode == MODE_LIN_RATE){
     double R_fovis_vxyz = bot_param_get_double_or_fail(param, "state_estimator.fovis.r_vxyz");
     R_fovis(0) = bot_sq(R_fovis_vxyz);
     R_fovis(1) = bot_sq(R_fovis_vxyz);
     R_fovis(2) = bot_sq(R_fovis_vxyz);
     z_indices.head<3>() = eigen_utils::RigidBodyState::velocityInds();
+
+  }else if (mode == MODE_LIN){
+    double R_fovis_pxy = bot_param_get_double_or_fail(param, "state_estimator.fovis.r_pxy");
+    R_fovis(0) = bot_sq(R_fovis_pxy);
+    R_fovis(1) = bot_sq(R_fovis_pxy);
+    double R_fovis_pz = bot_param_get_double_or_fail(param, "state_estimator.fovis.r_pz");
+    R_fovis(2) = bot_sq(R_fovis_pz);
+    z_indices.head<3>() = eigen_utils::RigidBodyState::positionInds();
+
   }else{
     // ..incomplete
   }
 
   cov_fovis = R_fovis.asDiagonal();
+
+  prev_t0_body_ = Eigen::Isometry3d::Identity();
+  prev_t0_body_utime_ = 0;
+
 }
 
 
+int get_trans_with_utime(BotFrames *bot_frames,
+        const char *from_frame, const char *to_frame, int64_t utime,
+        Eigen::Isometry3d & mat){
+  int status;
+  double matx[16];
+  status = bot_frames_get_trans_mat_4x4_with_utime( bot_frames, from_frame,  to_frame, utime, matx);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      mat(i,j) = matx[i*4+j];
+    }
+  }
+  return status;
+}
 
 // NOTE: this inserts the BotTrans trans_vec 
 // as the velocity components in the pose 
@@ -87,20 +128,69 @@ bot_core::pose_t getBotTransAsBotPoseVelocity(BotTrans bt, int64_t utime ){
   return pose;
 }
 
-RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, RBIS state, RBIM cov){
-  
-  if (msg->estimate_status == fovis::update_t::ESTIMATE_VALID){
-    std::cout << "FovisHandler: FOVIS success\n";
+
+
+RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg, RBIS state, RBIM cov){
+
+  Eigen::Isometry3d t0_body = Eigen::Isometry3d::Identity();
+  if (msg->prev_timestamp != prev_t0_body_utime_){
+    // TODO check that these trans are valid
+    int status = get_trans_with_utime(frames, "body" , "local", msg->prev_timestamp, t0_body);
+
+    prev_t0_body_ = t0_body;
+    prev_t0_body_utime_ = msg->prev_timestamp;
   }else{
-    std::cout << "FovisHandler: FOVIS failure, quitting\n";
+    t0_body = prev_t0_body_;
+  }
+
+
+  Eigen::Isometry3d t1_body = Eigen::Isometry3d::Identity();
+  get_trans_with_utime(frames, "body" , "local", msg->timestamp, t1_body);
+
+  Eigen::Isometry3d t0t1_body_vo = Eigen::Isometry3d::Identity();
+  t0t1_body_vo.translation() = Eigen::Vector3d( msg->translation[0], msg->translation[1], msg->translation[2] );
+  t0t1_body_vo.rotate( Eigen::Quaterniond( msg->rotation[0], msg->rotation[1], msg->rotation[2], msg->rotation[3] ) );
+
+  Eigen::Isometry3d t1_body_vo = t0_body * t0t1_body_vo; // the pose of the robot as estimated by applying the VO translation on top of t0 state
+
+  if (1==0){
+    Isometry3dTime t0_body_T = Isometry3dTime(msg->prev_timestamp , t0_body );
+    pc_vis_->pose_to_lcm_from_list(7000, t0_body_T );
+    Isometry3dTime t1_body_T = Isometry3dTime(msg->timestamp , t1_body );
+    pc_vis_->pose_to_lcm_from_list(7001, t1_body_T );
+
+
+    Isometry3dTime t1_body_vo_T = Isometry3dTime(msg->timestamp , t1_body_vo );
+    pc_vis_->pose_to_lcm_from_list(7002, t1_body_vo_T );
+
+
+    Eigen::Isometry3d current_body;
+    current_body.setIdentity();
+    current_body.translation() = Eigen::Vector3d( state.position()[0], state.position()[1], state.position()[2] );
+    current_body.rotate( Eigen::Quaterniond( state.quat.w(), state.quat.x(), state.quat.y(), state.quat.z() ) );
+    Isometry3dTime current_body_T = Isometry3dTime(msg->timestamp , current_body );
+    pc_vis_->pose_to_lcm_from_list(7003, current_body_T );
+
+    //std::cout << t1_body.translation().transpose() << " body\n";
+    //std::cout << t1_body_vo.translation().transpose() << " vo delta\n";
+    //Eigen::Vector3d diff = Eigen::Vector3d( t1_body_vo.translation() - t1_body.translation() ); 
+    //std::cout << diff.transpose() << " is diff\n\n";
+  }
+
+  if (msg->estimate_status == pronto::update_t::ESTIMATE_VALID){
+  }else{
+    std::cout << "FovisHandler: FOVIS failure, not integrating this measurement\n";
     return NULL;
   }
   
   // TODO: explore why this is allowed to be published upstream
   if ( isnan( msg->translation[0]) ){
     std::cout << "FovisHandler: FOVIS produced NaN. x="<< msg->translation[0] << ", quitting\n";
+    exit(-1); // keep this exit until we have found the source of the NaN in Fovis
     return NULL;
   }
+
+
   
   BotTrans odo_deltaT;
   memset(&odo_deltaT, 0, sizeof(odo_deltaT));
@@ -124,13 +214,18 @@ RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, 
     //  z_meas.head<3>() = Eigen::Map<const Eigen::Vector3d>(msg->trans);
     return new RBISIndexedPlusOrientationMeasurement(z_indices, z_meas, cov_fovis, quat, RBISUpdateInterface::fovis,
             msg->timestamp);
+
   }else if (mode == MODE_LIN_RATE) {
     return new RBISIndexedMeasurement(eigen_utils::RigidBodyState::velocityInds(),
         Eigen::Map<const Eigen::Vector3d>( odo_velT.trans_vec ), cov_fovis, RBISUpdateInterface::fovis,
         msg->timestamp);
-    //RBISIndexedMeasurement(RBIS::velocity_inds(),
-    //VO_velocity_measurement_body_coords,VO_measurement_cov_body_coords,
-    //vo_sensor_id <you'll need to add this>, utime);
+
+  }else if (mode == MODE_LIN) {
+    Eigen::VectorXd z_meas(3);
+    z_meas.head<3>() = Eigen::Vector3d( t1_body_vo.translation().x()  , t1_body_vo.translation().y() , t1_body_vo.translation().z() );
+    return new RBISIndexedMeasurement(eigen_utils::RigidBodyState::positionInds(),
+        z_meas, cov_fovis, RBISUpdateInterface::fovis,
+        msg->timestamp);
 
   }else{
     std::cout << "FovisHandler Mode not supported, exiting\n";
@@ -148,46 +243,13 @@ void printTrans(BotTrans bt, std::string message){
 }
 
 
-
-
 // Difference the transform and scale by elapsed time:
-
 BotTrans FovisHandler::getTransAsVelocityTrans(BotTrans msgT, int64_t utime, int64_t prev_utime){
+  Eigen::Isometry3d msgE = pronto::getBotTransAsEigen(msgT);
+  Eigen::Isometry3d msgE_vel = pronto::getDeltaAsVelocity(msgE, (utime-prev_utime) );
   BotTrans msgT_vel;
-  memset(&msgT_vel, 0, sizeof(msgT_vel));
-  
-  double rpy[3];
-  bot_quat_to_roll_pitch_yaw(msgT.rot_quat,rpy);
-  double elapsed_time = ( (double) utime -  prev_utime)/1000000;
-  double rpy_rate[3];
-  rpy_rate[0] = rpy[0]/elapsed_time;
-  rpy_rate[1] = rpy[1]/elapsed_time;
-  rpy_rate[2] = rpy[2]/elapsed_time;
-  
-  if (verbose_){
-    std::stringstream ss;
-    ss << utime << " msgT: ";
-    printTrans(msgT, ss.str() );  
-    std::cout << "Elapsed Time: " << elapsed_time  << " sec\n";
-    std::cout << "RPY: " << rpy[0] << ", "<<rpy[1] << ", "<<rpy[2] <<" rad\n";
-    std::cout << "RPY: " << rpy[0]*180/M_PI << ", "<<rpy[1]*180/M_PI << ", "<<rpy[2]*180/M_PI <<" deg\n";
-    std::cout << "RPY: " << rpy_rate[0] << ", "<<rpy_rate[1] << ", "<<rpy_rate[2] <<" rad/s | velocity scaled\n";
-    std::cout << "RPY: " << rpy_rate[0]*180/M_PI << ", "<<rpy_rate[1]*180/M_PI << ", "<<rpy_rate[2]*180/M_PI <<" deg/s | velocity scaled\n";
-    std::cout << "XYZ: " << msgT.trans_vec[0] << ", "  << msgT.trans_vec[1] << ", "  << msgT.trans_vec[2] << "\n";
-  }
-  
-  msgT_vel.trans_vec[0] = msgT.trans_vec[0]/elapsed_time;
-  msgT_vel.trans_vec[1] = msgT.trans_vec[1]/elapsed_time;
-  msgT_vel.trans_vec[2] = msgT.trans_vec[2]/elapsed_time;
-  bot_roll_pitch_yaw_to_quat (rpy_rate, msgT_vel.rot_quat);
-  
-  if (verbose_){
-    std::stringstream ss2;
-    ss2 << " msgT_vel: ";
-    printTrans(msgT_vel, ss2.str() );
-    std::cout << "\n\n";
-  }  
-  
+  msgT_vel = pronto::getEigenAsBotTrans(msgE_vel);
+ 
   return msgT_vel;
 }
 
@@ -195,7 +257,6 @@ BotTrans FovisHandler::getTransAsVelocityTrans(BotTrans msgT, int64_t utime, int
 /// Publishing Functions 
 // Convert the delta position into a velocity 
 // as a bot_pose message for visualization with signal scope:
-// [duplicated in rbis_legodo_common.cpp]
 void FovisHandler::sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel){
   BotTrans msgT_vel = getTransAsVelocityTrans(msgT, utime, prev_utime);
   bot_core::pose_t vel_pose = getBotTransAsBotPoseVelocity(msgT_vel, utime)  ;
