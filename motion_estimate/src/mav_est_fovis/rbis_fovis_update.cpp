@@ -130,7 +130,7 @@ bot_core::pose_t getBotTransAsBotPoseVelocity(BotTrans bt, int64_t utime ){
 
 
 
-RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, RBIS state, RBIM cov){
+RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg, RBIS state, RBIM cov){
 
   Eigen::Isometry3d t0_body = Eigen::Isometry3d::Identity();
   if (msg->prev_timestamp != prev_t0_body_utime_){
@@ -177,7 +177,7 @@ RBISUpdateInterface * FovisHandler::processMessage(const fovis::update_t * msg, 
     //std::cout << diff.transpose() << " is diff\n\n";
   }
 
-  if (msg->estimate_status == fovis::update_t::ESTIMATE_VALID){
+  if (msg->estimate_status == pronto::update_t::ESTIMATE_VALID){
   }else{
     std::cout << "FovisHandler: FOVIS failure, not integrating this measurement\n";
     return NULL;

@@ -6,13 +6,13 @@
 #include <bot_param/param_client.h>
 #include <bot_frames/bot_frames.h>
 
-#include <lcmtypes/fovis_bot2.hpp>
-
 #include <pronto_utils/pronto_vis.hpp>
 #include <pronto_utils/pronto_conversions_lcm.hpp>
 #include <pronto_utils/pronto_conversions_bot_core.hpp>
 #include <mav_state_est/rbis_update_interface.hpp>
 #include <mav_state_est/sensor_handlers.hpp>
+
+#include <lcmtypes/pronto/update_t.hpp>
 
 namespace MavStateEst {
 
@@ -26,7 +26,7 @@ public:
   FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
                BotParam * param, BotFrames * frames);
 
-  RBISUpdateInterface * processMessage(const fovis::update_t  * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const pronto::update_t  * msg, RBIS state, RBIM cov);
 
   FovisMode mode;
   Eigen::VectorXi z_indices;
