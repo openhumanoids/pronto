@@ -29,6 +29,9 @@ add_subdirectory(src/quick_lock)
 # estimator proper
 add_subdirectory(src/fusion)
 
+# cloud accumulate:
+add_subdirectory(src/cloud_accumulate)
+
 # map creator:
 add_subdirectory(src/create_octomap)
 
