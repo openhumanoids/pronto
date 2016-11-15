@@ -9,7 +9,7 @@
 #include <boost/thread.hpp>
 
 #include "convert_octomap.hpp"
-#include "cloud_accumulate.hpp"
+#include "cloud_accumulate/cloud_accumulate.hpp"
 
 #include <lcmtypes/bot_core/utime_t.hpp>
 #include <lcmtypes/bot_core/system_status_t.hpp>

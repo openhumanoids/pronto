@@ -18,14 +18,15 @@ endif()
 
 message(STATUS "PCL_IO_PKG_CONFIG={${PCL_IO_PKG_CONFIG}}")
 
-
 ################
-add_executable(se-create-octomap create_octomap.cpp convert_octomap.cpp cloud_accumulate.cpp)
+add_executable(se-create-octomap create_octomap.cpp convert_octomap.cpp)
 pods_use_pkg_config_packages(se-create-octomap  
     path-util ${REQUIRED_PACKAGES}
-    pronto_vis  octomap eigen3
-    octomap-util)
+    octomap
+    eigen3
+    octomap-util
+    pcl_io-1.7)
 #    drc-utils
-target_link_libraries (se-create-octomap lcm pronto_math 
-                        boost_system boost_thread)
+target_link_libraries (se-create-octomap cloud_accumulate lcm pronto_math boost_system boost_thread)
+pods_use_pkg_config_packages(se-create-octomap)
 pods_install_executables(se-create-octomap )
