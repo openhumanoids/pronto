@@ -201,7 +201,7 @@ int main(int argc, char ** argv) {
   co_cfg.blur_sigma = 0.1; // default was .5
   co_cfg.blur_map = true;
   CloudAccumulateConfig ca_cfg;
-  ca_cfg.lidar_channel ="SCAN";
+  ca_cfg.lidar_channel ="MULTISENSE_SCAN";
   ca_cfg.batch_size = 1500;
   ca_cfg.min_range = 1.85; // remove all the short range points
   ca_cfg.max_range = 30.0;
