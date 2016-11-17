@@ -18,9 +18,9 @@ namespace MavStateEst {
 
 class FovisHandler {
 public:
-  // Typical mode is MODE_VELOCITY_ROT_RATE
+  // Typical mode is MODE_POSITION OR MODE_
   typedef enum {
-    MODE_LIN_RATE, MODE_ROT_RATE, MODE_LIN_AND_ROT_RATE, MODE_LIN
+    MODE_VELOCITY, MODE_ROTATION_RATE, MODE_VELOCITY_ROTATION_RATE, MODE_POSITION, MODE_POSITION_ORIENT
   } FovisMode;
 
   FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
@@ -43,10 +43,8 @@ public:
   
   void sendTransAsVelocityPose(BotTrans msgT, int64_t utime, int64_t prev_utime, std::string channel);
   
-  // Publish Debug Data e.g. velocities
-  bool publish_diagnostics_;
-  bool verbose_;  
-  
+  // Publish Debug Data to LCM
+  bool publish_diagnostics_;  
 
   Eigen::Isometry3d prev_t0_body_;
   Eigen::Isometry3d prev_t0_body_internal_;
