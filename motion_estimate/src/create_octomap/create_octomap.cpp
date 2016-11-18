@@ -110,6 +110,7 @@ void App::planarLidarHandler(const lcm::ReceiveBuffer* rbuf, const std::string& 
     accu_->processLidar(msg);
     
     if ( accu_->getFinished()  ){//finished_accumating?
+      std::cout << "Finished Collecting: " << accu_->getFinishedTime() << std::endl;
       do_convert_cloud_ = true;
       do_accum_ = false;
     }
