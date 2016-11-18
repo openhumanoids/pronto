@@ -33,7 +33,7 @@ void gpfMeasurement(GPFLikelihoodInterface<LikelihoodInterface> * likelihood_int
     const RBIM & cov,
     const Eigen::VectorXi & z_indices, Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective, int num_samples,
     double max_weight_proportion,
-    bot_lcmgl_t * lcmgl = NULL);
+    bot_lcmgl_t * lcmgl);
 
 pronto_indexed_measurement_t * gpfCreateLCMmsg(const Eigen::VectorXi & z_indices, const Eigen::VectorXd & z_effective,
     const Eigen::MatrixXd & R_effective);
@@ -45,8 +45,17 @@ template<class LikelihoodInterface>
 void gpfMeasurement(GPFLikelihoodInterface<LikelihoodInterface> * likelihood_interface, const RBIS & state,
     const RBIM & cov,
     const Eigen::VectorXi & z_indices, Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective, int num_samples,
+    double max_weight_proportion)
+{
+    gpfMeasurement(likelihood_interface, state,cov, z_indices, z_effective, R_effective, num_samples,max_weight_proportion, NULL);
+}
+
+template<class LikelihoodInterface>
+void gpfMeasurement(GPFLikelihoodInterface<LikelihoodInterface> * likelihood_interface, const RBIS & state,
+    const RBIM & cov,
+    const Eigen::VectorXi & z_indices, Eigen::VectorXd & z_effective, Eigen::MatrixXd & R_effective, int num_samples,
     double max_weight_proportion,    
-    bot_lcmgl_t * lcmgl = NULL)
+    bot_lcmgl_t * lcmgl)
 {
   using namespace Eigen;
   using namespace eigen_utils;
