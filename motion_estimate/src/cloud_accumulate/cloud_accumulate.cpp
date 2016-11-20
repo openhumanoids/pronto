@@ -167,7 +167,7 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   
   counter_++;
   if (counter_ >= ca_cfg_.batch_size){
-    timeFinished_ = this_msg->utime;
+    utimeFinished_ = this_msg->utime;
     finished_ = true;
   }
 }
@@ -218,7 +218,7 @@ void CloudAccumulate::processVelodyne(const bot_core::pointcloud2_t* msg){
   
   counter_++;  
   if (counter_ >= ca_cfg_.batch_size){
-    timeFinished_ = msg->utime;
+    utimeFinished_ = msg->utime;
     finished_ = true;
   }
 }

@@ -37,7 +37,7 @@ class CloudAccumulate{
     
     int getCounter(){ return counter_; }
     bool getFinished(){ return finished_; }
-    long getFinishedTime() { return timeFinished_; }
+    long getFinishedTime() { return utimeFinished_; }
     pronto::PointCloud* getCloud(){ return combined_cloud_; }
     Laser_projector* getLaserProjector(){ return laser_projector_; }
     
@@ -70,7 +70,7 @@ class CloudAccumulate{
     pronto::PointCloud* combined_cloud_;
     
     bool finished_;
-    long long int timeFinished_;
+    int64_t utimeFinished_;
     
     Laser_projector * laser_projector_;
     laser_projected_scan * projected_laser_scan_;  
