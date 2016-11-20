@@ -458,6 +458,19 @@ void pronto_vis::convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &clou
   }
 }
 
+void pronto_vis::convertCloudProntoToPcl(pronto::PointCloud &cloud, pcl::PointCloud<pcl::PointXYZRGB> &cloud_out){
+  int npts = cloud.points.size();
+  cloud_out.points.resize(npts);
+  for(int j=0; j<npts; j++) {
+    cloud_out.points[j].x = cloud.points[j].x;
+    cloud_out.points[j].y = cloud.points[j].y;
+    cloud_out.points[j].z = cloud.points[j].z;
+    cloud_out.points[j].r = cloud.points[j].r;
+    cloud_out.points[j].g = cloud.points[j].g;
+    cloud_out.points[j].b = cloud.points[j].b;
+  }
+}
+
 void pronto_vis::ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
   int64_t obj_id, int64_t ptcld_id){
  for (size_t i=0; i < ptcld_cfg_list.size() ; i++){

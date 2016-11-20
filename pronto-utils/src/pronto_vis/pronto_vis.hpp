@@ -149,6 +149,7 @@ class pronto_vis {
     ///////////// Point Cloud Methods ////////////////////////////
 #ifdef USE_PRONTO_VIS_PCL
     void convertCloudPclToPronto(pcl::PointCloud<pcl::PointXYZRGB> &cloud, pronto::PointCloud &cloud_out);
+    void convertCloudProntoToPcl(pronto::PointCloud &cloud, pcl::PointCloud<pcl::PointXYZRGB> &cloud_out);
     // Plot a set of point clouds relative to a specific pose
     void ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
             int64_t obj_id, int64_t ptcld_id);

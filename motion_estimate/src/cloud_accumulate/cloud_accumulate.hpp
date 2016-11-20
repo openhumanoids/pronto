@@ -22,18 +22,25 @@ struct CloudAccumulateConfig
     std::string lidar_channel;
     double max_range;
     double min_range;
+    bool check_local_to_scan_valid;
 };
 
 class CloudAccumulate{
   public:
     CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_);
-    
+    CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_,
+                    BotParam* botparam, BotFrames* botframes);
+
     ~CloudAccumulate(){
-    }    
+      delete laser_projector_;
+      delete projected_laser_scan_;
+    }
     
     int getCounter(){ return counter_; }
     bool getFinished(){ return finished_; }
+    long getFinishedTime() { return utimeFinished_; }
     pronto::PointCloud* getCloud(){ return combined_cloud_; }
+    Laser_projector* getLaserProjector(){ return laser_projector_; }
     
     void clearCloud(){ 
       combined_cloud_->points.clear(); 
@@ -43,14 +50,15 @@ class CloudAccumulate{
     }
     
     void publishCloud(pronto::PointCloud* &cloud);
-    void processLidar(const  bot_core::planar_lidar_t* msg);
-    void processVelodyne(const  bot_core::pointcloud2_t* msg);
+    void processLidar(const bot_core::planar_lidar_t* msg);
+    void processVelodyne(const bot_core::pointcloud2_t* msg);
 
   private:
+    void init(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_,
+                          BotParam* botparam, BotFrames* botframes);
+
     boost::shared_ptr<lcm::LCM> lcm_;
-    const CloudAccumulateConfig& ca_cfg_;
-    
-    
+    const CloudAccumulateConfig& ca_cfg_;    
     
     pronto_vis* pc_vis_ ;
     BotParam* botparam_;
@@ -63,6 +71,7 @@ class CloudAccumulate{
     pronto::PointCloud* combined_cloud_;
     
     bool finished_;
+    int64_t utimeFinished_;
     
     Laser_projector * laser_projector_;
     laser_projected_scan * projected_laser_scan_;  
