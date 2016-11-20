@@ -206,6 +206,7 @@ int main(int argc, char ** argv) {
   ca_cfg.batch_size = 1500;
   ca_cfg.min_range = 1.85; // remove all the short range points
   ca_cfg.max_range = 30.0;
+  ca_cfg.check_local_to_scan_valid = false;
   AppConfig app_cfg;
   app_cfg.accum_at_launch = false;
   app_cfg.repeat_period = 20; // default was -1 

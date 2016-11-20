@@ -144,15 +144,14 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
 void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   
   // TODO: This has to be re-implemented in botframes, as it checks for 3 recent transforms:
-  // 1.PRE_SPINDE -> POST_SPINDLE
+  // 1.PRE_SPINDLE -> POST_SPINDLE
   // 2.HEAD -> BODY
   // 3.BODY -> LOCAL
   // in the case of not using the head - the head is static, therefore the 2nd transform does not update, thus returning false.
-  /*if (!frame_check_tools_.isLocalToScanValid(botframes_)){
+  if (ca_cfg_.check_local_to_scan_valid && !frame_check_tools_.isLocalToScanValid(botframes_)){
     cout << "Is local to scan valid? NO." << endl; 
     return;
   }
-  */
 
   std::shared_ptr<bot_core::planar_lidar_t> this_msg;
   this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));

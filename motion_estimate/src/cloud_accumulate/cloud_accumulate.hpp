@@ -22,6 +22,7 @@ struct CloudAccumulateConfig
     std::string lidar_channel;
     double max_range;
     double min_range;
+    bool check_local_to_scan_valid;
 };
 
 class CloudAccumulate{
