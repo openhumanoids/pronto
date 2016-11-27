@@ -166,14 +166,19 @@ Eigen::Isometry3d getWorldToBody(RBIS state){
 }
 
 
-RBISUpdateInterface * YawLockHandler::processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov){
+RBISUpdateInterface * YawLockHandler::processMessage(const bot_core::joint_state_t *msg, MavStateEstimator* state_estimator){
+
+  RBIS head_state;
+  RBIM head_cov;
+  state_estimator->getHeadState(head_state, head_cov);
+
 
   // Get the Yaw Rate Bias Estimate:
   Eigen::VectorXd state_measurement = Eigen::VectorXd::Zero(1, 1);
   if ( yaw_lock_->getIsRobotStanding() ){
     state_measurement(0) = body_gyro[2];
   }else{
-    state_measurement(0) = state.gyroBias()(2);
+    state_measurement(0) = head_state.gyroBias()(2);
   }
 
 
@@ -181,7 +186,7 @@ RBISUpdateInterface * YawLockHandler::processMessage(const bot_core::joint_state
   Eigen::Quaterniond world_to_body_quat_lock; 
   if (mode == MODE_YAW || mode == MODE_YAWBIAS_YAW){  // Get the Yaw estimate:
     yaw_lock_->setJointState(msg->joint_position, msg->joint_name);
-    yawLockValid = yaw_lock_->getCorrection( getWorldToBody(state), msg->utime, world_to_body_quat_lock);
+    yawLockValid = yaw_lock_->getCorrection( getWorldToBody(head_state), msg->utime, world_to_body_quat_lock);
   }
 
 

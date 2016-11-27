@@ -30,12 +30,12 @@ protected:
   std::string channel;
 
   // Microstrain Functions:
-  RBISUpdateInterface * processMessage(const bot_core::ins_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::ins_t * msg, MavStateEstimator* state_estimator);
   bool processMessageInit(const bot_core::ins_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
 
   // Compariable Atlas Functions:
-  RBISUpdateInterface * processMessageAtlas(const bot_core::kvh_raw_imu_batch_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessageAtlas(const bot_core::kvh_raw_imu_batch_t * msg, MavStateEstimator* state_estimator);
   bool processMessageInitAtlas(const bot_core::kvh_raw_imu_batch_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
   //////////// Members Particular to Atlas:
@@ -90,7 +90,7 @@ class GpsHandler {
 protected:
   public:
   GpsHandler(BotParam * _param);
-  RBISUpdateInterface * processMessage(const bot_core::gps_data_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::gps_data_t * msg, MavStateEstimator* state_estimator);
   bool processMessageInit(const bot_core::gps_data_t * msg, const std::map<std::string, bool> & sensors_initialized
       , const RBIS & default_state, const RBIM & default_cov,
       RBIS & init_state, RBIM & init_cov);
@@ -107,7 +107,7 @@ public:
   ViconHandler(BotParam * param, BotFrames *frames);
   ViconHandler(BotParam * param, ViconMode vicon_mode);
   void init(BotParam * param);
-  RBISUpdateInterface * processMessage(const bot_core::rigid_transform_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::rigid_transform_t * msg, MavStateEstimator* state_estimator);
   bool processMessageInit(const bot_core::rigid_transform_t * msg, const std::map<std::string, bool> & sensors_initialized
         , const RBIS & default_state, const RBIM & default_cov,
         RBIS & init_state, RBIM & init_cov);
@@ -129,7 +129,7 @@ public:
   {
       indexed_sensor = this_sensor;
   }
-  RBISUpdateInterface * processMessage(const pronto::indexed_measurement_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const pronto::indexed_measurement_t * msg, MavStateEstimator* state_estimator);
   bool processMessageInit(const pronto::indexed_measurement_t * msg, const std::map<std::string, bool> & sensors_initialized
         , const RBIS & default_state, const RBIM & default_cov,
         RBIS & init_state, RBIM & init_cov);
@@ -146,7 +146,7 @@ public:
   } ScanMatchingMode;
 
   ScanMatcherHandler(BotParam * param);
-  RBISUpdateInterface * processMessage(const bot_core::pose_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::pose_t * msg, MavStateEstimator* state_estimator);
 
   ScanMatchingMode mode;
   Eigen::VectorXi z_indices;
@@ -156,7 +156,7 @@ public:
 class OpticalFlowHandler {
 public:
   OpticalFlowHandler(BotParam * param, BotFrames * frames);
-  RBISUpdateInterface * processMessage(const pronto::optical_flow_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const pronto::optical_flow_t * msg, MavStateEstimator* state_estimator);
 
   BotTrans body_to_cam;
   Eigen::Vector3d body_to_cam_trans; // In body frame, not camera frame
