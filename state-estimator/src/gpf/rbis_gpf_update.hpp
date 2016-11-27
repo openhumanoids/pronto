@@ -34,8 +34,8 @@ class LaserGPFHandler {
 public:
   LaserGPFHandler(lcm_t * lcm, BotParam * _param, BotFrames * _frames);
 
-  RBISUpdateInterface * processMessage(const bot_core::planar_lidar_t * msg, RBIS state, RBIM cov);
-  RBISUpdateInterface * processMessagePointcloud(const bot_core::pointcloud_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::planar_lidar_t * msg, MavStateEstimator* state_estimator);
+  RBISUpdateInterface * processMessagePointcloud(const bot_core::pointcloud_t * msg, MavStateEstimator* state_estimator);
 
   lcm_t * lcm_pub; //needed to copy into update each time to publish message for debugging
   std::string pub_channel;
