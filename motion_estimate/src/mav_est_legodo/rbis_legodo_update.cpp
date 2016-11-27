@@ -203,19 +203,24 @@ void LegOdoHandler::forceTorqueHandler(const lcm::ReceiveBuffer* rbuf, const std
 }
 
 
-RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov){
+RBISUpdateInterface * LegOdoHandler::processMessage(const bot_core::joint_state_t *msg, MavStateEstimator* state_estimator){
 
   if (!force_torque_init_){
     std::cout << "Force/Torque message not received yet, not integrating leg odometry =========================\n";
     return NULL;    
   } 
 
-  world_to_body_full_.utime = state.utime;
-  world_to_body_full_.pos = Eigen::Vector3d( state.position()[0], state.position()[1], state.position()[2] );
-  world_to_body_full_.vel = Eigen::Vector3d( state.velocity()[0], state.velocity()[1], state.velocity()[2] );
-  world_to_body_full_.orientation = Eigen::Vector4d( state.quat.w(), state.quat.x(), state.quat.y(), state.quat.z() );
-  world_to_body_full_.rotation_rate = Eigen::Vector3d( state.angularVelocity()[0], state.angularVelocity()[1], state.angularVelocity()[2]);
-  world_to_body_full_.accel = Eigen::Vector3d( state.acceleration()[0], state.acceleration()[1], state.acceleration()[2] );
+  // TODO: this was changed to allow head_state to be calculated here, but are the assumptions still valid?
+  RBIS head_state;
+  RBIM head_cov;
+  state_estimator->getHeadState(head_state, head_cov);
+
+  world_to_body_full_.utime = head_state.utime;
+  world_to_body_full_.pos = Eigen::Vector3d( head_state.position()[0], head_state.position()[1], head_state.position()[2] );
+  world_to_body_full_.vel = Eigen::Vector3d( head_state.velocity()[0], head_state.velocity()[1], head_state.velocity()[2] );
+  world_to_body_full_.orientation = Eigen::Vector4d( head_state.quat.w(), head_state.quat.x(), head_state.quat.y(), head_state.quat.z() );
+  world_to_body_full_.rotation_rate = Eigen::Vector3d( head_state.angularVelocity()[0], head_state.angularVelocity()[1], head_state.angularVelocity()[2]);
+  world_to_body_full_.accel = Eigen::Vector3d( head_state.acceleration()[0], head_state.acceleration()[1], head_state.acceleration()[2] );
   leg_est_->setPoseBody(  getPoseAsIsometry3d(world_to_body_full_)      );
 
   // 1. Do the Leg Odometry Integration

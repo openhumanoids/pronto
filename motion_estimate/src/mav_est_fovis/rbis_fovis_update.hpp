@@ -26,7 +26,7 @@ public:
   FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
                BotParam * param, BotFrames * frames);
 
-  RBISUpdateInterface * processMessage(const pronto::update_t  * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const pronto::update_t  * msg, MavStateEstimator* state_estimator);
 
   FovisMode mode;
   Eigen::VectorXi z_indices;
@@ -49,6 +49,7 @@ public:
   
 
   Eigen::Isometry3d prev_t0_body_;
+  Eigen::Isometry3d prev_t0_body_internal_;
   int64_t prev_t0_body_utime_;
 };
 

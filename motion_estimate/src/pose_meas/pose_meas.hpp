@@ -21,7 +21,7 @@ public:
   PoseMeasHandler(BotParam * param, BotFrames *frames);
   PoseMeasHandler(BotParam * param, PoseMeasMode pose_meas_mode);
   void init(BotParam * param);
-  RBISUpdateInterface * processMessage(const bot_core::pose_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::pose_t * msg, MavStateEstimator* state_estimator);
   bool processMessageInit(const bot_core::pose_t * msg, const std::map<std::string, bool> & sensors_initialized
         , const RBIS & default_state, const RBIM & default_cov,
         RBIS & init_state, RBIM & init_cov);
