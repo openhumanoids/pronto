@@ -51,9 +51,9 @@ function(pods_install_headers)
     foreach(header ${ARGV})
         get_filename_component(_header_name ${header} NAME)
         configure_file(${header} ${INCLUDE_OUTPUT_PATH}/${dest_dir}/${_header_name} COPYONLY)
-	endforeach(header)
-	#mark them to be installed
-	install(FILES ${ARGV} DESTINATION include/${dest_dir})
+    endforeach(header)
+    #mark them to be installed
+    install(FILES ${ARGV} DESTINATION include/${dest_dir})
 
 
 endfunction(pods_install_headers)
@@ -301,7 +301,7 @@ macro(pods_use_pkg_config_packages target)
         OUTPUT_VARIABLE _pods_pkg_include_flags)
     string(STRIP ${_pods_pkg_include_flags} _pods_pkg_include_flags)
     string(REPLACE "-I" "" _pods_pkg_include_flags "${_pods_pkg_include_flags}")
-	separate_arguments(_pods_pkg_include_flags)
+    separate_arguments(_pods_pkg_include_flags)
     #    message("include: ${_pods_pkg_include_flags}")
     execute_process(COMMAND 
         ${PKG_CONFIG_EXECUTABLE} --libs ${ARGN}
@@ -316,8 +316,7 @@ macro(pods_use_pkg_config_packages target)
         string(REPLACE " " ";" _split_ldflags ${_pods_pkg_ldflags})
         foreach(__ldflag ${_split_ldflags})
                 string(REGEX REPLACE "^-l" "" __depend_target_name ${__ldflag})
-                get_target_property(IS_TARGET ${__depend_target_name} LOCATION)
-                if (NOT IS_TARGET STREQUAL "IS_TARGET-NOTFOUND")
+                if(TARGET "${__depend_target_name}")
                     #message("---- ${target} depends on  ${libname}")
                     add_dependencies(${target} ${__depend_target_name})
                 endif() 
@@ -337,17 +336,17 @@ endmacro()
 # manually.
 macro(pods_config_search_paths)
     if(NOT DEFINED __pods_setup)
-		#set where files should be output locally
-	    set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
-	    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
-	    set(INCLUDE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
-	    set(PKG_CONFIG_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib/pkgconfig)
-		
-		#set where files should be installed to
-	    set(LIBRARY_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib)
-	    set(EXECUTABLE_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/bin)
-	    set(INCLUDE_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/include)
-	    set(PKG_CONFIG_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+        #set where files should be output locally
+        set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+        set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+        set(INCLUDE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
+        set(PKG_CONFIG_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib/pkgconfig)
+        
+        #set where files should be installed to
+        set(LIBRARY_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib)
+        set(EXECUTABLE_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/bin)
+        set(INCLUDE_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/include)
+        set(PKG_CONFIG_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
 
 
         # add build/lib/pkgconfig to the pkg-config search path
