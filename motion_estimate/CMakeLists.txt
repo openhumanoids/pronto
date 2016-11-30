@@ -17,6 +17,7 @@ add_subdirectory(src/foot_contact_alt)
 add_subdirectory(src/leg_estimate)
 
 # RGBD as a GPF
+# Requires kinect-lcmtypes
 ##add_subdirectory(src/gpf-rgbd-lib)
 
 # mav modules :
