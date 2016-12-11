@@ -130,7 +130,7 @@ void insUpdateCovariance(double q_gyro, double q_accel, double q_gyro_bias, doub
     RBIM & cov, double dt);
 
 double matrixMeasurementGetKandCovDelta(const Eigen::MatrixXd & R, const Eigen::MatrixXd & H, const RBIM & cov,
-    const Eigen::VectorXd & z_resid, RBIM & dcov, Eigen::MatrixXd & K);
+    const Eigen::VectorXd & z_resid, RBIM & dcov, Eigen::MatrixXd & K, const Eigen::VectorXi & z_indices, bool flag=false);
 
 double matrixMeasurement(const Eigen::VectorXd & z, const Eigen::VectorXd & z_pred, const Eigen::MatrixXd & R,
     const Eigen::MatrixXd & H, const RBIS & state, const RBIM & cov, RBIS & dstate, RBIM & dcov);
