@@ -188,6 +188,13 @@ RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg,
       return NULL;
     }
 
+    // The following check is not properly debugged:
+    if (lower_it == state_estimator->history.updateMap.end()){
+      std::cout << msg->prev_timestamp <<  " at the end\n";
+      return NULL;
+    }else{
+      std::cout << msg->prev_timestamp <<  " not at the end - (successful delta change)\n";
+    }
 
     RBISUpdateInterface * t0_body_RBISInterface = lower_it->second;
     RBIS t0_body_RBIS = t0_body_RBISInterface->posterior_state;
