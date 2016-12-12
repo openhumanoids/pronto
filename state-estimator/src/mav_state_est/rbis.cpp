@@ -247,7 +247,7 @@ double loglikelihood =0;
   if (z_indices[0] == 9){ // pose corrections
     // flaseis old algorithm
     // true is new algorihtm
-   loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K, z_indices, true); // for vo positions
+   loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K, z_indices, false); // for vo positions
   }else{
    loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K, z_indices, false); // default for kinematic velocity
   }
@@ -264,7 +264,7 @@ double loglikelihood =0;
   if (z_indices[0] == 9){
     //std::cout << K*z_resid << " K*z_resid\n";
     //std::cout << dstate << " dstate\n";
-    //dstate.orientation() = Eigen::Quaterniond(1.,0.,0.,0.);
+    dstate.orientation() = Eigen::Quaterniond(1.,0.,0.,0.);
   }else{
     //std::cout << K*z_resid << " K*z_resid\n";
     //std::cout << dstate << " dstate\n";
