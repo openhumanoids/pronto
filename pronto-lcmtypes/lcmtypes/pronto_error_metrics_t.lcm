@@ -1,0 +1,18 @@
+package pronto;
+
+struct error_metrics_t
+{
+  int64_t utime;
+  double pos_error[3];
+  double pos_error_norm;
+
+  double rpy_error[3];
+
+  // calculated off of ground truth
+  double distance_travelled;
+  double percent_ddt;
+
+  // time between data points in seconds
+  double time_elapsed;
+
+}
