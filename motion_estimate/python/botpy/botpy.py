@@ -11,9 +11,14 @@ import numpy as np
 def timestamp_now (): return int (time.time () * 1000000)
 
 class BotTrans:
-  def __init__(self):
-    self.trans_vec =np.array([0,0,0])
-    self.rot_quat =np.array([1,0,0,0])
+  def __init__(self, pos = None, quat = None):
+    if (pos is None):
+      pos=[0,0,0]
+    if (quat is None):
+      quat=[1,0,0,0]
+
+    self.trans_vec =np.array(pos)
+    self.rot_quat =np.array(quat)
   def assign(self,trans_vec, rot_quat):
     self.trans_vec = trans_vec.copy()
     self.rot_quat = rot_quat.copy()
@@ -22,6 +27,13 @@ class BotTrans:
     print self.rot_quat
 
 ############################################################################
+def transform_relative(pose_a, pose_b):
+  #print "xxxxxxxxxxx"
+  #print pose_a.trans_vec
+  #print pose_b.trans_vec
+  pose_ab = trans_apply_trans( pose_b, trans_invert(pose_a));
+  return pose_ab
+
 def trans_apply_trans(src1, src):
   dest = BotTrans()
   dest.trans_vec = src1.trans_vec.copy()
