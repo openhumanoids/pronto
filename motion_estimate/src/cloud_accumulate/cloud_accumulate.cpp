@@ -4,7 +4,7 @@
 #include <pronto_utils/conversions_lcm.hpp>
 
 CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_):
-    lcm_(lcm_), ca_cfg_(ca_cfg_){
+    lcm_(lcm_), ca_cfg_(ca_cfg_), messages_buffer_(50){
   BotParam* botparam = bot_param_new_from_server(lcm_->getUnderlyingLCM(), 0);
   BotFrames* botframes = bot_frames_get_global(lcm_->getUnderlyingLCM(), botparam);
   init(lcm_, ca_cfg_, botparam, botframes);
@@ -12,7 +12,7 @@ CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudA
 
 CloudAccumulate::CloudAccumulate(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_,
   BotParam* botparam, BotFrames* botframes):
-    lcm_(lcm_), ca_cfg_(ca_cfg_){
+    lcm_(lcm_), ca_cfg_(ca_cfg_), messages_buffer_(50){
   init(lcm_, ca_cfg_, botparam, botframes);
 }
 
@@ -153,22 +153,28 @@ void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
     return;
   }
 
-  std::shared_ptr<bot_core::planar_lidar_t> this_msg;
-  this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
+  std::shared_ptr<bot_core::planar_lidar_t> this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
 
-  
-  // Convert Scan to local frame:
-  pronto::PointCloud* scan_local (new pronto::PointCloud ());
-  scan_local = convertPlanarScanToCloud( this_msg );
+  messages_buffer_.push_back(this_msg);
 
-  // Accumulate
-  combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
-  
-  counter_++;
-  if (counter_ >= ca_cfg_.batch_size){
-    utimeFinished_ = this_msg->utime;
-    finished_ = true;
+  // let it accumulate 10 messages, before processing
+  if (messages_buffer_.size() > 10) {
+    std::shared_ptr<bot_core::planar_lidar_t> processing_msg = messages_buffer_[0]; // get the front one
+    // Convert Scan to local frame:
+    pronto::PointCloud* scan_local (new pronto::PointCloud ());
+    scan_local = convertPlanarScanToCloud( processing_msg );
+
+    // Accumulate
+    combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
+    
+    counter_++;
+    if (counter_ >= ca_cfg_.batch_size){
+      utimeFinished_ = processing_msg->utime;
+      finished_ = true;
+    }
+    messages_buffer_.pop_front(); // remove the front one
   }
+
 }
 
 void CloudAccumulate::processVelodyne(const bot_core::pointcloud2_t* msg){
