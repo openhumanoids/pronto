@@ -15,6 +15,8 @@
 #include <pronto_utils/pronto_vis.hpp>
 #include <pronto_utils/pronto_lcm.hpp> // decode perception lcm messages
 #include <pronto_utils/pronto_frame_check_tools.hpp>
+
+#include <boost/circular_buffer.hpp>
 ////////////////////////////////////////
 struct CloudAccumulateConfig
 {
@@ -58,7 +60,7 @@ class CloudAccumulate{
                           BotParam* botparam, BotFrames* botframes);
 
     boost::shared_ptr<lcm::LCM> lcm_;
-    const CloudAccumulateConfig& ca_cfg_;    
+    const CloudAccumulateConfig& ca_cfg_;
     
     pronto_vis* pc_vis_ ;
     BotParam* botparam_;
@@ -67,6 +69,9 @@ class CloudAccumulate{
     
     int counter_; 
     int verbose_;
+    
+    // Create a circular buffer
+    boost::circular_buffer<std::shared_ptr<bot_core::planar_lidar_t>> messages_buffer_;
     
     pronto::PointCloud* combined_cloud_;
     

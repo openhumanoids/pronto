@@ -4,6 +4,7 @@ project(cloud_accumulate)
 
 ################
 add_library(cloud_accumulate SHARED cloud_accumulate.cpp)
+target_link_libraries(cloud_accumulate boost_system boost_filesystem boost_thread)
 set_target_properties(cloud_accumulate PROPERTIES SOVERSION 1)
 pods_install_libraries(cloud_accumulate)
 pods_install_headers( cloud_accumulate.hpp DESTINATION cloud_accumulate)
