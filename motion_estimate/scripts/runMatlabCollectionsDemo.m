@@ -1,6 +1,7 @@
 % demonstration of Collections to LCM
 global bot_
 bot_ = bot;
+rpg_add_lcm_path()
 
 % 2. Plot a set of axes - and connect them:
 pos= rand(4,3) 
