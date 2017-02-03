@@ -113,7 +113,7 @@ float foot_contact_classify::update (int64_t utime, Eigen::Isometry3d primary_fo
     msg_contact_est.detection_method = pronto::foot_contact_estimate_t::DIFF_SCHMITT_WITH_DELAY;
     msg_contact_est.left_contact  = vis_scale*lf_state  - 100;
     msg_contact_est.right_contact = vis_scale*rf_state - 200;
-    lcm_publish_->publish("FOOT_CONTACT_ESTIMATE",&msg_contact_est); // this message was used by the controller
+    lcm_publish_->publish("FOOT_CONTACT_ESTIMATE_DIAGNOSTICS",&msg_contact_est); // this message was used by the controller
 
     bool recent_left_contact = false;
     bool recent_right_contact = false;
