@@ -3,7 +3,10 @@ bot_ = bot;
 rpg_add_lcm_path()
 
 %1 234 567 is t xyz rpy (in degrees)
-filepath  = '/home/mfallon/2017-rss-simona/data/plots/imu-lo-vo-aicp-microstrain/log2_trot';
+%filepath  = '/home/mfallon/2017-rss-simona/data/plots/imu-lo-vo-aicp-microstrain/log2_trot';
+
+filepath  = '/home/mfallon/2017-rss-simona/dls_logs_aicp_vo_cov_tuning/005_fovis_cov';
+
 gt_filename = [ filepath '/viconpos.txt' ];
 gt_data= load(gt_filename);
 se_filename = [ filepath '/prontopos.txt' ];
@@ -25,13 +28,13 @@ plot_lcm_poses(se_input_full(se_idx,2:4) , se_input_full(se_idx,5:8), 3, 'se', 5
 
 
 % synchronse: drop se from 1kHz to 100Hz
-disp('synchronise')
+% and alogn with gt
+disp('Synchronise signals')
 se_input = zeros(size(gt_input));
 for i=1:size(gt_input,1)
-    if mod(i,1000)==0
-        i
-        size(gt_input,1)
-    end
+  if mod(i,1000)==0
+     disp([num2str(i) ' of '  num2str(size(gt_input,1))])
+  end   
   [a,b] = min(abs(se_input_full(:,1) - gt_input(i,1)));
   se_input(i,:) = se_input_full(b,:);
 end
