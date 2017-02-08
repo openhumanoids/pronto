@@ -31,7 +31,7 @@ public:
 
   YawLockHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub, 
       BotParam * param, ModelClient* model, BotFrames * frames);
-  RBISUpdateInterface * processMessage(const bot_core::joint_state_t *msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const bot_core::joint_state_t *msg, MavStateEstimator* state_estimator);
 
   // Classes:
   YawLock* yaw_lock_;
