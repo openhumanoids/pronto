@@ -71,7 +71,7 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) :
     int status = get_trans_with_utime( botframes_ ,  "VELODYNE", "body"  , 0, body_to_lidar_);
   }else{
     lcm_->subscribe(cl_cfg_.input_channel ,&App::lidarHandler,this);
-    int status = get_trans_with_utime( botframes_ ,  cl_cfg_.input_channel, "body"  , 0, body_to_lidar_);
+    int status = get_trans_with_utime( botframes_ ,  cl_cfg_.input_channel.c_str() , "body"  , 0, body_to_lidar_);
     std::cout << "Body to Lidar from param: " << std::endl;
     std::cout << body_to_lidar_.matrix() << std::endl;
 
