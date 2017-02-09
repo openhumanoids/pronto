@@ -104,7 +104,7 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
   // 100 scans per rev = 2.5 sec per rev = 24 rpm = 144 deg per second = 2.5136 rad/sec, 3.6 deg per scan.
   // 600 scans per rev = 15 sec per rev = 4rpm = 24 deg per second = 0.4189 rad/sec, 0.6 deg per scan.
   projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_interpolation(laser_projector_,
-    laser_msg_c, "body");
+    laser_msg_c, "local");
   if (projected_laser_scan_ == NULL){
     std::cout << "projection failed\n";
     return scan_local;
@@ -112,28 +112,21 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
   // %%%%%%%%%%%%
 
   // 2. Convert set of points into a point cloud
-  pronto::PointCloud* scan_body (new pronto::PointCloud ());
-  scan_body->points.resize (projected_laser_scan_->npoints);
+  scan_local->points.resize (projected_laser_scan_->npoints);
   int n_valid =0;
   for (int i = 0; i < projected_laser_scan_->npoints; i++) {
     if (( projected_laser_scan_->rawScan->ranges[i] < ca_cfg_.max_range) && ( projected_laser_scan_->rawScan->ranges[i] > ca_cfg_.min_range)){
-      scan_body->points[n_valid].x = projected_laser_scan_->points[i].x;
-      scan_body->points[n_valid].y = projected_laser_scan_->points[i].y;
-      scan_body->points[n_valid].z = projected_laser_scan_->points[i].z;
+      scan_local->points[n_valid].x = projected_laser_scan_->points[i].x;
+      scan_local->points[n_valid].y = projected_laser_scan_->points[i].y;
+      scan_local->points[n_valid].z = projected_laser_scan_->points[i].z;
       n_valid++;
     }
   }
-  scan_body->points.resize (n_valid);  
+  scan_local->points.resize (n_valid);  
   bot_core_planar_lidar_t_destroy(laser_msg_c);
   laser_destroy_projected_scan(projected_laser_scan_);  
   
   // 3. Visualize the scan:
-  Eigen::Isometry3d body_to_local;
-  // bot_frames_structure,from_frame,to_frame,utime,result
-  get_trans_with_utime( botframes_ , "body", "local"  , this_msg->utime, body_to_local);
-  
-  // 4. Project the scan into local frame:
-  pc_vis_->transformPointCloud(*scan_body, *scan_local, Eigen::Affine3f ( body_to_local.cast<float>() ) );
   Isometry3dTime null_T = Isometry3dTime(counter_, Eigen::Isometry3d::Identity()  );
   if (verbose_>=2) pc_vis_->pose_to_lcm_from_list(60010, null_T);
   if (verbose_>=2) pc_vis_->ptcld_to_lcm_from_list(60011, *scan_local, counter_, counter_);
