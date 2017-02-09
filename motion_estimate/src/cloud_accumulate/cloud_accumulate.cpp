@@ -134,44 +134,39 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
   return scan_local;
 }
 
-void CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
+
+bool CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   
-  // TODO: This has to be re-implemented in botframes, as it checks for 3 recent transforms:
-  // 1.PRE_SPINDLE -> POST_SPINDLE
-  // 2.HEAD -> BODY
-  // 3.BODY -> LOCAL
-  // in the case of not using the head - the head is static, therefore the 2nd transform does not update, thus returning false.
-  if (ca_cfg_.check_local_to_scan_valid && !frame_check_tools_.isLocalToScanValid(botframes_)){
-    cout << "Is local to scan valid? NO." << endl; 
-    return;
+  // was lidar_channel = "MULTISENSE_SCAN";
+  if (!frame_check_tools_.isFrameValid(botframes_, botparam_, ca_cfg_.lidar_channel, "local", msg->utime)){
+    cout << "Is " << ca_cfg_.lidar_channel << " to local valid? No, not adding it" << endl; 
+    return false;
   }
 
-  std::shared_ptr<bot_core::planar_lidar_t> this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
-
-  messages_buffer_.push_back(this_msg);
-
-  // let it accumulate 10 messages, before processing
-  if (messages_buffer_.size() > 10) {
-    std::shared_ptr<bot_core::planar_lidar_t> processing_msg = messages_buffer_[0]; // get the front one
-    // Convert Scan to local frame:
-    pronto::PointCloud* scan_local (new pronto::PointCloud ());
-    scan_local = convertPlanarScanToCloud( processing_msg );
-
-    // Accumulate
-    combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
-    
-    counter_++;
-    if (counter_ >= ca_cfg_.batch_size){
-      utimeFinished_ = processing_msg->utime;
-      finished_ = true;
-    }
-    messages_buffer_.pop_front(); // remove the front one
+  // 1
+  std::shared_ptr<bot_core::planar_lidar_t> this_msg;
+  this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
+ 
+  // Convert Scan to local frame:
+  pronto::PointCloud* scan_local (new pronto::PointCloud ());
+  scan_local = convertPlanarScanToCloud( this_msg );
+ 
+  // Accumulate
+  combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
+  
+  counter_++;
+  if (counter_ >= ca_cfg_.batch_size){
+    utimeFinished_ = this_msg->utime;
+    finished_ = true;
   }
 
+ return true;
 }
 
-void CloudAccumulate::processVelodyne(const bot_core::pointcloud2_t* msg){
 
+bool CloudAccumulate::processVelodyne(const bot_core::pointcloud2_t* msg){
+
+  // TODO: add FrameValid when when we have some Velodye data 
   std::cout << "velodyne: " << msg->utime << "\n";
 
 
@@ -219,4 +214,6 @@ void CloudAccumulate::processVelodyne(const bot_core::pointcloud2_t* msg){
     utimeFinished_ = msg->utime;
     finished_ = true;
   }
+
+  return true;
 }

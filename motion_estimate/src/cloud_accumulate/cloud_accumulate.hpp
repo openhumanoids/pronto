@@ -24,7 +24,6 @@ struct CloudAccumulateConfig
     std::string lidar_channel;
     double max_range;
     double min_range;
-    bool check_local_to_scan_valid;
 };
 
 class CloudAccumulate{
@@ -52,8 +51,10 @@ class CloudAccumulate{
     }
     
     void publishCloud(pronto::PointCloud* &cloud);
-    void processLidar(const bot_core::planar_lidar_t* msg);
-    void processVelodyne(const bot_core::pointcloud2_t* msg);
+
+    // returns true is scan was added, false if not
+    bool processLidar(const bot_core::planar_lidar_t* msg);
+    bool processVelodyne(const bot_core::pointcloud2_t* msg);
 
   private:
     void init(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_,
@@ -81,6 +82,7 @@ class CloudAccumulate{
     Laser_projector * laser_projector_;
     laser_projected_scan * projected_laser_scan_;  
     
+    // Project an individual lidar scan into the local/world frame
     pronto::PointCloud* convertPlanarScanToCloud(std::shared_ptr<bot_core::planar_lidar_t> this_msg);
     
 };
