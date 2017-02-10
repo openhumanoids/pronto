@@ -26,8 +26,6 @@ void CloudAccumulate::init(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumul
   pc_vis_ = new pronto_vis( lcm_->getUnderlyingLCM() );
   // obj: id name type reset
   // pts: id name type reset objcoll usergb rgb
-  pc_vis_->obj_cfg_list.push_back( obj_cfg(60000,"Pose - Laser",5,reset) );
-  pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60001,"Cloud - Laser"         ,1,reset, 60000,1, {0.0, 0.0, 1.0} ));
   pc_vis_->obj_cfg_list.push_back( obj_cfg(60010,"Pose - Null",5,reset) );
   pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60011,"Cloud (scan-by-scan) - Null"         ,1,reset, 60010,1, {0.0, 1.0, 0.0} ));
   pc_vis_->ptcld_cfg_list.push_back( ptcld_cfg(60012,"Cloud (full sweep) - Null"         ,1,1, 60010,1, {1.0, 0.0, 0.0} ));
@@ -85,13 +83,7 @@ int get_trans_with_utime(BotFrames *bot_frames,
 
 
 void CloudAccumulate::publishCloud(pronto::PointCloud* &cloud){
-  Eigen::Isometry3d local_to_fixscan;
-  get_trans_with_utime( botframes_ , ca_cfg_.lidar_channel.c_str(), "local"  , 1, local_to_fixscan);
-
-  Isometry3dTime local_to_fixscan_T = Isometry3dTime(1, local_to_fixscan );
   Isometry3dTime null_T = Isometry3dTime(1, Eigen::Isometry3d::Identity()  );
-  pc_vis_->pose_to_lcm_from_list(60000, local_to_fixscan_T);
-  pc_vis_->ptcld_to_lcm_from_list(60001, *cloud, 1,1);
   pc_vis_->pose_to_lcm_from_list(60010, null_T);
   pc_vis_->ptcld_to_lcm_from_list(60012, *cloud, 1,1);
 }

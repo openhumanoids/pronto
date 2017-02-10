@@ -28,5 +28,4 @@ pods_use_pkg_config_packages(se-create-octomap
     pcl_io-1.7)
 #    drc-utils
 target_link_libraries (se-create-octomap cloud_accumulate lcm pronto_math boost_system boost_thread)
-pods_use_pkg_config_packages(se-create-octomap)
 pods_install_executables(se-create-octomap )
