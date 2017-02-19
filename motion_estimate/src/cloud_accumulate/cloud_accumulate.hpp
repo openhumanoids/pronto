@@ -47,13 +47,16 @@ class CloudAccumulate{
       combined_cloud_->points.clear(); 
       counter_ = 0;
       finished_ = false;
-      std::cout << "Empty previous map\n";
+      //std::cout << "Empty previous map\n";
     }
     
     void publishCloud(pronto::PointCloud* &cloud);
 
     // returns true is scan was added, false if not
     bool processLidar(const bot_core::planar_lidar_t* msg);
+
+    bool processLidar(std::shared_ptr<bot_core::planar_lidar_t> msg);
+
     bool processVelodyne(const bot_core::pointcloud2_t* msg);
 
   private:

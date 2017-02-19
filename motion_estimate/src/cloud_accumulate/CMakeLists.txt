@@ -11,6 +11,6 @@ pods_install_headers( cloud_accumulate.hpp DESTINATION cloud_accumulate)
 pods_use_pkg_config_packages(cloud_accumulate eigen3 pronto_vis laser-util
   lcm bot2-frames ${REQUIRED_PACKAGES})
 pods_install_pkg_config_file(cloud_accumulate 
-  LIBS 
+  LIBS -lcloud_accumulate
   REQUIRES eigen3 
   VERSION 0.0.1)

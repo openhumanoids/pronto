@@ -98,8 +98,8 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
   projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_interpolation(laser_projector_,
     laser_msg_c, "local");
   if (projected_laser_scan_ == NULL){
-    std::cout << "projection failed\n";
-    return scan_local;
+    std::cout << "Projection failed. Not adding scan\n";
+    return NULL;
   }
   // %%%%%%%%%%%%
 
@@ -128,27 +128,31 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
 
 
 bool CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
-  
-  // was lidar_channel = "MULTISENSE_SCAN";
-  if (!frame_check_tools_.isFrameValid(botframes_, botparam_, ca_cfg_.lidar_channel, "local", msg->utime)){
-    cout << "Is " << ca_cfg_.lidar_channel << " to local valid? No, not adding it" << endl; 
-    return false;
-  }
-
-  // 1
   std::shared_ptr<bot_core::planar_lidar_t> this_msg;
   this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
+  processLidar(this_msg);
+}
+
+bool CloudAccumulate::processLidar(std::shared_ptr<bot_core::planar_lidar_t> msg){
+  // was lidar_channel = "MULTISENSE_SCAN";
+  if (!frame_check_tools_.isFrameValid(botframes_, botparam_, ca_cfg_.lidar_channel, "local", msg->utime)){
+    cout << "Is " << ca_cfg_.lidar_channel << " to local valid? No. Not adding scan" << endl; 
+    return false;
+  }  
  
   // Convert Scan to local frame:
   pronto::PointCloud* scan_local (new pronto::PointCloud ());
-  scan_local = convertPlanarScanToCloud( this_msg );
+  scan_local = convertPlanarScanToCloud( msg );
+  if (scan_local == NULL){
+    return false;
+  }
  
   // Accumulate
   combined_cloud_->points.insert(combined_cloud_->points.end(), scan_local->points.begin(), scan_local->points.end());
   
   counter_++;
   if (counter_ >= ca_cfg_.batch_size){
-    utimeFinished_ = this_msg->utime;
+    utimeFinished_ = msg->utime;
     finished_ = true;
   }
 
