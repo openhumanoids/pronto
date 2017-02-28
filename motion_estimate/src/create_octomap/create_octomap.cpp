@@ -10,6 +10,8 @@
 
 #include "convert_octomap.hpp"
 #include "cloud_accumulate/cloud_accumulate.hpp"
+#include <pronto_utils/pronto_vis.hpp>
+#include <pcl/io/ply_io.h>
 
 #include <lcmtypes/bot_core/utime_t.hpp>
 #include <lcmtypes/bot_core/system_status_t.hpp>
@@ -38,6 +40,8 @@ class App{
     CloudAccumulate* accu_;
     ConvertOctomap* convert_;
     
+    pronto_vis* pronto_vis_ ;
+
     bool do_accum_; // true if we should accumulate a lidar point cloud (or continue to)
     bool do_convert_cloud_; // true if a new pt cloud is ready to be converted to octomap
     bool do_republish_; // true if an octree is ready   
@@ -55,6 +59,10 @@ class App{
 
     void sendSystemStatus(std::string message);
 
+
+    void doFileProcessing(std::string ply_filename);
+
+
 private:
     
 };
@@ -66,6 +74,8 @@ App::App(boost::shared_ptr< lcm::LCM >& lcm_, ConvertOctomapConfig co_cfg_,
   convert_ = new ConvertOctomap(lcm_, co_cfg_);
   accu_ = new CloudAccumulate(lcm_, ca_cfg_);
   
+  pronto_vis_ = new pronto_vis( lcm_->getUnderlyingLCM() );
+
   do_accum_ = app_cfg_.accum_at_launch;
   if (app_cfg_.accum_at_launch){
     std::cout << "Accumulating map at launch\n";
@@ -135,6 +145,59 @@ void App::velodyneHandler(const lcm::ReceiveBuffer* rbuf, const std::string& cha
       do_accum_ = false;
     }
   }
+}
+
+void App::doFileProcessing(std::string ply_filename){
+  std::cout << "ply_filename: " << ply_filename << "\n";
+
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
+
+  /*
+  if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (ply_filename, *pcl_cloud) == -1){ //* load the file
+          std::cout << "Couldn't read pcd file\n";
+    exit(-1);
+  }      */
+
+  if (pcl::io::loadPLYFile<pcl::PointXYZRGB> (ply_filename, *pcl_cloud) == -1){ //* load the file
+          std::cout << "Couldn't read ply file\n";
+    exit(-1);
+  }
+
+
+  std::cout << "Started doProcessing\n";
+  pronto::PointCloud* cloud (new pronto::PointCloud ());
+  pronto::PointCloud* sub_cloud (new pronto::PointCloud ());
+
+  pronto_vis_->convertCloudPclToPronto(*pcl_cloud, *cloud);
+
+  // LCM collections can only handle about 200k points:
+  sub_cloud->points.clear();
+  for (size_t i=0 ; i < cloud->points.size() ; i=i+20){
+    sub_cloud->points.push_back( cloud->points[i] );
+    if (sub_cloud->points.size() > 100000){ // reasonable upper limit in size
+      break;
+    }
+  }
+
+  std::stringstream message;
+  message << "Processing cloud with " << cloud->points.size()
+              << " points" ;
+  sendSystemStatus( message.str() );
+  std::cout << message.str() << "\n";
+  convert_->doWork(cloud);
+
+  std::stringstream message2;
+  message2 << "Finished processing. Click \"Use New Map\" to enable";
+  sendSystemStatus( message2.str() );
+  std::cout << message2.str() << "\n";
+
+
+
+  //std::cout << "Republishing unblurred octomap and point cloud\n";
+  fprintf(stderr, "r");
+  convert_->publishOctree( convert_->getTree(),"OCTOMAP");
+  accu_->publishCloud(sub_cloud);
+  exit(-1);
 }
 
 
@@ -212,21 +275,22 @@ int main(int argc, char ** argv) {
   app_cfg.repeat_period = 20; // default was -1 
   
   std::stringstream s;
-  s <<  getDataPath() <<   "/octomap.pcd" ;
-  std::string pcd_filename = s.str();
+  s <<  getDataPath() <<   "/octomap.ply" ;
+  std::string ply_filename = s.str();
   int input = 0; // 0 = lcm | 1 = file
   
   ConciseArgs opt(argc, (char**)argv);
   //
   opt.add(co_cfg.octomap_resolution, "R", "octomap_resolution","Resolution of underlying octomap");
   opt.add(co_cfg.blur_sigma, "b", "blur_sigma","Radius of the blur kernel");
+  opt.add(co_cfg.blur_map, "u", "blur_map","Blur Map");
   //
   opt.add(ca_cfg.lidar_channel, "l", "lidar_channel","lidar_channel");
   opt.add(ca_cfg.batch_size, "s", "batch_size","Size of the batch of scans");
   opt.add(ca_cfg.min_range, "m", "min_range","Min Range to use");
   opt.add(ca_cfg.max_range, "M", "max_range","Max Range to use");
   //
-  opt.add(pcd_filename, "f", "pcd_filename","Process this PCD file");    
+  opt.add(ply_filename, "f", "ply_filename","Process this PCD file");    
   opt.add(input, "i", "input","Input mode: 0=lcm 1=file 2=republish pcd only");    
   opt.add(app_cfg.accum_at_launch, "a", "accum_at_launch","Start building the octomap at launch");    
   opt.add(app_cfg.repeat_period, "r", "repeat_period","Repeat period of republishes [sec]");
@@ -242,6 +306,10 @@ int main(int argc, char ** argv) {
   
   App* app= new App(lcm, co_cfg, ca_cfg, app_cfg);
   
+  if (input ==1){
+    app->doFileProcessing(ply_filename);
+  }
+
   boost::thread_group thread_group;
   
   if (ca_cfg.lidar_channel != "VELODYNE"){
