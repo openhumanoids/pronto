@@ -107,14 +107,19 @@ class pronto_vis {
     
     void pose_collection_to_lcm_from_list(int id, std::vector<Isometry3dTime> & posesT);
     void pose_collection_to_lcm(obj_cfg ocfg, std::vector<Isometry3dTime> & posesT);
+
     // Also can be used by a single pose
     void pose_collection_reset(int id, std::string name);
+
 
     void pose_to_lcm_from_list(int id,Isometry3dTime& poseT);
     void pose_to_lcm(obj_cfg ocfg, Isometry3dTime& poseT);
 
     void ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::PointCloud > &clouds,
             int64_t obj_id, int64_t ptcld_id);
+
+    void ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::PointCloud > &clouds,
+            std::vector<int64_t> &obj_ids, std::vector<int64_t> &ptcld_ids);
 
     void ptcld_to_lcm_from_list(int id, pronto::PointCloud &cloud,
             int64_t obj_id, int64_t ptcld_id);
@@ -154,6 +159,8 @@ class pronto_vis {
     void ptcld_collection_to_lcm_from_list(int id, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
             int64_t obj_id, int64_t ptcld_id);
     void ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
+        std::vector<int64_t> &obj_ids, std::vector<int64_t> &ptcld_ids); 
+    void ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
             int64_t obj_id, int64_t ptcld_id);
     
     void ptcld_to_lcm_from_list(int id, pcl::PointCloud<pcl::PointXYZRGB> &cloud,
@@ -167,6 +174,8 @@ class pronto_vis {
     void mesh_to_lcm(ptcld_cfg pcfg,pcl::PolygonMesh::Ptr mesh,
             int64_t obj_id, int64_t ptcld_id,
             bool sendSubset =false,const std::vector<int> &SubsetIndicies = std::vector<int>());
+
+
 
     // Merge two PolygonMesh structures into the meshA
     bool mergePolygonMesh(pcl::PolygonMesh::Ptr &meshA, pcl::PolygonMesh::Ptr meshB);
