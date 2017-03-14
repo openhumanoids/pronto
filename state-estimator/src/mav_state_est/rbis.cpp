@@ -122,7 +122,7 @@ void insUpdateCovariance(double q_gyro, double q_accel, double q_gyro_bias, doub
 }
 
 double matrixMeasurementGetKandCovDelta(const Eigen::MatrixXd & R, const Eigen::MatrixXd & C, const RBIM & cov,
-    const Eigen::VectorXd & z_resid, RBIM & cov_delta, Eigen::MatrixXd & K)
+    const Eigen::VectorXd & z_resid, RBIM & cov_delta, Eigen::MatrixXd & K, const Eigen::VectorXi & z_indices, bool flag)
 {
   int m = R.rows();
 
@@ -135,9 +135,78 @@ double matrixMeasurementGetKandCovDelta(const Eigen::MatrixXd & R, const Eigen::
   S.noalias() += C * cov * C.transpose();
 
   LDLT<MatrixXd> Sldlt = LDLT<MatrixXd>(S);
-  //  K = self->Sigma * H.transpose() * S.inverse();
-  K.transpose() = Sldlt.solve(C * cov);
-  cov_delta.noalias() = K * C * cov;
+
+  if(!flag){
+  
+    //  K = self->Sigma * H.transpose() * S.inverse();
+
+    K.transpose() = Sldlt.solve(C * cov);
+
+    cov_delta.noalias() = K * C * cov;
+  
+  }else{
+
+    MatrixXd cov_block(m, m);
+    cov_block = cov.block(z_indices(0), z_indices(0), m, m);
+
+    MatrixXd K_block = MatrixXd::Zero(m, m);
+
+    K_block.transpose() = Sldlt.solve(cov_block);
+
+    //MatrixXd K_full = MatrixXd::Zero(RBIS::rbis_num_states, m);
+
+    K.block(z_indices(0), 0, m, m) = K_block;
+
+    MatrixXd cov_full_with_block = MatrixXd::Zero(RBIS::rbis_num_states, RBIS::rbis_num_states);
+    cov_full_with_block.block(z_indices(0), z_indices(0), m, m ) =  cov_block;
+
+
+    //MatrixXd cov_delta = MatrixXd::Zero(RBIS::rbis_num_states, RBIS::rbis_num_states);
+    cov_delta =  K * C * cov_full_with_block;
+  }
+
+/*
+  if (flag){
+  //std::cout << cov_block << " cov_block\n";      
+//  std::cout << S2 << " S2\n";    
+ // std::cout << K2 << " K2\n";      
+  //std::cout << K2_full << " K2_full\n";      
+  //std::cout << cov_full_with_block_2 << " cov_full_with_block_2\n";      
+  //std::cout << cov_delta2 << " cov_delta2\n";    
+
+  std::cout << z_indices << " z_indices\n";    
+  std::cout << cov << " cov\n";
+  std::cout << C << " C\n";
+  std::cout << R << " R\n";
+  std::cout << S << " S\n";
+  std::cout << K << " K\n";
+  std::cout << z_resid << " z_resid\n";
+  MatrixXd temp(3,21);
+  temp = C  * cov;
+  std::cout << temp << " temp\n";  
+  std::cout << K * C * cov << " cov_delta\n";
+
+
+  ofstream myfile;
+  myfile.open ("example.txt");
+  myfile << "z_indices = [" << z_indices << "]\n";
+  myfile << "cov = [" << cov << "]\n";
+  myfile << "C = [" << C << "]\n";
+  myfile << "R = [" << R << "]\n";
+  myfile << "S = [" << S << "]\n";
+  myfile << "K = [" << K << "]\n";
+  myfile << "z_resid = [" << z_resid << "]\n";  
+  myfile << "cov_delta = [" << (K*C*cov) << "]\n";
+  myfile.close();
+
+  //ColPivHouseholderQR<MatrixXd> Scp = ColPivHouseholderQR<MatrixXd>(S);
+  //MatrixXd K2(21, 3);
+  //K2.transpose() = Scp.solve(C * cov);
+  //std::cout << K2.transpose() << " K2 transpose post\n";
+
+  }
+  */
+
 
   return -log(S.determinant()) - z_resid.transpose() * Sldlt.solve(z_resid);
 }
@@ -151,7 +220,10 @@ double matrixMeasurement(const Eigen::VectorXd & z, const Eigen::VectorXd & z_pr
 
   VectorXd z_resid = z - z_pred;
 
-  double loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K);
+  std::cout <<"Attention: Un-updated code!\n";
+  //  double loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K);
+  exit(-1);
+  double loglikelihood =0;
 
   dstate = RBIS(K * z_resid);
   return loglikelihood;
@@ -171,8 +243,63 @@ double indexedMeasurement(const Eigen::VectorXd & z, const Eigen::MatrixXd & R, 
     C(ii, z_indices(ii)) = 1;
   }
 
-  double loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K);
+double loglikelihood =0;
+  if (z_indices[0] == 9){ // pose corrections
+    // flaseis old algorithm
+    // true is new algorihtm
+   loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K, z_indices, false); // for vo positions
+  }else{
+   loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K, z_indices, false); // default for kinematic velocity
+  }
+
+
+  //if (z_indices[0] == 9){
+  //  std::cout << z_indices.transpose() << "\n";
+  //  std::cout << "got vo\n";
+  //  std::cout << K.transpose() << " K \n";
+  //}
+
   dstate = RBIS(K * z_resid);
+
+  if (z_indices[0] == 9){
+    //std::cout << K*z_resid << " K*z_resid\n";
+    //std::cout << dstate << " dstate\n";
+    //std::cout << "hack orientation\n";
+    //dstate.orientation() = Eigen::Quaterniond(1.,0.,0.,0.);
+  }else{
+    //std::cout << K*z_resid << " K*z_resid\n";
+    //std::cout << dstate << " dstate\n";
+    //std::cout << "vel\n";
+  }
+  
+  /*
+  if (z_indices[0] == 9){
+    std::cout << K.rows() << " and " << K.cols() << " K\n";
+
+    std::cout << z_resid.transpose() << " z_resid \n";
+
+    VectorXd dstate_v =  K * z_resid;
+    std::cout << dstate_v.transpose() << " dstate_v \n";
+
+
+    std::cout << dstate.position().transpose() << " dstate position\n";
+    Eigen::Quaterniond q = dstate.orientation();
+    std::cout << q.w() << " "
+              << q.x() << " "
+              << q.y() << " "
+              << q.z() << " "
+              << " dstate orientation\n";
+    dstate.orientation() = Eigen::Quaterniond(1.,0.,0.,0.);
+
+    q = dstate.orientation();
+    std::cout << q.w() << " "
+              << q.x() << " "
+              << q.y() << " "
+              << q.z() << " "
+              << " dstate orientation post\n";
+
+  }*/
+
   return loglikelihood;
 
 }
@@ -210,7 +337,7 @@ double indexedPlusOrientationMeasurement(const Eigen::VectorXd & z, const Eigen:
     C(ii, z_indices(ii)) = 1;
   }
 
-  double loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K);
+  double loglikelihood = matrixMeasurementGetKandCovDelta(R, C, cov, z_resid, dcov, K, z_indices, false);
   dstate = RBIS(K * z_resid);
 
   return loglikelihood; //TODO get this right
