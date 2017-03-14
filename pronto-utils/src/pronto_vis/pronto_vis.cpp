@@ -344,6 +344,15 @@ void pronto_vis::ptcld_to_lcm_from_list(int id, pronto::PointCloud &cloud, int64
 }
 
 void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t obj_id, int64_t ptcld_id){
+  std::vector<Eigen::Vector3d> empty_normal_list;
+  ptcld_to_lcm(pcfg, cloud, empty_normal_list, obj_id, ptcld_id);
+}
+
+
+void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud,
+    std::vector< Eigen::Vector3d> &cloud_normals,
+    int64_t obj_id, int64_t ptcld_id){
+
   int npts = cloud.points.size();
 
   vs_point3d_list_collection_t plist_coll;
@@ -371,9 +380,14 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t
     this_plist->ncolors = 0; // have the viewer choose the colors.
   else
     this_plist->ncolors = npts;
+
   // 3.3: normals:
-  this_plist->nnormals = 0;
-  this_plist->normals = NULL;
+  vs_point3d_t* normals = new vs_point3d_t[npts];
+  if (cloud_normals.size() == npts)
+    this_plist->nnormals = npts;
+  else
+    this_plist->nnormals = 0;
+
   // 3.4: point ids:
   this_plist->npointids = 0;//cloud.points.size();
   int64_t* pointsids= NULL;//new int64_t[ cloud.points.size() ];
@@ -397,10 +411,18 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t
     points[j].x = cloud.points[j].x;
     points[j].y = cloud.points[j].y;
     points[j].z = cloud.points[j].z;
+
+    if (cloud_normals.size() == npts){
+      normals[j].x = cloud_normals[j][0];
+      normals[j].y = cloud_normals[j][1];
+      normals[j].z = cloud_normals[j][2];
+    }
+
   }
 
   this_plist->colors = colors;
   this_plist->points = points;
+  this_plist->normals = normals;
   this_plist->pointids = pointsids;
   plist_coll.point_lists = plist;
   vs_point3d_list_collection_t_publish(publish_lcm_,"POINTS_COLLECTION",&plist_coll);
@@ -571,6 +593,14 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> 
   ptcld_to_lcm(pcfg, *cloud_out, obj_id, ptcld_id);  
 }
 
+
+void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> &cloud, 
+    std::vector< Eigen::Vector3d> &cloud_normals,
+    int64_t obj_id, int64_t ptcld_id){
+  pronto::PointCloud* cloud_out (new pronto::PointCloud);
+  convertCloudPclToPronto(cloud,*cloud_out);
+  ptcld_to_lcm(pcfg, *cloud_out, cloud_normals, obj_id, ptcld_id);  
+}
 
 void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
         std::vector<int64_t> &obj_ids, std::vector<int64_t> &ptcld_ids){

@@ -34,3 +34,12 @@ target_link_libraries(test-point-cloud-pcl-2 boost_system)
 pods_use_pkg_config_packages(test-point-cloud-pcl-2 lcm ${PCL_IO_PKG_CONFIG} 
   pronto_vis pronto_lcm)
 pods_install_executables(test-point-cloud-pcl-2)
+
+
+
+
+add_executable(test-point-cloud-normal test_point_cloud_normal.cpp)
+target_link_libraries(test-point-cloud-normal boost_system)
+pods_use_pkg_config_packages(test-point-cloud-normal lcm ${PCL_IO_PKG_CONFIG} 
+  pronto_vis pronto_lcm pcl_features-1.7)
+pods_install_executables(test-point-cloud-normal)
