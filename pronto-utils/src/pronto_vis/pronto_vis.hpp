@@ -125,6 +125,11 @@ class pronto_vis {
             int64_t obj_id, int64_t ptcld_id);
     void ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud,
             int64_t obj_id, int64_t ptcld_id);
+    // with normals
+    void ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud,
+            std::vector< Eigen::Vector3d> &cloud_normals,
+            int64_t obj_id, int64_t ptcld_id);
+
     // Also can be used by mesh
     void ptcld_collection_reset(int id, std::string name);
 
@@ -166,6 +171,10 @@ class pronto_vis {
     void ptcld_to_lcm_from_list(int id, pcl::PointCloud<pcl::PointXYZRGB> &cloud,
             int64_t obj_id, int64_t ptcld_id);
     void ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> &cloud,
+            int64_t obj_id, int64_t ptcld_id);
+    // with normals
+    void ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> &cloud,
+            std::vector< Eigen::Vector3d> &cloud_normals,
             int64_t obj_id, int64_t ptcld_id);
 
     void mesh_to_lcm_from_list(int id, pcl::PolygonMesh::Ptr mesh,

@@ -67,6 +67,12 @@ const double PARAM_POSE_WIDTH_POSES_MAX = 30;
 const double PARAM_POSE_WIDTH_POSES_DELTA = 0.1;
 const double PARAM_POSE_WIDTH_POSES_DEFAULT = 1;
 
+const char* PARAM_NORMAL_WIDTH_NORMAL = "Normal length";
+const double PARAM_NORMAL_WIDTH_NORMAL_MIN = 0.0;
+const double PARAM_NORMAL_WIDTH_NORMAL_MAX = 5;
+const double PARAM_NORMAL_WIDTH_NORMAL_DELTA = 0.05;
+const double PARAM_NORMAL_WIDTH_NORMAL_DEFAULT = 1;
+
 const char* PARAM_COLOR_AXES = "Color Poses";
 const bool PARAM_COLOR_AXES_DEFAULT = false;
 
@@ -213,6 +219,7 @@ struct _RendererCollections {
   double param_alpha_points;
   double param_point_width;
   double param_pose_width;
+  double param_normal_width;
   bool param_color_time;
   bool param_z_up;
 
@@ -630,6 +637,44 @@ static void draw_tetra(RendererCollections *self, double x, double y, double z, 
   glPopMatrix();
 }
 
+
+static void draw_arrow(RendererCollections *self, double x, double y, double z, 
+  double yaw, double pitch, double roll, double r, double g, double b) {
+  // based off of draw_camera
+  if (!self->viewer) return;
+
+  glPushMatrix();
+  glTranslatef(x, y, z);
+  glColor3f(r,g,b);
+  //glColor3f(0.1,0.7,0.1);
+  glRotatef(bot_to_degrees(yaw),  0., 0., 1.);
+  glRotatef(bot_to_degrees(pitch),0., 1., 0.);
+  glRotatef(bot_to_degrees(roll), 1., 0., 0.);
+
+  int slides = 6; // segments
+  int stacks = 1; // rows
+  double scale = self->param_normal_width;
+
+  glPushAttrib(GL_ENABLE_BIT);
+  glEnable(GL_DEPTH_TEST);
+  glPushMatrix();
+  glTranslatef(0, 0, 0);
+  GLUquadricObj *q = gluNewQuadric();
+  gluCylinder(q, 0.005*scale, 0.005*scale, 0.15*scale, slides, stacks); // base
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, 0, 0.15*scale);
+  GLUquadricObj *q2 = gluNewQuadric();
+  gluCylinder(q2, 0.013*scale, 0.0, 0.05*scale, slides, stacks); // tip
+  glPopMatrix();
+  gluDeleteQuadric(q);
+  gluDeleteQuadric(q2);
+  glPopAttrib();
+
+  glPopMatrix();
+}
+
+
 static void draw_square(RendererCollections *self, double x, double y, double z, double theta, double size) {
   if (!self->viewer) return;
 
@@ -1039,6 +1084,7 @@ public:
       my_vs_t & element = it->second;
       float* entries = it->second.entries;
       float* colors = it->second.colors;
+      float* normals = it->second.normals;
 
       if (colors) {
         glEnableClientState(GL_COLOR_ARRAY);
@@ -1058,6 +1104,32 @@ public:
         if (obj_it != objs.end()) {
           vs_object_t& obj = obj_it->second;
           if (obj.id>=range_start && obj.id<=range_end) {
+
+            if (normals){
+              for (int i=1; i< element.npoints;i++){
+                  double normal[3];
+                  normal[0] = normals[i*3];
+                  normal[1] = normals[i*3+1];
+                  normal[2] = normals[i*3+2];
+                  double dist = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+                  normal[0] = normal[0]/dist;
+                  normal[1] = normal[1]/dist;
+                  normal[2] = normal[2]/dist;
+                  double pitch = asin(- normal[1] );
+                  double yaw = atan2( normal[0]  , normal[2] );
+                  if (colors){
+                    draw_arrow(self, entries[i*3], entries[i*3+1], entries[i*3+2],   
+                           0, yaw, pitch,
+                           colors[i*4], colors[i*4+1], colors[i*4+2]);
+                  }else{
+                    draw_arrow(self, entries[i*3], entries[i*3+1], entries[i*3+2],   
+                           0, yaw, pitch,
+                           255, 0, 0);
+                  }
+
+              }
+            }
+
             glPushMatrix();
             double z = time_elevation_collection(self, obj.id, obj.z, collection_it->first);
             float* rgb = &::colors[3*(id%num_colors)];
@@ -1271,8 +1343,8 @@ static void draw_collections(RendererCollections *self) {
 
   if (!self->param_z_up) {
     // Viewer is (x,y,z) = (forward,left,up) coordinates
-    //		Collections are in (forward,right,down) coordinates
-    //		We rotate 180 around x-axis
+    //    Collections are in (forward,right,down) coordinates
+    //    We rotate 180 around x-axis
     glRotatef(180.0,1.0,0.0,0.0);
   }
 
@@ -1500,6 +1572,7 @@ static void on_param_widget_changed(BotGtkParamWidget *pw, const char *param, vo
   #endif
   self->param_point_width = (double)bot_gtk_param_widget_get_double(self->pw, PARAM_POINT_WIDTH_POINTS);
   self->param_pose_width = (double)bot_gtk_param_widget_get_double(self->pw, PARAM_POSE_WIDTH_POSES);  
+  self->param_normal_width = (double)bot_gtk_param_widget_get_double(self->pw, PARAM_NORMAL_WIDTH_NORMAL);
   
   #ifdef EXTRA_CONTROLS
   self->param_z_up = bot_gtk_param_widget_get_bool(self->pw, PARAM_Z_UP);
@@ -1608,6 +1681,7 @@ BotRenderer *renderer_collections_new (BotViewer *viewer, int render_priority, l
   self->param_color_time = PARAM_COLOR_TIME_DEFAULT;
   self->param_point_width = PARAM_POINT_WIDTH_POINTS_DEFAULT;
   self->param_pose_width = PARAM_POSE_WIDTH_POSES_DEFAULT;
+  self->param_normal_width = PARAM_NORMAL_WIDTH_NORMAL_DEFAULT;
   self->param_z_up = PARAM_Z_UP_DEFAULT;
   self->param_color_axes = PARAM_COLOR_AXES_DEFAULT;
 
@@ -1666,6 +1740,12 @@ BotRenderer *renderer_collections_new (BotViewer *viewer, int render_priority, l
                                     PARAM_POSE_WIDTH_POSES_MIN, PARAM_POSE_WIDTH_POSES_MAX,
                                     PARAM_POSE_WIDTH_POSES_DELTA,
                                     PARAM_POSE_WIDTH_POSES_DEFAULT);
+    bot_gtk_param_widget_add_double(self->pw, PARAM_NORMAL_WIDTH_NORMAL,
+                                    BOT_GTK_PARAM_WIDGET_SLIDER,
+                                    PARAM_NORMAL_WIDTH_NORMAL_MIN, PARAM_NORMAL_WIDTH_NORMAL_MAX,
+                                    PARAM_NORMAL_WIDTH_NORMAL_DELTA,
+                                    PARAM_NORMAL_WIDTH_NORMAL_DEFAULT);
+
     #ifdef EXTRA_CONTROLS
     bot_gtk_param_widget_add_booleans(self->pw, (BotGtkParamWidgetUIHint)0,
                                       PARAM_COLOR_AXES, PARAM_COLOR_AXES_DEFAULT, NULL);
