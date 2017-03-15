@@ -26,6 +26,17 @@ pods_use_pkg_config_packages(se-create-octomap
     eigen3
     octomap-util
     pcl_io-1.7)
-#    drc-utils
 target_link_libraries (se-create-octomap cloud_accumulate lcm pronto_math boost_system boost_thread)
 pods_install_executables(se-create-octomap )
+
+
+################
+add_executable(se-publish-cloud-as-octomap publish_cloud_as_octomap.cpp convert_octomap.cpp)
+pods_use_pkg_config_packages(se-publish-cloud-as-octomap
+    path-util ${REQUIRED_PACKAGES}
+    octomap
+    eigen3
+    octomap-util
+    pcl_io-1.7)
+target_link_libraries (se-publish-cloud-as-octomap cloud_accumulate lcm pronto_math boost_system boost_thread)
+pods_install_executables(se-publish-cloud-as-octomap )
