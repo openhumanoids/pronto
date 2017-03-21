@@ -41,7 +41,7 @@ public:
       const std::map<std::string, bool> & sensors_initialized, const RBIS & default_state,
       const RBIM & default_cov, RBIS & init_state, RBIM & init_cov);
 
-  RBISUpdateInterface * processMessage(const pronto::filter_state_t * msg, RBIS state, RBIM cov);
+  RBISUpdateInterface * processMessage(const pronto::filter_state_t * msg, MavStateEstimator* state_estimator);
 };
 
 class RBISInitializer {

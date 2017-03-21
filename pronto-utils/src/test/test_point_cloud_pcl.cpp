@@ -26,6 +26,7 @@ main (int argc, char** argv)
 
   int cfg_root = 1;
   Eigen::Isometry3d pose =  Eigen::Isometry3d::Identity();
+  //pose.translation().x() = -2.0; // offset the rendering
   Isometry3dTime poseT = Isometry3dTime ( 0, pose  );
   obj_cfg oconfig = obj_cfg(cfg_root,   "Pose"  ,5,1);
   pc_vis_->pose_to_lcm(oconfig,poseT);
@@ -69,6 +70,15 @@ main (int argc, char** argv)
   ptcld_cfg pconfig5 = ptcld_cfg(cfg_root+5,  "Cloud5 - pronto"     ,1,1, cfg_root,0, {0.2,0,0.2} );
   pc_vis_->ptcld_to_lcm(pconfig5, *cloud5, 0, 0);
 
+
+  sleep(2.0);
+  std::cout << "Sleep two seconds, then move root pose\n";
+  std::cout << "which indirectly causes the point clouds to move\n";
+
+  pose.translation().x() = 1.0;
+  poseT = Isometry3dTime ( 0, pose  );
+  oconfig = obj_cfg(cfg_root,   "Pose"  ,5,1); 
+  pc_vis_->pose_to_lcm(oconfig,poseT);
 
 
   return (0);

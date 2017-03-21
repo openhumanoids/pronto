@@ -13,6 +13,8 @@ FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   pc_vis_->obj_cfg_list.push_back( obj_cfg(7002,"Pronto-VO Pose t1 vo",5,1) );
   pc_vis_->obj_cfg_list.push_back( obj_cfg(7003,"Pronto-VO Pose current",5,1) );
 
+  pc_vis_->obj_cfg_list.push_back( obj_cfg(7010,"Pronto-VO Pose t0 internal",5,1) );
+
   char* mode_str = bot_param_get_str_or_fail(param, "state_estimator.fovis.mode");
 
   if (strcmp(mode_str, "velocity_rotation_rate") == 0) {
@@ -107,6 +109,7 @@ FovisHandler::FovisHandler(lcm::LCM* lcm_recv,  lcm::LCM* lcm_pub,
   cov_fovis = R_fovis.asDiagonal();
 
   prev_t0_body_ = Eigen::Isometry3d::Identity();
+  prev_t0_body_internal_ = Eigen::Isometry3d::Identity();
   prev_t0_body_utime_ = 0;
 
   publish_diagnostics_ = bot_param_get_boolean_or_fail(param, "state_estimator.fovis.publish_diagnostics");
@@ -152,7 +155,7 @@ bot_core::pose_t getBotTransAsBotPoseVelocity(BotTrans bt, int64_t utime ){
 
 
 
-RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg, RBIS state, RBIM cov){
+RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg, MavStateEstimator* state_estimator){
 
   if (msg->estimate_status == pronto::update_t::ESTIMATE_VALID){
   }else{
@@ -170,14 +173,43 @@ RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg,
 
   // 1. position correction mode:
   Eigen::Isometry3d t0_body = Eigen::Isometry3d::Identity();
+  Eigen::Isometry3d t0_body_internal = Eigen::Isometry3d::Identity();
   if (msg->prev_timestamp != prev_t0_body_utime_){
     // TODO: check that these trans are valid
     int status = get_trans_with_utime(frames, "body" , "local", msg->prev_timestamp, t0_body);
 
+
+    /////////////////////////////////////////////////////////////////////////////////
+    //updateHistory::historyMapIterator prev_it = state_estimator->history.updateMap.find(msg->prev_timestamp);
+    updateHistory::historyMapIterator lower_it = state_estimator->history.updateMap.lower_bound(msg->prev_timestamp);
+    double diff_utime = ( lower_it->first - msg->prev_timestamp ) *1E-6;
+    if (diff_utime > 0.025){
+      std::cout << "FOIVS: time difference for VO delta root pose is too great ("<< diff_utime <<"sec). Will not use\n";
+      return NULL;
+    }
+
+    // The following check is not properly debugged:
+    if (lower_it == state_estimator->history.updateMap.end()){
+      std::cout << msg->prev_timestamp <<  " at the end\n";
+      return NULL;
+    }else{
+      std::cout << msg->prev_timestamp <<  " not at the end - (successful delta change)\n";
+    }
+
+    RBISUpdateInterface * t0_body_RBISInterface = lower_it->second;
+    RBIS t0_body_RBIS = t0_body_RBISInterface->posterior_state;
+    t0_body_internal.translation() = Eigen::Vector3d( t0_body_RBIS.position()[0], t0_body_RBIS.position()[1], t0_body_RBIS.position()[2] );
+    t0_body_internal.rotate( Eigen::Quaterniond( t0_body_RBIS.quat.w(), t0_body_RBIS.quat.x(), t0_body_RBIS.quat.y(), t0_body_RBIS.quat.z()) );
+    /////////////////////////////////////////////////////////////////////////////////
+
     prev_t0_body_ = t0_body;
+    prev_t0_body_internal_ = t0_body_internal;
     prev_t0_body_utime_ = msg->prev_timestamp;
+
+
   }else{
     t0_body = prev_t0_body_;
+    t0_body_internal = prev_t0_body_internal_;
   }
 
 
@@ -188,9 +220,7 @@ RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg,
   t0t1_body_vo.translation() = Eigen::Vector3d( msg->translation[0], msg->translation[1], msg->translation[2] );
   t0t1_body_vo.rotate( Eigen::Quaterniond( msg->rotation[0], msg->rotation[1], msg->rotation[2], msg->rotation[3] ) );
 
-  Eigen::Isometry3d t1_body_vo = t0_body * t0t1_body_vo; // the pose of the robot as estimated by applying the VO translation on top of t0 state
-
-
+  Eigen::Isometry3d t1_body_vo = t0_body_internal * t0t1_body_vo; // the pose of the robot as estimated by applying the VO translation on top of t0 state
 
   if (publish_diagnostics_){
     Isometry3dTime t0_body_T = Isometry3dTime(msg->prev_timestamp , t0_body );
@@ -201,10 +231,19 @@ RBISUpdateInterface * FovisHandler::processMessage(const pronto::update_t * msg,
     pc_vis_->pose_to_lcm_from_list(7002, t1_body_vo_T );
 
 
+    Isometry3dTime t0_body_internal_T = Isometry3dTime(msg->prev_timestamp , t0_body_internal );
+    pc_vis_->pose_to_lcm_from_list(7010, t0_body_internal_T );
+
+
+
+    RBIS head_state;
+    RBIM head_cov;
+    state_estimator->getHeadState(head_state, head_cov);
+
     Eigen::Isometry3d current_body;
     current_body.setIdentity();
-    current_body.translation() = Eigen::Vector3d( state.position()[0], state.position()[1], state.position()[2] );
-    current_body.rotate( Eigen::Quaterniond( state.quat.w(), state.quat.x(), state.quat.y(), state.quat.z() ) );
+    current_body.translation() = Eigen::Vector3d( head_state.position()[0], head_state.position()[1], head_state.position()[2] );
+    current_body.rotate( Eigen::Quaterniond( head_state.quat.w(), head_state.quat.x(), head_state.quat.y(), head_state.quat.z() ) );
     Isometry3dTime current_body_T = Isometry3dTime(msg->timestamp , current_body );
     pc_vis_->pose_to_lcm_from_list(7003, current_body_T );
 

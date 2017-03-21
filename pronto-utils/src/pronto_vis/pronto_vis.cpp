@@ -192,6 +192,7 @@ void pronto_vis::pose_collection_reset(int id, std::string name){
 //
 void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::PointCloud > &clouds,
             int64_t obj_id, int64_t ptcld_id){
+  std::cout << "This function is depreciated, please replace with method providing lists of ids\n";
 
   vs_point3d_list_collection_t plist_coll;
   plist_coll.id = pcfg.id;
@@ -260,6 +261,79 @@ void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::Po
 }
 
 
+
+//
+void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pronto::PointCloud > &clouds,
+            std::vector<int64_t> &obj_ids, std::vector<int64_t> &ptcld_ids){
+
+  vs_point3d_list_collection_t plist_coll;
+  plist_coll.id = pcfg.id;
+  plist_coll.name =(char*)   pcfg.name.c_str();
+  plist_coll.type =pcfg.type; // collection of points
+  plist_coll.reset = pcfg.reset;
+  plist_coll.nlists = clouds.size(); // number of seperate sets of points
+  vs_point3d_list_t plist[plist_coll.nlists];
+
+  for (size_t i=0; i < clouds.size() ; i++){  // loop here for many lists
+    size_t npts = clouds[i].points.size();
+
+    vs_point3d_list_t* this_plist = &(plist[i]);
+    // 3.0: header
+    this_plist->id = ptcld_ids[i]; // which specific cloud is this     ptcoll_cfg.point_lists_id;
+    this_plist->collection = pcfg.obj_coll;
+    this_plist->element_id = obj_ids[i]; // which specific pose axis typically a timestamp
+    // 3.1: points/entries (rename)
+    vs_point3d_t* points = new vs_point3d_t[npts];
+    this_plist->npoints = npts;
+    // 3.2: colors:
+    vs_color_t* colors = new vs_color_t[npts];
+    // TODO: this sends the points, but they are not used. Should avoid sending altogether
+    if (pcfg.use_rgb == -1)
+      this_plist->ncolors = 0; // have viewer pick the color
+    else
+      this_plist->ncolors = npts;
+    // 3.3: normals:
+    this_plist->nnormals = 0;
+    this_plist->normals = NULL;
+    // 3.4: point ids:
+    this_plist->npointids = 0;//cloud.points.size();
+    int64_t* pointsids= NULL;//new int64_t[ cloud.points.size() ];
+
+    float rgba[4];
+    for(size_t j=0; j<npts; j++) {  //Nransac
+      if (  pcfg.use_rgb == 1){// use the rgb value
+        rgba[0] = pcfg.rgb[0];
+        rgba[1] = pcfg.rgb[1];
+        rgba[2] = pcfg.rgb[2];
+      }else{
+        rgba[0] = clouds[i].points[j].r/255.0;
+        rgba[1] = clouds[i].points[j].g/255.0;
+        rgba[2] = clouds[i].points[j].b/255.0;
+      }
+
+      colors[j].r = rgba[0]; // points_collection values range 0-1
+      colors[j].g = rgba[1];
+      colors[j].b = rgba[2];
+      points[j].x = clouds[i].points[j].x;
+      points[j].y = clouds[i].points[j].y;
+      points[j].z = clouds[i].points[j].z;
+    }
+    this_plist->colors = colors;
+    this_plist->points = points;
+    this_plist->pointids = pointsids;
+  }
+  
+  plist_coll.point_lists = plist;
+  vs_point3d_list_collection_t_publish(publish_lcm_,"POINTS_COLLECTION",&plist_coll);
+
+  for (int i=0;i<plist_coll.nlists;i++) {
+      delete [] plist_coll.point_lists[i].points;
+      delete [] plist_coll.point_lists[i].colors;
+  }     
+}
+
+
+
 void pronto_vis::ptcld_to_lcm_from_list(int id, pronto::PointCloud &cloud, int64_t obj_id, int64_t ptcld_id){
  for (size_t i=0; i < ptcld_cfg_list.size() ; i++){
    if (id == ptcld_cfg_list[i].id ){
@@ -270,6 +344,15 @@ void pronto_vis::ptcld_to_lcm_from_list(int id, pronto::PointCloud &cloud, int64
 }
 
 void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t obj_id, int64_t ptcld_id){
+  std::vector<Eigen::Vector3d> empty_normal_list;
+  ptcld_to_lcm(pcfg, cloud, empty_normal_list, obj_id, ptcld_id);
+}
+
+
+void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud,
+    std::vector< Eigen::Vector3d> &cloud_normals,
+    int64_t obj_id, int64_t ptcld_id){
+
   int npts = cloud.points.size();
 
   vs_point3d_list_collection_t plist_coll;
@@ -297,9 +380,14 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t
     this_plist->ncolors = 0; // have the viewer choose the colors.
   else
     this_plist->ncolors = npts;
+
   // 3.3: normals:
-  this_plist->nnormals = 0;
-  this_plist->normals = NULL;
+  vs_point3d_t* normals = new vs_point3d_t[npts];
+  if (cloud_normals.size() == npts)
+    this_plist->nnormals = npts;
+  else
+    this_plist->nnormals = 0;
+
   // 3.4: point ids:
   this_plist->npointids = 0;//cloud.points.size();
   int64_t* pointsids= NULL;//new int64_t[ cloud.points.size() ];
@@ -323,10 +411,18 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pronto::PointCloud &cloud, int64_t
     points[j].x = cloud.points[j].x;
     points[j].y = cloud.points[j].y;
     points[j].z = cloud.points[j].z;
+
+    if (cloud_normals.size() == npts){
+      normals[j].x = cloud_normals[j][0];
+      normals[j].y = cloud_normals[j][1];
+      normals[j].z = cloud_normals[j][2];
+    }
+
   }
 
   this_plist->colors = colors;
   this_plist->points = points;
+  this_plist->normals = normals;
   this_plist->pointids = pointsids;
   plist_coll.point_lists = plist;
   vs_point3d_list_collection_t_publish(publish_lcm_,"POINTS_COLLECTION",&plist_coll);
@@ -497,6 +593,26 @@ void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> 
   ptcld_to_lcm(pcfg, *cloud_out, obj_id, ptcld_id);  
 }
 
+
+void pronto_vis::ptcld_to_lcm(ptcld_cfg pcfg, pcl::PointCloud<pcl::PointXYZRGB> &cloud, 
+    std::vector< Eigen::Vector3d> &cloud_normals,
+    int64_t obj_id, int64_t ptcld_id){
+  pronto::PointCloud* cloud_out (new pronto::PointCloud);
+  convertCloudPclToPronto(cloud,*cloud_out);
+  ptcld_to_lcm(pcfg, *cloud_out, cloud_normals, obj_id, ptcld_id);  
+}
+
+void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
+        std::vector<int64_t> &obj_ids, std::vector<int64_t> &ptcld_ids){
+
+  std::vector < pronto::PointCloud > clouds_out;
+  for (size_t i=0; i < clouds.size() ; i++){
+    pronto::PointCloud* cloud_out (new pronto::PointCloud);
+    convertCloudPclToPronto(clouds[i],*cloud_out);
+    clouds_out.push_back(*cloud_out);
+  }
+  ptcld_collection_to_lcm(pcfg, clouds_out, obj_ids, ptcld_ids);
+}
 
 void pronto_vis::ptcld_collection_to_lcm(ptcld_cfg pcfg, std::vector< pcl::PointCloud<pcl::PointXYZRGB> > &clouds,
             int64_t obj_id, int64_t ptcld_id){

@@ -19,6 +19,7 @@ struct CommandLineConfig
 {
   bool use_velodyne;
   bool init_with_message; // initialize off of a pose or vicon
+  std::string input_channel;
   std::string output_channel;
   std::string init_channel;
 };
@@ -69,8 +70,11 @@ App::App(boost::shared_ptr<lcm::LCM> &lcm_, const CommandLineConfig& cl_cfg_) :
     lcm_->subscribe("VELODYNE_HORIZONTAL",&App::pointCloudHandler,this);
     int status = get_trans_with_utime( botframes_ ,  "VELODYNE", "body"  , 0, body_to_lidar_);
   }else{
-    lcm_->subscribe("SCAN",&App::lidarHandler,this);
-    int status = get_trans_with_utime( botframes_ ,  "SCAN", "body"  , 0, body_to_lidar_);
+    lcm_->subscribe(cl_cfg_.input_channel ,&App::lidarHandler,this);
+    int status = get_trans_with_utime( botframes_ ,  cl_cfg_.input_channel.c_str() , "body"  , 0, body_to_lidar_);
+    std::cout << "Body to Lidar from param: " << std::endl;
+    std::cout << body_to_lidar_.matrix() << std::endl;
+
   }
 
   pose_initialized_ = false;
@@ -208,11 +212,13 @@ int main(int argc, char **argv){
   CommandLineConfig cl_cfg;
   cl_cfg.use_velodyne = false;
   cl_cfg.init_with_message = TRUE;
+  cl_cfg.input_channel = "HOKUYO_SCAN";
   cl_cfg.output_channel = "POSE_BODY";
   cl_cfg.init_channel = "POSE_VICON";
 
   ConciseArgs parser(argc, argv, "simple-fusion");
   parser.add(cl_cfg.init_with_message, "g", "init_with_message", "Bootstrap internal estimate using VICON or POSE_INIT");
+  parser.add(cl_cfg.input_channel, "s", "input_channel", "Input LIDAR scan message");
   parser.add(cl_cfg.output_channel, "o", "output_channel", "Output message e.g POSE_BODY");
   parser.add(cl_cfg.use_velodyne, "v", "use_velodyne", "Use a velodyne instead of the LIDAR");
   parser.add(cl_cfg.init_channel, "i", "init_channel", "Read the init message from this channel, e.g., POSE_VICON");
