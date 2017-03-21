@@ -18,6 +18,7 @@ add_subdirectory(src/pronto_vis)
 add_subdirectory(src/pronto_lcm)
 add_subdirectory(src/pronto_filters)
 add_subdirectory(src/pronto_joint_tools)
+add_subdirectory(src/pronto_lidar_filters)
 
 add_subdirectory(src/pronto_complementary)
 
