@@ -55,8 +55,14 @@ public:
         bot_frames_get_trans_latest_timestamp(botframes, 
              chain[i].first.c_str(), chain[i].second.c_str(), &last_update_utime);
         if (current_utime > last_update_utime){
-          std::cout << chain[i].first << " to " << chain[i].second 
-             << " "<< last_update_utime <<" older than " << current_utime << "\n\n";
+          std::cout << "Invalid Chain: "<< chain[i].first << " to " << chain[i].second 
+             << " is "
+             << std::setprecision(16)
+             << ((double) (last_update_utime)*1e-6) 
+             <<" which older than request "
+             << ((double) (current_utime)*1e-6) 
+             << std::setprecision(6)
+             << "\n";
           false;
         }
       }

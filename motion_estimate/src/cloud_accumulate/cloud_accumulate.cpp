@@ -161,10 +161,7 @@ bool CloudAccumulate::processLidar(std::shared_ptr<bot_core::planar_lidar_t> msg
 
 
 bool CloudAccumulate::processVelodyne(const bot_core::pointcloud2_t* msg){
-
-  // TODO: add FrameValid when when we have some Velodye data 
-  std::cout << "velodyne: " << msg->utime << "\n";
-
+  // TODO: add FrameValid when we have some Velodye data 
 
   // 1. convert to a Velodyne PCL point cloud:
   pcl::PointCloud<pcl::PointXYZIR>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZIR> ());
