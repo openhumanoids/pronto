@@ -1,7 +1,9 @@
 # list of subdirectories to build, one one each line.  Empty lines
 # and lines starting with '#' are ignored
 
+bot2-frames_cpp
 visualization
+
 
 pronto-lcmtypes
 pronto-utils
@@ -11,4 +13,3 @@ state-estimator
 motion_estimate
 
 lidar_odometry
-bot2-frames_cpp
