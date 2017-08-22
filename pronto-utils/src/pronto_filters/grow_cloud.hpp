@@ -25,7 +25,7 @@
 #include "pcl/surface/concave_hull.h"
 #include "pcl/PolygonMesh.h"
 #include "pcl/octree/octree.h"
-
+#include "pcl/common/centroid.h"
 
 #include <pronto_utils/pronto_vis.hpp> // visualize pt clds
 
