@@ -6,6 +6,7 @@
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core/planar_lidar_t.hpp>
 #include <lcmtypes/bot_core/pointcloud2_t.hpp>
+#include <lcmtypes/bot_core/pointcloud_t.hpp>
 
 #include <laser_utils/laser_util.h>
 #include <path_util/path_util.h>
@@ -59,6 +60,10 @@ class CloudAccumulate{
 
     bool processVelodyne(const bot_core::pointcloud2_t* msg);
 
+    bool processVelodynePointcloud(std::shared_ptr<bot_core::pointcloud_t> msg);
+    bool processVelodynePointcloud(bot_core::pointcloud_t* msg);
+
+    bool processPointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int64_t &utime);
   private:
     void init(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_,
                           BotParam* botparam, BotFrames* botframes);
