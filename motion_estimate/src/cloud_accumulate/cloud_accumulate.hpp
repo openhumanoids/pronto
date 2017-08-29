@@ -60,10 +60,12 @@ class CloudAccumulate{
 
     bool processVelodyne(const bot_core::pointcloud2_t* msg);
 
-    bool processVelodynePointcloud(std::shared_ptr<bot_core::pointcloud_t> msg);
-    bool processVelodynePointcloud(bot_core::pointcloud_t* msg);
+    bool processPointcloud(std::shared_ptr<bot_core::pointcloud_t> msg);
+    bool processPointcloud(bot_core::pointcloud_t* msg);
 
-    bool processPointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int64_t &utime);
+    bool processPCLPointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const int64_t &utime);
+
+    bool processProntoPointcloud(pronto::PointCloud* scan_velodyne, const int64_t &utime);
   private:
     void init(boost::shared_ptr<lcm::LCM> &lcm_, const CloudAccumulateConfig& ca_cfg_,
                           BotParam* botparam, BotFrames* botframes);
