@@ -128,7 +128,7 @@ void App::velodyneHandler(const lcm::ReceiveBuffer* rbuf, const std::string& cha
       std::cout << message.str() << "\n";
     }
     
-    accu_->processVelodyne(msg);
+    accu_->processPointcloud2(msg);
     
     if ( accu_->getFinished()  ){//finished_accumating?
       do_convert_cloud_ = true;
