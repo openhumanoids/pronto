@@ -58,7 +58,7 @@ class CloudAccumulate{
 
     bool processLidar(std::shared_ptr<bot_core::planar_lidar_t> msg);
 
-    bool processVelodyne(const bot_core::pointcloud2_t* msg);
+    bool processPointcloud2(const bot_core::pointcloud2_t* msg);
 
     bool processPointcloud(std::shared_ptr<bot_core::pointcloud_t> msg);
     bool processPointcloud(bot_core::pointcloud_t* msg);
