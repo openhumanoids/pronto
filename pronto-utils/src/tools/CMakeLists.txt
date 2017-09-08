@@ -10,7 +10,14 @@ if(PCL_IO_FOUND)
   set(USE_PRONTO_VIS_PCL TRUE)
 endif()
 
-if(NOT PCL_IO_FOUND)
+pkg_check_modules(PCL_IO_1_8 pcl_io-1.8)
+if(PCL_IO_1_8_FOUND)
+  message("---- PCL IO_1_8 was found (in pronto_vis)\n")
+  set(PCL_IO_PKG_CONFIG "pcl_io-1.8")
+  set(USE_PRONTO_VIS_PCL TRUE)
+endif()
+
+if(NOT PCL_IO_FOUND AND NOT PCL_IO_1_8_FOUND)
   message("---- PCL IO not found in tools\n")
   message("---- PCL IO not found. Not building tools\n")
   return()
@@ -34,8 +41,11 @@ pods_install_executables(pronto-multisense-to-frame)
 ##################################################
 pods_install_headers(conversions_lcm.hpp point_types.hpp DESTINATION pronto_utils)
 
-set(PCL_LIBRARIES  pcl_io-1.7 pcl_filters-1.7)
-
+if(PLC_IO_FOUND)
+  set(PCL_LIBRARIES  pcl_io-1.7 pcl_filters-1.7)
+elseif(PCL_IO_1_8_FOUND)
+  set(PCL_LIBRARIES pcl_io-1.8 pcl_filters-1.8)
+endif()
 ##############################################
 add_executable (se-pointcloud2-tool pointcloud2_tool.cpp)
 target_link_libraries(se-pointcloud2-tool boost_system)
