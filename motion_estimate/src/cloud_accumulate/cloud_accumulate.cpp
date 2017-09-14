@@ -131,7 +131,7 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
 bool CloudAccumulate::processLidar(const  bot_core::planar_lidar_t* msg){
   std::shared_ptr<bot_core::planar_lidar_t> this_msg;
   this_msg = std::shared_ptr<bot_core::planar_lidar_t>(new bot_core::planar_lidar_t(*msg));
-  processLidar(this_msg);
+  return processLidar(this_msg);
 }
 
 bool CloudAccumulate::processLidar(std::shared_ptr<bot_core::planar_lidar_t> msg){
