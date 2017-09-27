@@ -95,8 +95,8 @@ pronto::PointCloud*  CloudAccumulate::convertPlanarScanToCloud(std::shared_ptr<b
   bot_core_planar_lidar_t * laser_msg_c = convertPlanarLidarCppToC(this_msg);
   // 100 scans per rev = 2.5 sec per rev = 24 rpm = 144 deg per second = 2.5136 rad/sec, 3.6 deg per scan.
   // 600 scans per rev = 15 sec per rev = 4rpm = 24 deg per second = 0.4189 rad/sec, 0.6 deg per scan.
-  projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_interpolation(laser_projector_,
-    laser_msg_c, "local");
+  projected_laser_scan_ = laser_create_projected_scan_from_planar_lidar_with_interpolation_with_timeout(laser_projector_,
+    laser_msg_c, "local", 400000);
   if (projected_laser_scan_ == NULL){
     std::cout << "Projection failed. Not adding scan\n";
     return NULL;
