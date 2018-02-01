@@ -40,3 +40,16 @@ pods_use_pkg_config_packages(se-publish-cloud-as-octomap
     pcl_io-1.7)
 target_link_libraries (se-publish-cloud-as-octomap cloud_accumulate lcm pronto_math boost_system boost_thread)
 pods_install_executables(se-publish-cloud-as-octomap )
+
+
+
+################
+add_executable(se-write-clouds-to-file write_clouds_to_file.cpp convert_octomap.cpp)
+pods_use_pkg_config_packages(se-write-clouds-to-file
+    path-util ${REQUIRED_PACKAGES}
+    octomap
+    eigen3
+    octomap-util
+    pcl_io-1.7)
+target_link_libraries (se-write-clouds-to-file cloud_accumulate lcm pronto_math boost_system boost_thread)
+pods_install_executables(se-write-clouds-to-file )

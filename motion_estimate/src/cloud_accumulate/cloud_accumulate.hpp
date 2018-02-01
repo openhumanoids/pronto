@@ -52,6 +52,9 @@ class CloudAccumulate{
     }
     
     void publishCloud(pronto::PointCloud* &cloud);
+    void writePCD(std::string filename, pronto::PointCloud* &cloud){
+      pc_vis_->writePCD(filename, *cloud);
+    }
 
     // returns true is scan was added, false if not
     bool processLidar(const bot_core::planar_lidar_t* msg);
