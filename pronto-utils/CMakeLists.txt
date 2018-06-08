@@ -2,6 +2,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wreturn-ty
 
 cmake_minimum_required(VERSION 2.6.0)
 
+add_definitions(-fpermissive)
+
 # pull in the pods macros. See cmake/pods.cmake for documentation
 set(POD_NAME pronto-tools)
 include(cmake/pods.cmake)

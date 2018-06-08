@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6.0)
 
+add_definitions(-fpermissive)
+
 file(GLOB hpp_files include/visualization/*.hpp)
 #add_definitions(-Wall -msse2 -msse3)
 

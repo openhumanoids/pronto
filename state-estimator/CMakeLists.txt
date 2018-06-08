@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6.0)
 
+add_definitions(-fpermissive)
+
 # pull in the pods macros. See cmake/pods.cmake for documentation
 set(POD_NAME mav_estimator)
 include(cmake/pods.cmake)
