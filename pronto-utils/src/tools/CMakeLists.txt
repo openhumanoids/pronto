@@ -41,7 +41,7 @@ pods_install_executables(pronto-multisense-to-frame)
 ##################################################
 pods_install_headers(conversions_lcm.hpp point_types.hpp DESTINATION pronto_utils)
 
-if(PLC_IO_FOUND)
+if(PCL_IO_FOUND)
   set(PCL_LIBRARIES  pcl_io-1.7 pcl_filters-1.7)
 elseif(PCL_IO_1_8_FOUND)
   set(PCL_LIBRARIES pcl_io-1.8 pcl_filters-1.8)
