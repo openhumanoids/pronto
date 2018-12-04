@@ -24,6 +24,6 @@ add_subdirectory(src/pronto_lidar_filters)
 
 add_subdirectory(src/pronto_complementary)
 
-add_subdirectory(src/test)
+#add_subdirectory(src/test)
 add_subdirectory(src/tools)
 

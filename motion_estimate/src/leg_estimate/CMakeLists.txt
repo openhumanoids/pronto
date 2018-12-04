@@ -40,7 +40,7 @@ pods_install_executables(se-leg-odometry )
 add_executable(se-convert-bdi-into-vicon-frame convert_bdi_into_vicon_frame.cpp )
 target_link_libraries(se-convert-bdi-into-vicon-frame boost_system)
 pods_use_pkg_config_packages(se-convert-bdi-into-vicon-frame  
-    bot2-frames pronto_vis lcmtypes_bot2-core
+    bot2-frames lcmtypes_bot2-core pronto_vis
     path-util ${REQUIRED_PACKAGES})
 target_link_libraries (se-convert-bdi-into-vicon-frame lcm  )
 pods_install_executables(se-convert-bdi-into-vicon-frame )

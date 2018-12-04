@@ -32,15 +32,15 @@ add_subdirectory(src/quick_lock)
 add_subdirectory(src/fusion)
 
 # cloud accumulate:
-add_subdirectory(src/cloud_accumulate)
+#add_subdirectory(src/cloud_accumulate)
 
 # map creator:
-add_subdirectory(src/create_octomap)
+#add_subdirectory(src/create_octomap)
 
 # gui:
-add_subdirectory(src/renderer_rs)
-add_subdirectory(src/renderer_frames_pronto)
-add_subdirectory(src/pronto_viewer)
+#add_subdirectory(src/renderer_rs)
+#add_subdirectory(src/renderer_frames_pronto)
+#add_subdirectory(src/pronto_viewer)
 
 
 # require python

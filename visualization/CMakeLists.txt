@@ -27,7 +27,7 @@ add_library(vs_vis SHARED
 target_link_libraries(vs_vis ${Boost_LIBRARIES})
 
 set_target_properties(vs_vis PROPERTIES SOVERSION 1)
-pods_use_pkg_config_packages(vs_vis bot2-vis bot2-lcmgl-renderer lcm eigen3)
+pods_use_pkg_config_packages(vs_vis lcm eigen3) # bot2-vis bot2-lcmgl-renderer
 
 pods_install_libraries(vs_vis)
 pods_install_headers(${hpp_files} DESTINATION visualization)
@@ -38,9 +38,9 @@ pods_install_pkg_config_file(visualization
     VERSION 0.0.1)
 
 # individual collections renderer:
-add_subdirectory(src/collections_renderer)
+#add_subdirectory(src/collections_renderer)
 # viewer for just the above
-add_subdirectory(src/collections_viewer)
+#add_subdirectory(src/collections_viewer)
 
 
 

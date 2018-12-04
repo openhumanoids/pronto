@@ -12,4 +12,3 @@ pods_install_matlab_path(mav_state_est)
 
 add_subdirectory(src)
 add_subdirectory(python)
-

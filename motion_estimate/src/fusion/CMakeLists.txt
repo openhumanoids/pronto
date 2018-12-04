@@ -8,7 +8,7 @@ pods_use_pkg_config_packages(se-fusion
     mav-est-legodo
     mav-est-yawlock
     lcmtypes_pronto
-    model-client 
+    model-client
     pronto_vis
     mav-est-pose-init)
 

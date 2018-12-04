@@ -14,7 +14,7 @@ set(REQUIRED_LIBS bot2-core
 	bot2-frames
 	eigen-utils
 	laser-util
-	laser-sim3d
+	#laser-sim3d
 	octomap-util
         path-util
         lcmtypes_vicon

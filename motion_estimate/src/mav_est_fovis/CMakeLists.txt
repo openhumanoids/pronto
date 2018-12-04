@@ -14,7 +14,7 @@ set(REQUIRED_LIBS mav-state-est
 	bot2-frames
 	eigen-utils
     path-util
-    pronto_vis
+    #pronto_vis
     )
 #	laser-util
 #	laser-sim3d

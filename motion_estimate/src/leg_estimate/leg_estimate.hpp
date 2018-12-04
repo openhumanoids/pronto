@@ -26,7 +26,7 @@
 
 // #include <pronto_utils/pronto_math.hpp>
 // #include <pronto_utils/pronto_lcm.hpp>
-#include <pronto_utils/pronto_vis.hpp>
+//#include <pronto_utils/pronto_vis.hpp>
 
 #include <lcmtypes/bot_core/pose_t.hpp>
 #include <lcmtypes/bot_core/rigid_transform_t.hpp>
@@ -117,7 +117,7 @@ class leg_estimate{
     BotParam* botparam_;
     boost::shared_ptr<ModelClient> model_;
     boost::shared_ptr<KDL::TreeFkSolverPosFull_recursive> fksolver_;
-    pronto_vis* pc_vis_;
+    //pronto_vis* pc_vis_;
     
     // joint position filters, optionally used
     std::vector<LowPassFilter*> lpfilter_; // previously were not pointers
